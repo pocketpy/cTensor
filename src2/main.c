@@ -15,7 +15,7 @@ Tensor model_forward(Model* model, Tensor input) {
     return x;
 }
 
-int main_disable() {
+int main() {
     // load iris dataset
     const float(*X)[4];
     const int* y;
@@ -57,7 +57,7 @@ int main_disable() {
             optim_sgd_zerograd(optimizer);
             Tensor y_pred = model_forward(&model, input);
             Tensor loss = nn_crossentropy(y_true, y_pred);
-            Tensor_backward(loss, (Tensor){NULL});
+            Tensor_backward(loss, (Tensor){});
             optim_sgd_step(optimizer);
         }
     }
