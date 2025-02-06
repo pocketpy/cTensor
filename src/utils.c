@@ -30,6 +30,18 @@ void cten_assert_dim(const char* title, int a, int b) {
     cten_assert(a == b, "%s: %d != %d", title, a, b);
 }
 
+int _broadcast_offset(TensorShape shape, int* index, int dim) {
+    int offset = 0;
+    for (int i = 0; i < dim; i++) {
+        int stride = 1;
+        for (int j = i + 1; j < dim; j++) {
+            stride *= shape[j];
+        }
+        offset += index[i] * stride;
+    }
+    return offset;
+}
+
 bool cten_elemwise_broadcast(Tensor* a, Tensor* b) {
     int a_dim = TensorShape_dim(a->shape);
     int b_dim = TensorShape_dim(b->shape);
@@ -55,23 +67,17 @@ bool cten_elemwise_broadcast(Tensor* a, Tensor* b) {
             a_broadcast = 1;
         }
         Tensor a_ = Tensor_new(b->shape, a->node != NULL);
-        for(int i = 0; i < a_.shape[0]; i++) {
-            int i_ = a->shape[0] == 1 ? 0 : i;
-            for(int j = 0; j < a_.shape[1]; j++) {
-                int j_ = a->shape[1] == 1 ? 0 : j;
-                for(int k = 0; k < a_.shape[2]; k++) {
-                    int k_ = a->shape[2] == 1 ? 0 : k;
-                    for(int l = 0; l < a_.shape[3]; l++) {
-                        int l_ = a->shape[3] == 1 ? 0 : l;
-                        // a_[i][j][k][l] = a[i_][j_][k_][l_]
-                        a_.data->flex[i * a_.shape[1] * a_.shape[2] * a_.shape[3] +
-                                      j * a_.shape[2] * a_.shape[3] + k * a_.shape[3] + l] =
-                            a->data->flex[i_ * a->shape[1] * a->shape[2] * a->shape[3] +
-                                          j_ * a->shape[2] * a->shape[3] + k_ * a->shape[3] + l_];
-                    }
-                }
+        int index_a[4], index_a_;
+        for (int i = 0; i < a_.data->numel; i++) {
+            int curr_index = i;
+            for (int j = 0; j <= a_dim-1; j++) {
+                index_a_ = curr_index % a_.shape[j];
+                index_a[j] = (a->shape[j] == 1) ? 0 : index_a_;
+                curr_index /= a_.shape[j];
             }
+            a_.data->flex[i] = a->data->flex[_broadcast_offset(a->shape, index_a, a_dim)];
         }
+
         *a = a_;
     }
     return true;

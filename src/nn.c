@@ -41,11 +41,15 @@ static Tensor GradFn_softmax(Tensor self, int i) {
     Tensor res = Tensor_new(input.shape, false);
     for(int j = 0; j < input.data->numel; j++) {
         float softmax_j = self.data->flex[j];
+        float sum_kronecker = 0;
+        float sum_jk = 0;
         for(int k = 0; k < input.data->numel; k++) {
             float softmax_k = self.data->flex[k];
             float delta_jk = (j == k) ? 1.0f : 0.0f;
-            res.data->flex[j * input.data->numel + k] = softmax_j * (delta_jk - softmax_k);
+            sum_kronecker += delta_jk * softmax_j;
+            sum_jk += softmax_j * softmax_k;
         }
+        res.data->flex[j] = sum_kronecker - sum_jk;
     }
     return res;
 }

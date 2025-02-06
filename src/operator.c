@@ -36,34 +36,19 @@ Tensor Tensor_add(Tensor self, Tensor other) {
 }
 
 Tensor Tensor_mul(Tensor self, Tensor other) {
-    int f_index = -1;
-    if (TensorShape_dim(self.shape) == 0 || TensorShape_dim(other.shape) == 0) {
-        f_index = (TensorShape_dim(self.shape) == 0) ? 0 : 1;
+    if (TensorShape_dim(self.shape) == 0) {
+        self.shape[0] = 1;
     }
-    else{
-        if (!cten_elemwise_broadcast(&self, &other)) {
-            cten_assert_shape("Tensor_mul() cannot broadcast", self.shape, other.shape);
-        }
+    if (TensorShape_dim(other.shape) == 0) {
+        other.shape[0] = 1;
     }
-    TensorShape* res_shape =  f_index ? &self.shape : &other.shape ;
+    cten_elemwise_broadcast(&self, &other);
     bool require_grad = self.node != NULL || other.node != NULL;
-    Tensor res = Tensor_new(*res_shape, require_grad);
-    if (f_index == -1) {
-        for (int i = 0; i < self.data->numel; i++) {
-            res.data->flex[i] = self.data->flex[i] * other.data->flex[i];
-        }
+    Tensor res = Tensor_new(self.shape, require_grad);
+    for (int i = 0; i < self.data->numel; i++) {
+        res.data->flex[i] = self.data->flex[i] * other.data->flex[i];
     }
-    else if (f_index == 0) {
-        for (int i = 0; i < other.data->numel; i++) {
-            res.data->flex[i] = self.data->flex[0] * other.data->flex[i];
-        }
-    }
-    else {
-        for (int i = 0; i < self.data->numel; i++) {
-            res.data->flex[i] = self.data->flex[i] * other.data->flex[0];
-        }
-    }
-    if(require_grad) {
+    if (require_grad) {
         res.node->grad_fn = GradFn_mul;
         res.node->inputs[0] = self;
         res.node->inputs[1] = other;
