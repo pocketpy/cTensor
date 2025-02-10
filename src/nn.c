@@ -38,18 +38,19 @@ Tensor nn_relu(Tensor self) {
 /* nn.softmax */
 static Tensor GradFn_softmax(Tensor self, int i) {
     Tensor input = self.node->inputs[i];
-    Tensor res = Tensor_new(input.shape, false);
-    for(int j = 0; j < input.data->numel; j++) {
-        float softmax_j = self.data->flex[j];
-        float sum_kronecker = 0;
-        float sum_jk = 0;
-        for(int k = 0; k < input.data->numel; k++) {
-            float softmax_k = self.data->flex[k];
-            float delta_jk = (j == k) ? 1.0f : 0.0f;
-            sum_kronecker += delta_jk * softmax_j;
-            sum_jk += softmax_j * softmax_k;
-        }
-        res.data->flex[j] = sum_kronecker - sum_jk;
+    int input_dim = TensorShape_dim(input.shape);
+    TensorShape res_shape = {0,0,0,0};
+    for (int i = 0; i < input_dim * 2; i++) {
+        res_shape[i] = input.shape[i % input_dim];
+    }
+    Tensor res = Tensor_new(res_shape, false);
+    for(int mat_index = 0; mat_index < res.data->numel; mat_index++) {
+        int i = mat_index / res_shape[input_dim - 1];
+        int j = mat_index % res_shape[input_dim - 1];
+        int kronecker = (i == j) ? 1 : 0;
+        float yi = self.data->flex[i];
+        float yj = self.data->flex[j];
+        res.data->flex[mat_index] = yi * (kronecker - yj);
     }
     return res;
 }

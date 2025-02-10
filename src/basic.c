@@ -91,7 +91,19 @@ void Tensor_backward(Tensor self, Tensor grad) {
         self.node->grad = Tensor_add(self.node->grad, grad);
     }
     for(int i = 0; i < self.node->n_inputs; i++) {
-        grad = Tensor_mul(grad, self.node->grad_fn(self, i));
+        grad = Tensor_mul(self.node->grad, self.node->grad_fn(self, i));
+        //-TODO judgement below is for softmax-return's matrix, but imperfect
+        if (TensorShape_dim(grad.shape) - TensorShape_dim(self.node->grad.shape) == 1   \
+            && TensorShape_dim(self.node->grad.shape) != 0) {
+            for (int i = 0; i < self.node->grad.data->numel; i++) {
+                float sum = 0;
+                for (int j = 0; j < grad.shape[1]; j++) {
+                    sum += grad.data->flex[i*grad.shape[0]+j];
+                }
+                grad.data->flex[i] = sum;
+            }
+            for (int i = 0; i < 4; i++) grad.shape[i] = self.node->grad.shape[i];
+        }
         Tensor_backward(self.node->inputs[i], grad);
     }
     // Tensor_delete(grad);

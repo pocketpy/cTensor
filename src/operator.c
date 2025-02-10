@@ -36,11 +36,16 @@ Tensor Tensor_add(Tensor self, Tensor other) {
 }
 
 Tensor Tensor_mul(Tensor self, Tensor other) {
-    if (TensorShape_dim(self.shape) == 0) {
-        self.shape[0] = 1;
-    }
-    if (TensorShape_dim(other.shape) == 0) {
-        other.shape[0] = 1;
+    int self_dim = TensorShape_dim(self.shape);
+    int other_dim = TensorShape_dim(other.shape);
+    //- TODO add dim in the front if dim>2
+    if (self_dim != other_dim) {
+        if (self_dim < other_dim) {
+            for (int i = self_dim; i < other_dim; i++) self.shape[i] = 1;
+        }
+        else {
+            for (int i = other_dim; i < self_dim; i++) other.shape[i] = 1;
+        }
     }
     cten_elemwise_broadcast(&self, &other);
     bool require_grad = self.node != NULL || other.node != NULL;
@@ -128,9 +133,52 @@ Tensor Tensor_sum(Tensor self) {
 static Tensor GradFn_matmul(Tensor self, int i) {
     Tensor _0 = self.node->inputs[i];
     Tensor _1 = self.node->inputs[1 - i];
-    _0 = Tensor_detach(_0);
-    _1 = Tensor_detach(_1);
-    return Tensor_matmul(_0, _1);
+    TensorShape res_shape;
+    memcpy(res_shape, _0.shape, sizeof(TensorShape));
+    Tensor res = Tensor_new(res_shape, false);
+
+    int _1_dim = TensorShape_dim(_1.shape);
+    int dim_3 = 1, dim_4 = 1;
+    int numel_dim_2 = _1.data->numel, numel_dim_3 = _1.data->numel;
+    int res_numel_dim_2 = res.data->numel, res_numel_dim_3 = res.data->numel;
+    if (_1_dim == 3) {
+        dim_3 = _1.shape[0];
+        numel_dim_2 = _1.shape[1] * _1.shape[2];
+        numel_dim_3 = numel_dim_2;
+        res_numel_dim_2 = _0.shape[1] * _0.shape[2];
+        res_numel_dim_3 = res_numel_dim_2;
+    }
+    if (_1_dim == 4) {
+        dim_4 = _1.shape[0];
+        dim_3 = _1.shape[1];
+        numel_dim_2 = _1.shape[2] * _1.shape[3];
+        numel_dim_3 = numel_dim_2 * _1.shape[1];
+        res_numel_dim_2 = _0.shape[2] * _0.shape[3];
+        res_numel_dim_3 = res_numel_dim_2 * _0.shape[1];
+    }
+
+    for (int i_dim4 = 0; i_dim4 < dim_4; i_dim4++)
+    {
+        for (int i_dim3 = 0; i_dim3 < dim_3; i_dim3++) {
+            for (int index = 0; index < res_numel_dim_2; index++) {
+                int l = index / res_shape[1];
+                int k = index % res_shape[1];
+                float sum = 0;
+                if (i == 0) {
+                    for (int kj = k * _1.shape[1]; kj < (k + 1) * _1.shape[1]; kj++) {
+                        sum += _1.data->flex[i_dim4*numel_dim_3 + i_dim3*numel_dim_2 + kj];
+                    }
+                }
+                else {
+                    for (int il = l; il < _1.shape[0] * _1.shape[1]; il += _1.shape[1]) {
+                        sum += _1.data->flex[i_dim4 * numel_dim_3 + i_dim3 * numel_dim_2 + il];
+                    }
+                }
+                res.data->flex[i_dim4 * res_numel_dim_3 + i_dim3 * res_numel_dim_2 + index] = sum;
+            }
+        }
+    }
+    return res;
 }
 
 Tensor Tensor_matmul(Tensor self, Tensor other) {
@@ -138,6 +186,20 @@ Tensor Tensor_matmul(Tensor self, Tensor other) {
     int other_dim = TensorShape_dim(other.shape);
     assert(self_dim >= 2);
     assert(other_dim >= 2);
+    //dimension support for 3, 4
+    int dim_3 = 1, dim_4 = 1;
+    int numel_dim_2 = self.data->numel, numel_dim_3 = self.data->numel;
+    if (self_dim == 3) { 
+        dim_3 = self.shape[0]; 
+        numel_dim_2 = self.shape[1] * self.shape[2];
+        numel_dim_3 = numel_dim_2;
+    }
+    if (self_dim == 4) {
+        dim_4 = self.shape[0];
+        dim_3 = self.shape[1];
+        numel_dim_2 = self.shape[2] * self.shape[3];
+        numel_dim_3 = numel_dim_2 * self.shape[1];
+    }
 
     int m = self.shape[self_dim - 2];
     int n = self.shape[self_dim - 1];
@@ -150,16 +212,20 @@ Tensor Tensor_matmul(Tensor self, Tensor other) {
     res_shape[self_dim - 1] = p;
     Tensor res = Tensor_new(res_shape, self.node != NULL || other.node != NULL);
 
-    for(int i = 0; i < m; i++) {
-        for(int j = 0; j < p; j++) {
-            float sum = 0;
-            for(int k = 0; k < n; k++) {
-                sum += self.data->flex[i * n + k] * other.data->flex[k * p + j];
+    for (int i_dim4 = 0; i_dim4 < dim_4; i_dim4++) {
+        for (int i_dim3 = 0; i_dim3 < dim_3; i_dim3++) {
+            for (int i = 0; i < m; i++) {
+                for (int j = 0; j < p; j++) {
+                    float sum = 0;
+                    for (int k = 0; k < n; k++) {
+                        sum += self.data->flex[i_dim4*numel_dim_3 + i_dim3*numel_dim_2 + i * n + k] *   \
+                            other.data->flex[i_dim4 * numel_dim_3 + i_dim3 * numel_dim_2 + k * p + j];
+                    }
+                    res.data->flex[i_dim4 * numel_dim_3 + i_dim3 * numel_dim_2 + i * p + j] = sum;
+                }
             }
-            res.data->flex[i * p + j] = sum;
         }
     }
-
     if(res.node != NULL) {
         res.node->grad_fn = GradFn_matmul;
         res.node->inputs[0] = self;
