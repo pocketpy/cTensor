@@ -30,12 +30,16 @@ void cten_assert_dim(const char* title, int a, int b) {
     cten_assert(a == b, "%s: %d != %d", title, a, b);
 }
 
-int _broadcast_offset(TensorShape shape, int* index, int dim) {
-    int offset = 0;
+int _broadcast_offset_dim2(TensorShape shape, int* index, int dim) {
+    int offset = 0, high_dim_offset = 0;
+    if (dim > 2) {
+        high_dim_offset = dim - 2;
+        dim = 2;
+    }
     for (int i = 0; i < dim; i++) {
         int stride = 1;
         for (int j = i + 1; j < dim; j++) {
-            stride *= shape[j];
+            stride *= shape[j + high_dim_offset];
         }
         offset += index[i] * stride;
     }
@@ -45,7 +49,12 @@ int _broadcast_offset(TensorShape shape, int* index, int dim) {
 bool cten_elemwise_broadcast(Tensor* a, Tensor* b) {
     int a_dim = TensorShape_dim(a->shape);
     int b_dim = TensorShape_dim(b->shape);
+    bool completely_same = true;
     if(a_dim != b_dim) return false;
+    for (int i = 0; i < a_dim; i++) {
+        if (a->shape[i] != b->shape[i]) completely_same = false;
+    }
+    if (completely_same) return true;
     int a_broadcast = -1;
     for(int i = 0; i < a_dim; i++) {
         if(a->shape[i] == b->shape[i]) continue;
@@ -66,18 +75,54 @@ bool cten_elemwise_broadcast(Tensor* a, Tensor* b) {
             b = tmp;
             a_broadcast = 1;
         }
-        Tensor a_ = Tensor_new(b->shape, a->node != NULL);
-        int index_a[4], index_a_;
-        for (int i = 0; i < a_.data->numel; i++) {
-            int curr_index = i;
-            for (int j = 0; j <= a_dim-1; j++) {
-                index_a_ = curr_index % a_.shape[j];
-                index_a[j] = (a->shape[j] == 1) ? 0 : index_a_;
-                curr_index /= a_.shape[j];
-            }
-            a_.data->flex[i] = a->data->flex[_broadcast_offset(a->shape, index_a, a_dim)];
+
+        int dim_3 = 1, dim_4 = 1;
+        int numel_dim_2 = b->data->numel, numel_dim_3 = b->data->numel;
+        int a_dim3_numel_dim_2 = 0;
+        bool a_has_dim2 = false;
+        if (b_dim == 3) {
+            dim_3 = b->shape[0];
+            numel_dim_2 = b->shape[1] * b->shape[2];
+            numel_dim_3 = numel_dim_2;
+            if (a->shape[1] != 1) a_has_dim2 = true;
+        }
+        if (b_dim == 4) {
+            dim_4 = b->shape[0];
+            dim_3 = b->shape[1];
+            numel_dim_2 = b->shape[2] * b->shape[3];
+            numel_dim_3 = numel_dim_2 * b->shape[1];
+            if (a->shape[1] != 1) a_dim3_numel_dim_2 = numel_dim_2;
+            if (a->shape[2] != 1) a_has_dim2 = true;
         }
 
+        Tensor a_ = Tensor_new(b->shape, a->node != NULL);
+        int index_a[2], index_a_;
+        int high_dim_offset = a_dim - 2, a_dim_iter = 2;
+        if (high_dim_offset < 0) {
+            high_dim_offset = 0;
+            a_dim_iter = a_dim;
+        }
+        for (int i_dim4 = 0; i_dim4 < dim_4; i_dim4++) {
+            for (int i_dim3 = 0; i_dim3 < dim_3; i_dim3++) {
+                for (int i = 0; i < numel_dim_2; i++) {
+                    if (a_has_dim2) {
+                        a_.data->flex[i_dim4 * numel_dim_3 + i_dim3 * numel_dim_2 + i] = \
+                            a->data->flex[i_dim3 * a_dim3_numel_dim_2 + i];
+                    }
+                    else {
+                        int curr_index = i;
+                        for (int j = 0; j < a_dim_iter; j++) {
+                            index_a_ = curr_index % a_.shape[j + high_dim_offset];
+                            index_a[j] = (a->shape[j + high_dim_offset] == 1) ? 0 : index_a_;
+                            curr_index /= a_.shape[j + high_dim_offset];
+                        }
+                        a_.data->flex[i_dim4 * numel_dim_3 + i_dim3 * numel_dim_2 + i] =    \
+                            a->data->flex[i_dim3 * a_dim3_numel_dim_2 +     \
+                            _broadcast_offset_dim2(a->shape, index_a, a_dim)];
+                    }
+                }
+            }
+        }
         *a = a_;
     }
     return true;

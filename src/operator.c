@@ -35,16 +35,32 @@ Tensor Tensor_add(Tensor self, Tensor other) {
     return res;
 }
 
+static void _dim_extend(TensorShape small_shape, TensorShape big_shape) {
+    int small_dim = TensorShape_dim(small_shape);
+    int big_dim = TensorShape_dim(big_shape);
+    if (small_dim < 2) {
+        int j = min(big_dim, 2);
+        for (int i = small_dim; i < j; i++) small_shape[i] = 1;
+        small_dim = j;
+    }
+    if (big_dim > 2) {
+        for (int i = small_dim - 1; i >= 0; i--) {
+            small_shape[i + big_dim - small_dim] = small_shape[i];
+        }
+        for (int i = 0; i < big_dim - small_dim; i++) small_shape[i] = 1;
+    }
+}
+
 Tensor Tensor_mul(Tensor self, Tensor other) {
     int self_dim = TensorShape_dim(self.shape);
     int other_dim = TensorShape_dim(other.shape);
     //- TODO add dim in the front if dim>2
     if (self_dim != other_dim) {
         if (self_dim < other_dim) {
-            for (int i = self_dim; i < other_dim; i++) self.shape[i] = 1;
+            _dim_extend(self.shape, other.shape);
         }
         else {
-            for (int i = other_dim; i < self_dim; i++) other.shape[i] = 1;
+            _dim_extend(other.shape, self.shape);
         }
     }
     cten_elemwise_broadcast(&self, &other);
