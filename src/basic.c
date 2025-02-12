@@ -95,14 +95,17 @@ void Tensor_backward(Tensor self, Tensor grad) {
         //-TODO judgement below is for softmax-return's matrix, but imperfect
         if (TensorShape_dim(grad.shape) - TensorShape_dim(self.node->grad.shape) == 1   \
             && TensorShape_dim(self.node->grad.shape) != 0) {
+                
+            int last_dim_size = grad.shape[TensorShape_dim(grad.shape) - 1];
             for (int i = 0; i < self.node->grad.data->numel; i++) {
                 float sum = 0;
-                for (int j = 0; j < grad.shape[1]; j++) {
-                    sum += grad.data->flex[i*grad.shape[0]+j];
+                for (int j = 0; j < last_dim_size; j++) {
+                    sum += grad.data->flex[i * last_dim_size + j];
                 }
                 grad.data->flex[i] = sum;
             }
             for (int i = 0; i < 4; i++) grad.shape[i] = self.node->grad.shape[i];
+            grad.data->numel = self.node->grad.data->numel;
         }
         Tensor_backward(self.node->inputs[i], grad);
     }

@@ -54,7 +54,6 @@ static void _dim_extend(TensorShape small_shape, TensorShape big_shape) {
 Tensor Tensor_mul(Tensor self, Tensor other) {
     int self_dim = TensorShape_dim(self.shape);
     int other_dim = TensorShape_dim(other.shape);
-    //- TODO add dim in the front if dim>2
     if (self_dim != other_dim) {
         if (self_dim < other_dim) {
             _dim_extend(self.shape, other.shape);
@@ -230,6 +229,7 @@ Tensor Tensor_matmul(Tensor self, Tensor other) {
 
     for (int i_dim4 = 0; i_dim4 < dim_4; i_dim4++) {
         for (int i_dim3 = 0; i_dim3 < dim_3; i_dim3++) {
+            //- TODO cache preload for matrix
             for (int i = 0; i < m; i++) {
                 for (int j = 0; j < p; j++) {
                     float sum = 0;

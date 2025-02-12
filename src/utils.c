@@ -45,7 +45,7 @@ int _broadcast_offset_dim2(TensorShape shape, int* index, int dim) {
     }
     return offset;
 }
-
+//- TODO better policy wanted
 bool cten_elemwise_broadcast(Tensor* a, Tensor* b) {
     int a_dim = TensorShape_dim(a->shape);
     int b_dim = TensorShape_dim(b->shape);
@@ -84,7 +84,7 @@ bool cten_elemwise_broadcast(Tensor* a, Tensor* b) {
             dim_3 = b->shape[0];
             numel_dim_2 = b->shape[1] * b->shape[2];
             numel_dim_3 = numel_dim_2;
-            if (a->shape[1] != 1) a_has_dim2 = true;
+            if (a->shape[1] != 1 && a->shape[2] != 1) a_has_dim2 = true;
         }
         if (b_dim == 4) {
             dim_4 = b->shape[0];
@@ -92,7 +92,7 @@ bool cten_elemwise_broadcast(Tensor* a, Tensor* b) {
             numel_dim_2 = b->shape[2] * b->shape[3];
             numel_dim_3 = numel_dim_2 * b->shape[1];
             if (a->shape[1] != 1) a_dim3_numel_dim_2 = numel_dim_2;
-            if (a->shape[2] != 1) a_has_dim2 = true;
+            if (a->shape[2] != 1 && a->shape[3] != 1) a_has_dim2 = true;
         }
 
         Tensor a_ = Tensor_new(b->shape, a->node != NULL);
