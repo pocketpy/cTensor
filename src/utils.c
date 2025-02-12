@@ -94,6 +94,11 @@ bool cten_elemwise_broadcast(Tensor* a, Tensor* b) {
             if (a->shape[1] != 1) a_dim3_numel_dim_2 = numel_dim_2;
             if (a->shape[2] != 1 && a->shape[3] != 1) a_has_dim2 = true;
         }
+        if (a_has_dim2 == false && a_dim > 1) {
+            int tmp = a->shape[a_dim - 1];
+            a->shape[a_dim - 1] = a->shape[a_dim - 2];
+            a->shape[a_dim - 2] = tmp;
+        }
 
         Tensor a_ = Tensor_new(b->shape, a->node != NULL);
         int index_a[2], index_a_;
