@@ -123,9 +123,9 @@ bool cten_elemwise_broadcast(Tensor* a, Tensor* b) {
                     else {
                         int curr_index = i;
                         for (int j = 0; j < a_dim_iter; j++) {
-                            index_a_ = curr_index % a_.shape[j + high_dim_offset];
+                            index_a_ = curr_index % a_.shape[a_dim - 1];
                             index_a[j] = (a->shape[j + high_dim_offset] == 1) ? 0 : index_a_;
-                            curr_index /= a_.shape[j + high_dim_offset];
+                            curr_index /= a_.shape[a_dim - 1];
                         }
                         a_.data->flex[i_dim4 * numel_dim_3 + i_dim3 * numel_dim_2 + i] =    \
                             a->data->flex[i_dim4 * a_numel_dim_3 + i_dim3 * a_numel_dim_2 +     \
