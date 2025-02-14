@@ -77,13 +77,15 @@ bool cten_elemwise_broadcast(Tensor* a, Tensor* b) {
         }
 
         int dim_3 = 1, dim_4 = 1;
-        int numel_dim_2 = b->data->numel, numel_dim_3 = b->data->numel;
-        int a_dim3_numel_dim_2 = 0;
+        int numel_dim_2 = b->data->numel, numel_dim_3 = 0;
+        int a_numel_dim_2 = 0, a_numel_dim_3 = 0;
         bool a_has_dim2 = false;
         if (b_dim == 3) {
             dim_3 = b->shape[0];
             numel_dim_2 = b->shape[1] * b->shape[2];
-            numel_dim_3 = numel_dim_2;
+            a_numel_dim_2 = a->shape[1] * a->shape[2];
+            if (a->shape[0] == 1) a_numel_dim_2 = 0;
+            if (a->data->numel == 1) a_numel_dim_2 = 0;
             if (a->shape[1] != 1 && a->shape[2] != 1) a_has_dim2 = true;
         }
         if (b_dim == 4) {
@@ -91,7 +93,11 @@ bool cten_elemwise_broadcast(Tensor* a, Tensor* b) {
             dim_3 = b->shape[1];
             numel_dim_2 = b->shape[2] * b->shape[3];
             numel_dim_3 = numel_dim_2 * b->shape[1];
-            if (a->shape[1] != 1) a_dim3_numel_dim_2 = numel_dim_2;
+            a_numel_dim_2 = a->shape[2] * a->shape[3];
+            a_numel_dim_3 = a_numel_dim_2 * a->shape[1];
+            if (a->shape[0] == 1) a_numel_dim_3 = 0;
+            if (a->shape[1] == 1) a_numel_dim_2 = 0;
+            if (a->data->numel == 1) { a_numel_dim_2 = 0; a_numel_dim_3 = 0; }
             if (a->shape[2] != 1 && a->shape[3] != 1) a_has_dim2 = true;
         }
         if (a_has_dim2 == false && a_dim > 1) {
@@ -112,7 +118,7 @@ bool cten_elemwise_broadcast(Tensor* a, Tensor* b) {
                 for (int i = 0; i < numel_dim_2; i++) {
                     if (a_has_dim2) {
                         a_.data->flex[i_dim4 * numel_dim_3 + i_dim3 * numel_dim_2 + i] = \
-                            a->data->flex[i_dim3 * a_dim3_numel_dim_2 + i];
+                            a->data->flex[i_dim4 * a_numel_dim_3 + i_dim3 * a_numel_dim_2 + i];
                     }
                     else {
                         int curr_index = i;
@@ -122,7 +128,7 @@ bool cten_elemwise_broadcast(Tensor* a, Tensor* b) {
                             curr_index /= a_.shape[j + high_dim_offset];
                         }
                         a_.data->flex[i_dim4 * numel_dim_3 + i_dim3 * numel_dim_2 + i] =    \
-                            a->data->flex[i_dim3 * a_dim3_numel_dim_2 +     \
+                            a->data->flex[i_dim4 * a_numel_dim_3 + i_dim3 * a_numel_dim_2 +     \
                             _broadcast_offset_dim2(a->shape, index_a, a_dim)];
                     }
                 }

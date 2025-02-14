@@ -42,8 +42,9 @@ static Tensor GradFn_softmax(Tensor self, int i) {
     assert(input_dim > 0);
     TensorShape res_shape = {0,0,0,0};
     int last_dim_size = input.shape[input_dim - 1];
-    for (int i = 0; i < input_dim; i++) {
-        res_shape[i] = input.shape[i];
+    int input_numel_dim_2 = last_dim_size;
+    for (int k = 0; k < input_dim; k++) {
+        res_shape[k] = input.shape[k];
     }
     res_shape[input_dim] = last_dim_size;
     Tensor res = Tensor_new(res_shape, false);
@@ -53,23 +54,25 @@ static Tensor GradFn_softmax(Tensor self, int i) {
         dim_3 = res.shape[0];
         numel_dim_2 = res.shape[1] * res.shape[2];
         numel_dim_3 = numel_dim_2;
+        input_numel_dim_2 = last_dim_size * input.shape[input_dim - 2];
     }
     if (input_dim == 3) {
         dim_4 = res.shape[0];
         dim_3 = res.shape[1];
         numel_dim_2 = res.shape[2] * res.shape[3];
         numel_dim_3 = numel_dim_2 * res.shape[1];
+        input_numel_dim_2 = last_dim_size * input.shape[input_dim - 2];
     }
 
     for (int i_dim4 = 0; i_dim4 < dim_4; i_dim4++)
     {
         for (int i_dim3 = 0; i_dim3 < dim_3; i_dim3++) {
             for(int mat_index = 0; mat_index < numel_dim_2; mat_index++) {
-                int i = mat_index / res_shape[input_dim - 1];
-                int j = mat_index % res_shape[input_dim - 1];
-                int kronecker = (i == j) ? 1 : 0;
-                float yi = self.data->flex[i_dim3 * last_dim_size + i_dim4 * numel_dim_2 + i];
-                float yj = self.data->flex[i_dim3 * last_dim_size + i_dim4 * numel_dim_2 + j];
+                int _i = mat_index / res_shape[input_dim - 1];
+                int _j = mat_index % res_shape[input_dim - 1];
+                int kronecker = (_i == _j) ? 1 : 0;
+                float yi = self.data->flex[i_dim3 * last_dim_size + i_dim4 * input_numel_dim_2 + _i];
+                float yj = self.data->flex[i_dim3 * last_dim_size + i_dim4 * input_numel_dim_2 + _j];
                 res.data->flex[i_dim4 * numel_dim_3 + i_dim3 * numel_dim_2 + mat_index] = yi * (kronecker - yj);
             }
         }
