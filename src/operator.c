@@ -44,6 +44,15 @@ static void _dim_extend(TensorShape small_shape, TensorShape big_shape) {
     for (int i = 0; i < big_dim - small_dim; i++) small_shape[i] = 1;
 }
 
+static Tensor _largest_common_shape(Tensor self, Tensor other) {
+    TensorShape res_shape;
+    for (int i = 0; i < 4; i++) {
+        res_shape[i] = max(self.shape[i], other.shape[i]);
+    }
+    Tensor res = Tensor_new(res_shape, false);
+    return res;
+}
+
 Tensor Tensor_mul(Tensor self, Tensor other) {
     int self_dim = TensorShape_dim(self.shape);
     int other_dim = TensorShape_dim(other.shape);
@@ -55,7 +64,9 @@ Tensor Tensor_mul(Tensor self, Tensor other) {
             _dim_extend(other.shape, self.shape);
         }
     }
-    cten_elemwise_broadcast(&self, &other);
+    Tensor broadcast_shape = _largest_common_shape(self, other);
+    cten_elemwise_broadcast(&self, &broadcast_shape);
+    cten_elemwise_broadcast(&other, &broadcast_shape);
     bool require_grad = self.node != NULL || other.node != NULL;
     Tensor res = Tensor_new(self.shape, require_grad);
     for (int i = 0; i < self.data->numel; i++) {
