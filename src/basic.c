@@ -86,6 +86,16 @@ Tensor Tensor_detach(Tensor self) {
     return detached;
 }
 
+static Tensor _softmax_preprosess(Tensor self, Tensor other) {
+    int self_dim = TensorShape_dim(self.shape);
+    int dim1_index = 0;
+    if (self_dim > 1) dim1_index = self_dim - 1;
+    self.shape[self_dim] = self.shape[dim1_index];
+    self.shape[dim1_index] = 1;
+    Tensor res = Tensor_mul(self, other);
+    return res;
+}
+
 void Tensor_backward(Tensor self, Tensor grad) {
     if(self.node == NULL) return;
     if(grad.data == NULL) {
@@ -99,7 +109,26 @@ void Tensor_backward(Tensor self, Tensor grad) {
         self.node->grad = Tensor_add(self.node->grad, grad);
     }
     for(int i = 0; i < self.node->n_inputs; i++) {
-        grad = Tensor_mul(grad, self.node->grad_fn(self, i));
+        Tensor grad_fn = self.node->grad_fn(self, i);
+        //-TODO judgement below is for softmax-return's matrix, but imperfect
+        if (TensorShape_dim(grad_fn.shape) - TensorShape_dim(self.node->grad.shape) == 1   \
+            && TensorShape_dim(self.node->grad.shape) != 0) {
+            grad = _softmax_preprosess(self.node->grad, grad_fn);
+            int last_dim_size = grad.shape[TensorShape_dim(grad.shape) - 1];
+            for (int i = 0; i < self.node->grad.data->numel; i++) {
+                float sum = 0;
+                for (int j = 0; j < last_dim_size; j++) {
+                    sum += grad.data->flex[i * last_dim_size + j];
+                }
+                grad.data->flex[i] = sum;
+            }
+            for (int i = 0; i < 4; i++) grad.shape[i] = self.node->grad.shape[i];
+            grad.data->numel = self.node->grad.data->numel;
+        }
+        else{
+            grad = Tensor_mul(self.node->grad, grad_fn);
+        }
+        
         Tensor_backward(self.node->inputs[i], grad);
     }
 }

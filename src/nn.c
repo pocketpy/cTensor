@@ -38,13 +38,43 @@ Tensor nn_relu(Tensor self) {
 /* nn.softmax */
 static Tensor GradFn_softmax(Tensor self, int i) {
     Tensor input = self.node->inputs[i];
-    Tensor res = Tensor_new(input.shape, false);
-    for(int j = 0; j < input.data->numel; j++) {
-        float softmax_j = self.data->flex[j];
-        for(int k = 0; k < input.data->numel; k++) {
-            float softmax_k = self.data->flex[k];
-            float delta_jk = (j == k) ? 1.0f : 0.0f;
-            res.data->flex[j * input.data->numel + k] = softmax_j * (delta_jk - softmax_k);
+    int input_dim = TensorShape_dim(input.shape);
+    assert(input_dim > 0);
+    TensorShape res_shape = {0,0,0,0};
+    int last_dim_size = input.shape[input_dim - 1];
+    int input_numel_dim_2 = last_dim_size;
+    for (int k = 0; k < input_dim; k++) {
+        res_shape[k] = input.shape[k];
+    }
+    res_shape[input_dim] = last_dim_size;
+    Tensor res = Tensor_new(res_shape, false);
+    int dim_3 = 1, dim_4 = 1;
+    int numel_dim_2 = res.data->numel, numel_dim_3 = res.data->numel;
+    if (input_dim == 2) {//res_dim == 3
+        dim_3 = res.shape[0];
+        numel_dim_2 = res.shape[1] * res.shape[2];
+        numel_dim_3 = numel_dim_2;
+        input_numel_dim_2 = last_dim_size * input.shape[input_dim - 2];
+    }
+    if (input_dim == 3) {
+        dim_4 = res.shape[0];
+        dim_3 = res.shape[1];
+        numel_dim_2 = res.shape[2] * res.shape[3];
+        numel_dim_3 = numel_dim_2 * res.shape[1];
+        input_numel_dim_2 = last_dim_size * input.shape[input_dim - 2];
+    }
+
+    for (int i_dim4 = 0; i_dim4 < dim_4; i_dim4++)
+    {
+        for (int i_dim3 = 0; i_dim3 < dim_3; i_dim3++) {
+            for(int mat_index = 0; mat_index < numel_dim_2; mat_index++) {
+                int _i = mat_index / res_shape[input_dim - 1];
+                int _j = mat_index % res_shape[input_dim - 1];
+                int kronecker = (_i == _j) ? 1 : 0;
+                float yi = self.data->flex[i_dim3 * last_dim_size + i_dim4 * input_numel_dim_2 + _i];
+                float yj = self.data->flex[i_dim3 * last_dim_size + i_dim4 * input_numel_dim_2 + _j];
+                res.data->flex[i_dim4 * numel_dim_3 + i_dim3 * numel_dim_2 + mat_index] = yi * (kronecker - yj);
+            }
         }
     }
     return res;
