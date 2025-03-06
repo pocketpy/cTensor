@@ -67,8 +67,15 @@ float Tensor_get(Tensor self, int i, int j, int k, int l) {
     assert((self.shape[1] == 0 && j == 0) || (j >= 0 && j < self.shape[1]));
     assert((self.shape[2] == 0 && k == 0) || (k >= 0 && k < self.shape[2]));
     assert((self.shape[3] == 0 && l == 0) || (l >= 0 && l < self.shape[3]));
-    return self.data->flex[i * self.shape[1] * self.shape[2] * self.shape[3] +
-                           j * self.shape[2] * self.shape[3] + k * self.shape[3] + l];
+    int rank = TensorShape_dim(self.shape);
+    int indices[4] = {i, j, k, l};
+    int index = 0;
+    int factor = 1;
+    for (int d = rank - 1; d >= 0; d--) {
+        index += indices[d] * factor;
+        factor *= self.shape[d];
+    }
+    return self.data->flex[index];
 }
 
 void Tensor_set(Tensor self, int i, int j, int k, int l, float value) {
@@ -76,8 +83,15 @@ void Tensor_set(Tensor self, int i, int j, int k, int l, float value) {
     assert((self.shape[1] == 0 && j == 0) || (j >= 0 && j < self.shape[1]));
     assert((self.shape[2] == 0 && k == 0) || (k >= 0 && k < self.shape[2]));
     assert((self.shape[3] == 0 && l == 0) || (l >= 0 && l < self.shape[3]));
-    self.data->flex[i * self.shape[1] * self.shape[2] * self.shape[3] +
-                    j * self.shape[2] * self.shape[3] + k * self.shape[3] + l] = value;
+    int rank = TensorShape_dim(self.shape);
+    int indices[4] = {i, j, k, l};
+    int index = 0;
+    int factor = 1;
+    for (int d = rank - 1; d >= 0; d--) {
+        index += indices[d] * factor;
+        factor *= self.shape[d];
+    }
+    self.data->flex[index] = value;
 }
 
 Tensor Tensor_detach(Tensor self) {
