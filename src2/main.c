@@ -1,6 +1,7 @@
 #include "cten.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 enum MemoryPoolIds {
     PoolId_Default = 0,
@@ -23,7 +24,7 @@ Tensor Model_forward(Model* model, Tensor x) {
 
 int main() {
     cten_initilize();
-
+    
     // load iris dataset
     const float(*X)[4];
     const int* y;
@@ -39,12 +40,41 @@ int main() {
     printf("n_train_samples: %d\n", n_train_samples);
     printf("n_test_samples: %d\n", n_test_samples);
 
+    float mean[4] = {0}, std[4] = {0};
+    for (int i = 0; i < n_train_samples; i++) {
+        for (int j = 0; j < 4; j++) {
+            mean[j] += X[i][j];
+        }
+    }
+    for (int j = 0; j < 4; j++) {
+        mean[j] /= n_train_samples;
+    }
+    for (int i = 0; i < n_train_samples; i++) {
+        for (int j = 0; j < 4; j++) {
+            std[j] += (X[i][j] - mean[j]) * (X[i][j] - mean[j]);
+        }
+    }
+    for (int j = 0; j < 4; j++) {
+        std[j] = sqrtf(std[j] / n_train_samples);
+        // Avoid division by zero
+        if (std[j] == 0) std[j] = 1.0f;
+    }
+
+    float(*X_norm)[4] = malloc(n_samples * sizeof(*X_norm));
+    for (int i = 0; i < n_samples; i++) {
+        for (int j = 0; j < 4; j++) {
+            X_norm[i][j] = (X[i][j] - mean[j]) / std[j];
+        }
+    }
+    //Normalize the input
+    X = (const float(*)[4])X_norm;
+
     // create model
     Model model;
     cten_begin_malloc(PoolId_Model);
-    model.weight_1 = Tensor_new((TensorShape){n_features, 32}, true);
+    model.weight_1 = nn_random_init((TensorShape){n_features, 32}, true);
     model.bias_1 = Tensor_zeros((TensorShape){1, 32}, true);
-    model.weight_2 = Tensor_new((TensorShape){32, n_classes}, true);
+    model.weight_2 = nn_random_init((TensorShape){32, n_classes}, true);
     model.bias_2 = Tensor_zeros((TensorShape){1, n_classes}, true);
     cten_end_malloc();
 
@@ -77,7 +107,8 @@ int main() {
             Tensor y_pred = Model_forward(&model, input);
             Tensor loss = nn_crossentropy(y_true, y_pred);
             // backward pass
-            Tensor_backward(loss, (Tensor){});
+            Tensor grad = Tensor_ones((TensorShape){1}, false);
+            Tensor_backward(loss, grad);
             optim_sgd_step(optimizer);
             cten_end_malloc();
             // free temporary tensors
@@ -107,6 +138,7 @@ int main() {
         int pred_classes[1];
         Tensor_argmax(y_pred, pred_classes);
         if(pred_classes[0] == y[i]) correct++;
+        printf("Sample %d - True: %d, Pred: %d\n", i - n_train_samples, y[i], pred_classes[0]);
         cten_end_malloc();
         // free temporary tensors
         cten_free(PoolId_Default);

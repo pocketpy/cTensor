@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <math.h>
 #include <stddef.h>
+#include <stdlib.h>
 
 Tensor nn_linear(Tensor input, Tensor weight, Tensor bias) {
     Tensor tmp = Tensor_matmul(input, weight);
@@ -32,6 +33,19 @@ Tensor nn_relu(Tensor self) {
         res.node->grad_fn = GradFn_relu;
         res.node->inputs[0] = self;
         res.node->n_inputs = 1;
+    }
+    return res;
+}
+
+Tensor nn_random_init(TensorShape shape, bool requires_grad) {
+    Tensor res = Tensor_new(shape, requires_grad);
+    int fan_in = shape[0];
+    int fan_out = shape[1];
+    float scale = sqrtf(6.0f / (fan_in + fan_out));
+    
+    for(int i = 0; i < res.data->numel; i++) {
+        float r = (float)rand() / RAND_MAX * 2.0f - 1.0f; 
+        res.data->flex[i] = r * scale;
     }
     return res;
 }

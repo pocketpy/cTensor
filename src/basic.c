@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 int TensorShape_numel(TensorShape shape) {
     int numel = 1;
@@ -33,12 +34,21 @@ int TensorShape_tostring(TensorShape shape, char* buf, int size) {
     return snprintf(buf, size, "(%d, %d, %d, %d)", shape[0], shape[1], shape[2], shape[3]);
 }
 
+static void fill_with_random(float* data, int n) {
+    for (int i = 0; i < n; i++) {
+        float r = (float)rand() / (float)RAND_MAX * 2.0f - 1.0f;
+        data[i] = r;
+    }
+}
+
+
 Tensor Tensor_new(TensorShape shape, bool requires_grad) {
     Tensor self;
     memcpy(self.shape, shape, sizeof(TensorShape));
     int numel = TensorShape_numel(shape);
     self.data = _cten_malloc(sizeof(FloatBuffer) + sizeof(float) * numel);
     self.data->numel = numel;
+    fill_with_random(self.data->flex, numel);
     if(requires_grad) {
         self.node = _cten_malloc(sizeof(GradNode));
         memset(self.node, 0, sizeof(GradNode));
