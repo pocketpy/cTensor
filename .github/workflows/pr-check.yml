@@ -1,0 +1,35 @@
+name: Compilation PR Checks
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Create Build Directory
+        run: |
+          mkdir -p build
+          cd build
+          cmake ..
+
+      - name: Build Project
+        run: |
+          cd build
+          cmake --build .
+
+      - name: Run Executable with Logging
+        run: |
+          cd build
+          ./cten_exe > output.log 2>&1
+          cat output.log
+
+      - name: Clean Up Build Directory
+        run: |
+          rm -rf build
