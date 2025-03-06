@@ -92,7 +92,7 @@ int main() {
             printf("    batch: %d/%d samples\n", i, n_train_samples);
             cten_begin_malloc(PoolId_Default);
             // prepare input and target
-            Tensor input = Tensor_new((TensorShape){batch_size, n_features}, false);
+            Tensor input = nn_random_init((TensorShape){batch_size, n_features}, false);
             Tensor y_true = Tensor_zeros((TensorShape){batch_size, n_classes}, false);
             for(int j = 0; j < batch_size; j++) {
                 for(int k = 0; k < n_features; k++) {
@@ -125,7 +125,7 @@ int main() {
     for(int i = n_train_samples; i < n_samples; i++) {
         cten_begin_malloc(PoolId_Default);
         // prepare input and target
-        Tensor input = Tensor_new((TensorShape){1, n_features}, false);
+        Tensor input = nn_random_init((TensorShape){1, n_features}, false);
         Tensor y_true = Tensor_zeros((TensorShape){1, n_classes}, false);
         for(int j = 0; j < n_features; j++) {
             Tensor_set(input, 0, j, 0, 0, X[i][j]);
