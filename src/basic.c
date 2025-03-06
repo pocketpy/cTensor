@@ -5,6 +5,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 int TensorShape_numel(TensorShape shape) {
     int numel = 1;
@@ -33,12 +38,25 @@ int TensorShape_tostring(TensorShape shape, char* buf, int size) {
     return snprintf(buf, size, "(%d, %d, %d, %d)", shape[0], shape[1], shape[2], shape[3]);
 }
 
+double randn() {
+    double u1 = ((double)rand() / RAND_MAX);
+    double u2 = ((double)rand() / RAND_MAX);
+    return sqrt(-2.0 * log(u1)) * cos(2.0 * M_PI * u2);
+}
+
+void random_init(float* data, int numel) {
+    for (int i = 0; i < numel; i++) {
+        data[i] = (float)randn();
+    }
+}
+
 Tensor Tensor_new(TensorShape shape, bool requires_grad) {
     Tensor self;
     memcpy(self.shape, shape, sizeof(TensorShape));
     int numel = TensorShape_numel(shape);
     self.data = _cten_malloc(sizeof(FloatBuffer) + sizeof(float) * numel);
     self.data->numel = numel;
+    random_init(self.data->flex, numel);
     if(requires_grad) {
         self.node = _cten_malloc(sizeof(GradNode));
         memset(self.node, 0, sizeof(GradNode));
