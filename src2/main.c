@@ -72,9 +72,9 @@ int main() {
     // create model
     Model model;
     cten_begin_malloc(PoolId_Model);
-    model.weight_1 = nn_random_init((TensorShape){n_features, 32}, true);
+    model.weight_1 = Tensor_new((TensorShape){n_features, 32}, true);
     model.bias_1 = Tensor_zeros((TensorShape){1, 32}, true);
-    model.weight_2 = nn_random_init((TensorShape){32, n_classes}, true);
+    model.weight_2 = Tensor_new((TensorShape){32, n_classes}, true);
     model.bias_2 = Tensor_zeros((TensorShape){1, n_classes}, true);
     cten_end_malloc();
 
@@ -92,7 +92,7 @@ int main() {
             printf("    batch: %d/%d samples\n", i, n_train_samples);
             cten_begin_malloc(PoolId_Default);
             // prepare input and target
-            Tensor input = nn_random_init((TensorShape){batch_size, n_features}, false);
+            Tensor input = Tensor_new((TensorShape){batch_size, n_features}, false);
             Tensor y_true = Tensor_zeros((TensorShape){batch_size, n_classes}, false);
             for(int j = 0; j < batch_size; j++) {
                 for(int k = 0; k < n_features; k++) {
@@ -125,7 +125,7 @@ int main() {
     for(int i = n_train_samples; i < n_samples; i++) {
         cten_begin_malloc(PoolId_Default);
         // prepare input and target
-        Tensor input = nn_random_init((TensorShape){1, n_features}, false);
+        Tensor input = Tensor_new((TensorShape){1, n_features}, false);
         Tensor y_true = Tensor_zeros((TensorShape){1, n_classes}, false);
         for(int j = 0; j < n_features; j++) {
             Tensor_set(input, 0, j, 0, 0, X[i][j]);

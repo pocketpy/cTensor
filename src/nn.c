@@ -37,19 +37,6 @@ Tensor nn_relu(Tensor self) {
     return res;
 }
 
-Tensor nn_random_init(TensorShape shape, bool requires_grad) {
-    Tensor res = Tensor_new(shape, requires_grad);
-    int fan_in = shape[0];
-    int fan_out = shape[1];
-    float scale = sqrtf(6.0f / (fan_in + fan_out));
-    
-    for(int i = 0; i < res.data->numel; i++) {
-        float r = (float)rand() / RAND_MAX * 2.0f - 1.0f; 
-        res.data->flex[i] = r * scale;
-    }
-    return res;
-}
-
 /* nn.softmax */
 static Tensor GradFn_softmax(Tensor self, int i) {
     Tensor input = self.node->inputs[i];

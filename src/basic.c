@@ -39,6 +39,21 @@ Tensor Tensor_new(TensorShape shape, bool requires_grad) {
     int numel = TensorShape_numel(shape);
     self.data = _cten_malloc(sizeof(FloatBuffer) + sizeof(float) * numel);
     self.data->numel = numel;
+    
+    if (TensorShape_dim(shape) >= 2) {
+        int fan_in = shape[0];
+        int fan_out = shape[1];
+        float scale = sqrtf(6.0f / (fan_in + fan_out));
+        
+        for(int i = 0; i < self.data->numel; i++) {
+            float r = (float)rand() / RAND_MAX * 2.0f - 1.0f; 
+            self.data->flex[i] = r * scale;
+        }
+    } else {
+        // For non-weight tensors, initialize to zeros
+        memset(self.data->flex, 0, sizeof(float) * self.data->numel);
+    }
+    
     if(requires_grad) {
         self.node = _cten_malloc(sizeof(GradNode));
         memset(self.node, 0, sizeof(GradNode));
