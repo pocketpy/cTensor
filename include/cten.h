@@ -10,6 +10,8 @@
 #endif
 
 #define DATASET_SIZE 150
+#define N_SAMPLES 150
+#define N_FEATURES 4
 
 typedef int TensorShape[4];
 typedef struct GradNode GradNode;
@@ -46,7 +48,7 @@ bool TensorShape_equals(Tensor a, Tensor b);
 Tensor Tensor_new(TensorShape shape, bool requires_grad);
 Tensor Tensor_zeros(TensorShape shape, bool requires_grad);
 Tensor Tensor_ones(TensorShape shape, bool requires_grad);
-Tensor Tensor_init_he(TensorShape shape, bool requires_grad);
+Tensor Tensor_init_he(Tensor self);
 
 float Tensor_get(Tensor self, int i, int j, int k, int l);
 void Tensor_set(Tensor self, int i, int j, int k, int l, float value);
@@ -129,3 +131,6 @@ int load_iris_dataset(const float (**X)[4], const int** y);
 int load_peng_dataset(const float (**X)[4], const int** y);
 void print_tensor(Tensor t, void* ctx);
 Tensor GradFn_matmul(Tensor self, int i);
+void normalize(float X[][4], int num_samples);
+void swap(float *a, float *b, int n);
+void shuffle(float X[N_SAMPLES][N_FEATURES], int y[N_SAMPLES]);
