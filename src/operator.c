@@ -5,6 +5,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 static Tensor GradFn_add(Tensor self, int i) {
     // f(x, y) = x + y; f'(x) = 1; f'(y) = 1
@@ -18,30 +19,39 @@ static Tensor GradFn_mul(Tensor self, int i) {
 }
 
 Tensor Tensor_add(Tensor self, Tensor other) {
-    if(!cten_elemwise_broadcast(&self, &other)) {
-        cten_assert_shape("Tensor_add() cannot broadcast", self.shape, other.shape);
-    }
     bool requires_grad = !cten_is_eval() && (self.node != NULL || other.node != NULL);
     Tensor res = Tensor_new(self.shape, requires_grad);
-    for(int i = 0; i < self.data->numel; i++) {
-        res.data->flex[i] = self.data->flex[i] + other.data->flex[i];
-    }
+
     if(requires_grad) {
         res.node->grad_fn = GradFn_add;
         res.node->inputs[0] = self;
         res.node->inputs[1] = other;
         res.node->n_inputs = 2;
     }
+
+    if(!cten_elemwise_broadcast(&self, &other)) {
+        cten_assert_shape("Tensor_add() cannot broadcast", self.shape, other.shape);
+    }
+    for(int i = 0; i < self.data->numel; i++) {
+        res.data->flex[i] = self.data->flex[i] + other.data->flex[i];
+    }
+
     return res;
 }
 
 Tensor Tensor_mul(Tensor self, Tensor other) {
     bool requires_grad = !cten_is_eval() && (self.node != NULL || other.node != NULL);
+    
+    if (!cten_elemwise_broadcast(&self, &other)) {
+        cten_assert_shape("Tensor_mul() cannot broadcast", self.shape, other.shape);
+    }
+
     Tensor res = Tensor_new(self.shape, requires_grad);
-    for(int i = 0; i < self.data->numel; i++) {
+    for (int i = 0; i < res.data->numel; i++) {
         res.data->flex[i] = self.data->flex[i] * other.data->flex[i];
     }
-    if(requires_grad) {
+
+    if (requires_grad) {
         res.node->grad_fn = GradFn_mul;
         res.node->inputs[0] = self;
         res.node->inputs[1] = other;
@@ -79,15 +89,16 @@ void Tensor_argmax(Tensor self, int* out) {
 
 static Tensor GradFn_mean(Tensor self, int i) {
     // f(x) = mean(x); f'(x) = 1 / x.numel()
-    Tensor res = Tensor_new(self.shape, false);
+    Tensor res = Tensor_new(self.node->inputs[i].shape, false);
+    float scale = 1.0f / self.node->inputs[i].data->numel;
     for(int i = 0; i < res.data->numel; i++) {
-        res.data->flex[i] = 1.0f / self.data->numel;
+        res.data->flex[i] = scale;
     }
     return res;
 }
 
 Tensor Tensor_mean(Tensor self) {
-    Tensor res = Tensor_new((TensorShape){0}, self.node != NULL);
+    Tensor res = Tensor_new((TensorShape){1,1}, self.node != NULL);
     float sum = 0;
     for(int i = 0; i < self.data->numel; i++) {
         sum += self.data->flex[i];
@@ -121,12 +132,65 @@ Tensor Tensor_sum(Tensor self) {
     return res;
 }
 
-static Tensor GradFn_matmul(Tensor self, int i) {
-    Tensor _0 = self.node->inputs[i];
-    Tensor _1 = self.node->inputs[1 - i];
+Tensor Tensor_transpose(Tensor self, int dim0, int dim1) {
+    int self_dim = TensorShape_dim(self.shape);
+    dim0 = TensorShape_asdim(self.shape, dim0);
+    dim1 = TensorShape_asdim(self.shape, dim1);
+    assert(self_dim >= 2 && dim0 < self_dim && dim1 < self_dim);
+
+    TensorShape new_shape;
+    for (int i = 0; i < self_dim; i++) {
+        new_shape[i] = self.shape[i];
+    }
+    new_shape[dim0] = self.shape[dim1];
+    new_shape[dim1] = self.shape[dim0];
+
+    Tensor res = Tensor_zeros(new_shape, self.node != NULL);
+
+    int strides[self_dim], new_strides[self_dim];
+    strides[self_dim - 1] = new_strides[self_dim - 1] = 1;
+    
+    for (int i = self_dim - 2; i >= 0; i--) {
+        strides[i] = strides[i + 1] * self.shape[i + 1];
+        new_strides[i] = new_strides[i + 1] * new_shape[i + 1];
+    }
+
+    for (int i = 0; i < self.data->numel; i++) {
+        int src_idx = i, dst_idx = 0;
+        int coord[self_dim];
+
+        for (int j = 0; j < self_dim; j++) {
+            coord[j] = src_idx / strides[j];
+            src_idx %= strides[j];
+        }
+
+        int temp = coord[dim0];
+        coord[dim0] = coord[dim1];
+        coord[dim1] = temp;
+
+        for (int j = 0; j < self_dim; j++) {
+            dst_idx += coord[j] * new_strides[j];
+        }
+
+        assert(dst_idx < res.data->numel);
+        res.data->flex[dst_idx] = self.data->flex[i];
+    }
+
+    return res;
+}
+
+Tensor GradFn_matmul(Tensor self, int i) {
+    Tensor _0 = self.node->inputs[0]; 
+    Tensor _1 = self.node->inputs[1]; 
+
     _0 = Tensor_detach(_0);
     _1 = Tensor_detach(_1);
-    return Tensor_matmul(_0, _1);
+    
+    if (i == 0) {
+        return Tensor_matmul(self.node->grad, Tensor_transpose(_1, 0, 1));
+    } else {
+        return Tensor_matmul(Tensor_transpose(_0, 0, 1), self.node->grad);
+    }
 }
 
 Tensor Tensor_matmul(Tensor self, Tensor other) {
