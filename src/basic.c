@@ -78,9 +78,8 @@ Tensor Tensor_ones(TensorShape shape, bool requires_grad) {
     return self;
 }
 
-Tensor Tensor_init_he(TensorShape shape, bool requires_grad) {
-    Tensor self = Tensor_new(shape, requires_grad);
-    float he_std = sqrtf(2.0f / shape[0]); 
+Tensor Tensor_init_he(Tensor self) {
+    float he_std = sqrtf(2.0f / self.shape[0]); 
     for (int i = 0; i < self.data->numel; i++) {
         self.data->flex[i] = he_std * rand_normal(); 
     }
@@ -112,40 +111,32 @@ Tensor Tensor_detach(Tensor self) {
 }
 
 Tensor Tensor_sum_reduce(Tensor self, TensorShape expected_shape) {
-    TensorShape new_shape;
-    memcpy(new_shape, self.shape, sizeof(TensorShape));
-
-    for (int i = 0; i < TensorShape_dim(self.shape); i++) {
-        if (self.shape[i] != expected_shape[i] && expected_shape[i] == 1) {
-            new_shape[i] = 1;  
-        }
-    }
+    assert(TensorShape_dim(self.shape) == TensorShape_dim(expected_shape));
 
     Tensor res = Tensor_zeros(expected_shape, false);
+    int self_dim = TensorShape_dim(self.shape);
+    int input_strides[self_dim], output_strides[self_dim];
+
+    input_strides[self_dim - 1] = 1;
+    output_strides[self_dim - 1] = 1;
+
+    for (int i = self_dim - 2; i >= 0; i--) {
+        input_strides[i] = input_strides[i + 1] * self.shape[i + 1];
+        output_strides[i] = output_strides[i + 1] * expected_shape[i + 1];
+    }
+
     for (int i = 0; i < self.data->numel; i++) {
-        int res_idx = 0; 
-        int stride = 1;
-        for (int j = TensorShape_dim(self.shape) - 1; j >= 0; j--) {
-            int coord = (i / stride) % self.shape[j];
-            if (new_shape[j] == 1) coord = 0;  
-            res_idx += coord * stride;
-            stride *= expected_shape[j];
+        int coord[self_dim];
+        int res_idx = 0;
+        for (int j = 0; j < self_dim; j++) {
+            coord[j] = (i / input_strides[j]) % self.shape[j];
+            if (expected_shape[j] == 1) coord[j] = 0; 
+            res_idx += coord[j] * output_strides[j];
         }
         res.data->flex[res_idx] += self.data->flex[i];
     }
-
     return res;
 }
-
-// int Tensor_backward_apply(Tensor self, void (*f)(Tensor, void*), void* ctx) {
-//     if(self.node == NULL) return 0;
-//     if(f != NULL) f(self, ctx);
-//     int count = 1;
-//     for(int i = 0; i < self.node->n_inputs; i++) {
-//         count += Tensor_backward_apply(self.node->inputs[i], f, ctx);
-//     }
-//     return count;
-// }
 
 void Tensor_backward(Tensor self, Tensor grad) {
     if (self.node == NULL) return;
@@ -157,7 +148,7 @@ void Tensor_backward(Tensor self, Tensor grad) {
 
     assert(grad.node == NULL);
 
-    float clip_value = 1.0f;  // Adjust as needed
+    float clip_value = 1.0f;  // gradient clipping
     for (int i = 0; i < grad.data->numel; i++) {
         grad.data->flex[i] = fmaxf(fminf(grad.data->flex[i], clip_value), -clip_value);
     }
@@ -182,32 +173,20 @@ void Tensor_backward(Tensor self, Tensor grad) {
         if (!TensorShape_equals(self.node->inputs[i], propagated_grad)) {
             propagated_grad = Tensor_sum_reduce(propagated_grad, self.node->inputs[i].shape);
         }
-
         // Recurse backward
         Tensor_backward(self.node->inputs[i], propagated_grad);
     }
 }
 
-// int Tensor_backward_apply(Tensor self, void (*f)(Tensor, void*), void* ctx) {
-//     if (self.node == NULL) {
-//         printf("Leaf tensor at %p (No computation node)\n", (void*)&self);
-//         print_shape(self.shape);
-//         return 0;
-//     }
-
-//     printf("Visiting tensor at %p\n", (void*)&self);
-//     print_shape(self.shape);
-//     printf("  Number of inputs: %d\n", self.node->n_inputs);
-
-//     if (f != NULL) f(self, ctx);
-
-//     int count = 1;
-//     for (int i = 0; i < self.node->n_inputs; i++) {
-//         printf("  -> Backpropagating through input %d\n", i);
-//         count += Tensor_backward_apply(self.node->inputs[i], f, ctx);
-//     }
-//     return count;
-// }
+int Tensor_backward_apply(Tensor self, void (*f)(Tensor, void*), void* ctx) {
+    if(self.node == NULL) return 0;
+    if(f != NULL) f(self, ctx);
+    int count = 1;
+    for(int i = 0; i < self.node->n_inputs; i++) {
+        count += Tensor_backward_apply(self.node->inputs[i], f, ctx);
+    }
+    return count;
+}
 
 void Tensor_print(Tensor self) {
     if(self.data == NULL) {
