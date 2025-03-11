@@ -5,6 +5,12 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#ifndef PI
+#define PI 3.14159265358979323846
+#endif
+
+#define DATASET_SIZE 150
+
 typedef int TensorShape[4];
 typedef struct GradNode GradNode;
 
@@ -34,11 +40,13 @@ int TensorShape_numel(TensorShape shape);
 int TensorShape_dim(TensorShape shape);
 int TensorShape_asdim(TensorShape shape, int dim);
 int TensorShape_tostring(TensorShape shape, char* buf, int size);
+bool TensorShape_equals(Tensor a, Tensor b);
 
 /* Tensor Basic */
 Tensor Tensor_new(TensorShape shape, bool requires_grad);
 Tensor Tensor_zeros(TensorShape shape, bool requires_grad);
 Tensor Tensor_ones(TensorShape shape, bool requires_grad);
+Tensor Tensor_init_he(TensorShape shape, bool requires_grad);
 
 float Tensor_get(Tensor self, int i, int j, int k, int l);
 void Tensor_set(Tensor self, int i, int j, int k, int l, float value);
@@ -63,6 +71,7 @@ Tensor Tensor_divf(Tensor self, float other);
 Tensor Tensor_powf(Tensor self, float other);
 
 Tensor Tensor_matmul(Tensor self, Tensor other);
+Tensor Tensor_transpose(Tensor self, int dim0, int dim1);
 
 Tensor Tensor_neg(Tensor self);
 Tensor Tensor_abs(Tensor self);
@@ -117,3 +126,6 @@ void cten_assert_dim(const char* title, int a, int b);
 
 bool cten_elemwise_broadcast(Tensor* a, Tensor* b);
 int load_iris_dataset(const float (**X)[4], const int** y);
+int load_peng_dataset(const float (**X)[4], const int** y);
+void print_tensor(Tensor t, void* ctx);
+Tensor GradFn_matmul(Tensor self, int i);

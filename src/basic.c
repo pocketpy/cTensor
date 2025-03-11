@@ -5,6 +5,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
+
+static float rand_normal() {
+    float u1 = (rand() + 1.0) / (RAND_MAX + 1.0);
+    float u2 = (rand() + 1.0) / (RAND_MAX + 1.0);
+    return sqrtf(-2.0f * logf(u1)) * cosf(2.0f * PI * u2);
+}
 
 int TensorShape_numel(TensorShape shape) {
     int numel = 1;
@@ -31,6 +38,15 @@ int TensorShape_asdim(TensorShape shape, int dim) {
 
 int TensorShape_tostring(TensorShape shape, char* buf, int size) {
     return snprintf(buf, size, "(%d, %d, %d, %d)", shape[0], shape[1], shape[2], shape[3]);
+}
+
+bool TensorShape_equals(Tensor a, Tensor b) {
+    for (int i = 0; i < 4; i++) {
+        if (a.shape[i] != b.shape[i]) {
+            return false;
+        }
+    }
+    return true;
 }
 
 Tensor Tensor_new(TensorShape shape, bool requires_grad) {
@@ -62,6 +78,15 @@ Tensor Tensor_ones(TensorShape shape, bool requires_grad) {
     return self;
 }
 
+Tensor Tensor_init_he(TensorShape shape, bool requires_grad) {
+    Tensor self = Tensor_new(shape, requires_grad);
+    float he_std = sqrtf(2.0f / shape[0]); 
+    for (int i = 0; i < self.data->numel; i++) {
+        self.data->flex[i] = he_std * rand_normal(); 
+    }
+    return self;
+}
+
 float Tensor_get(Tensor self, int i, int j, int k, int l) {
     assert((self.shape[0] == 0 && i == 0) || (i >= 0 && i < self.shape[0]));
     assert((self.shape[1] == 0 && j == 0) || (j >= 0 && j < self.shape[1]));
@@ -86,33 +111,103 @@ Tensor Tensor_detach(Tensor self) {
     return detached;
 }
 
-void Tensor_backward(Tensor self, Tensor grad) {
-    if(self.node == NULL) return;
-    if(grad.data == NULL) {
-        assert(self.data->numel == 1);
-        grad = Tensor_ones((TensorShape){0}, false);
+Tensor Tensor_sum_reduce(Tensor self, TensorShape expected_shape) {
+    TensorShape new_shape;
+    memcpy(new_shape, self.shape, sizeof(TensorShape));
+
+    for (int i = 0; i < TensorShape_dim(self.shape); i++) {
+        if (self.shape[i] != expected_shape[i] && expected_shape[i] == 1) {
+            new_shape[i] = 1;  
+        }
     }
+
+    Tensor res = Tensor_zeros(expected_shape, false);
+    for (int i = 0; i < self.data->numel; i++) {
+        int res_idx = 0; 
+        int stride = 1;
+        for (int j = TensorShape_dim(self.shape) - 1; j >= 0; j--) {
+            int coord = (i / stride) % self.shape[j];
+            if (new_shape[j] == 1) coord = 0;  
+            res_idx += coord * stride;
+            stride *= expected_shape[j];
+        }
+        res.data->flex[res_idx] += self.data->flex[i];
+    }
+
+    return res;
+}
+
+// int Tensor_backward_apply(Tensor self, void (*f)(Tensor, void*), void* ctx) {
+//     if(self.node == NULL) return 0;
+//     if(f != NULL) f(self, ctx);
+//     int count = 1;
+//     for(int i = 0; i < self.node->n_inputs; i++) {
+//         count += Tensor_backward_apply(self.node->inputs[i], f, ctx);
+//     }
+//     return count;
+// }
+
+void Tensor_backward(Tensor self, Tensor grad) {
+    if (self.node == NULL) return;
+
+    if (grad.data == NULL) {
+        assert(self.data->numel == 1);
+        grad = Tensor_ones(self.shape, false);
+    }
+
     assert(grad.node == NULL);
-    if(self.node->grad.data == NULL) {
-        self.node->grad = grad;
+
+    float clip_value = 1.0f;  // Adjust as needed
+    for (int i = 0; i < grad.data->numel; i++) {
+        grad.data->flex[i] = fmaxf(fminf(grad.data->flex[i], clip_value), -clip_value);
+    }
+
+    if (self.node->grad.data == NULL) {
+        Tensor zeros = Tensor_zeros(self.shape, false);
+        self.node->grad = Tensor_add(zeros, grad);
     } else {
         self.node->grad = Tensor_add(self.node->grad, grad);
     }
-    for(int i = 0; i < self.node->n_inputs; i++) {
-        grad = Tensor_mul(grad, self.node->grad_fn(self, i));
-        Tensor_backward(self.node->inputs[i], grad);
+
+    for (int i = 0; i < self.node->n_inputs; i++) {
+        Tensor local_grad = self.node->grad_fn(self, i);
+        Tensor propagated_grad;
+
+        if (self.node->grad_fn == GradFn_matmul) {
+            propagated_grad = local_grad;
+        } else {
+            propagated_grad = Tensor_mul(grad, local_grad);
+        }
+
+        if (!TensorShape_equals(self.node->inputs[i], propagated_grad)) {
+            propagated_grad = Tensor_sum_reduce(propagated_grad, self.node->inputs[i].shape);
+        }
+
+        // Recurse backward
+        Tensor_backward(self.node->inputs[i], propagated_grad);
     }
 }
 
-int Tensor_backward_apply(Tensor self, void (*f)(Tensor, void*), void* ctx) {
-    if(self.node == NULL) return 0;
-    if(f != NULL) f(self, ctx);
-    int count = 1;
-    for(int i = 0; i < self.node->n_inputs; i++) {
-        count += Tensor_backward_apply(self.node->inputs[i], f, ctx);
-    }
-    return count;
-}
+// int Tensor_backward_apply(Tensor self, void (*f)(Tensor, void*), void* ctx) {
+//     if (self.node == NULL) {
+//         printf("Leaf tensor at %p (No computation node)\n", (void*)&self);
+//         print_shape(self.shape);
+//         return 0;
+//     }
+
+//     printf("Visiting tensor at %p\n", (void*)&self);
+//     print_shape(self.shape);
+//     printf("  Number of inputs: %d\n", self.node->n_inputs);
+
+//     if (f != NULL) f(self, ctx);
+
+//     int count = 1;
+//     for (int i = 0; i < self.node->n_inputs; i++) {
+//         printf("  -> Backpropagating through input %d\n", i);
+//         count += Tensor_backward_apply(self.node->inputs[i], f, ctx);
+//     }
+//     return count;
+// }
 
 void Tensor_print(Tensor self) {
     if(self.data == NULL) {
