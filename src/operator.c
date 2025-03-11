@@ -29,10 +29,9 @@ Tensor Tensor_add(Tensor self, Tensor other) {
         res.node->n_inputs = 2;
     }
 
-    if(!TensorShape_equals(self, other) && !cten_elemwise_broadcast(&self, &other)) {
+    if(!cten_elemwise_broadcast(&self, &other)) {
         cten_assert_shape("Tensor_add() cannot broadcast", self.shape, other.shape);
-    }    
-
+    }
     for(int i = 0; i < self.data->numel; i++) {
         res.data->flex[i] = self.data->flex[i] + other.data->flex[i];
     }
@@ -43,14 +42,11 @@ Tensor Tensor_add(Tensor self, Tensor other) {
 Tensor Tensor_mul(Tensor self, Tensor other) {
     bool requires_grad = !cten_is_eval() && (self.node != NULL || other.node != NULL);
     
-    if (!TensorShape_equals(self, other) && !cten_elemwise_broadcast(&self, &other)) {
-        printf("Tensor_mul() cannot broadcast: ");
-        Tensor_print(self);
-        Tensor_print(other);
-        exit(1);
+    if (!cten_elemwise_broadcast(&self, &other)) {
+        cten_assert_shape("Tensor_mul() cannot broadcast", self.shape, other.shape);
     }
 
-    Tensor res = Tensor_ones(self.shape, requires_grad);
+    Tensor res = Tensor_new(self.shape, requires_grad);
     for (int i = 0; i < res.data->numel; i++) {
         res.data->flex[i] = self.data->flex[i] * other.data->flex[i];
     }
@@ -143,43 +139,40 @@ Tensor Tensor_transpose(Tensor self, int dim0, int dim1) {
     assert(self_dim >= 2 && dim0 < self_dim && dim1 < self_dim);
 
     TensorShape new_shape;
-    memcpy(new_shape, self.shape, sizeof(TensorShape));
+    for (int i = 0; i < self_dim; i++) {
+        new_shape[i] = self.shape[i];
+    }
     new_shape[dim0] = self.shape[dim1];
     new_shape[dim1] = self.shape[dim0];
 
     Tensor res = Tensor_zeros(new_shape, self.node != NULL);
 
-    int strides[self_dim];
-    strides[self_dim - 1] = 1;
+    int strides[self_dim], new_strides[self_dim];
+    strides[self_dim - 1] = new_strides[self_dim - 1] = 1;
+    
     for (int i = self_dim - 2; i >= 0; i--) {
         strides[i] = strides[i + 1] * self.shape[i + 1];
-    }
-
-    int new_strides[self_dim];
-    new_strides[self_dim - 1] = 1;
-    for (int i = self_dim - 2; i >= 0; i--) {
         new_strides[i] = new_strides[i + 1] * new_shape[i + 1];
     }
 
     for (int i = 0; i < self.data->numel; i++) {
-        int src_idx = i;
+        int src_idx = i, dst_idx = 0;
         int coord[self_dim];
 
         for (int j = 0; j < self_dim; j++) {
-            coord[j] = (src_idx / strides[j]) % self.shape[j];
+            coord[j] = src_idx / strides[j];
+            src_idx %= strides[j];
         }
 
         int temp = coord[dim0];
         coord[dim0] = coord[dim1];
         coord[dim1] = temp;
 
-        int dst_idx = 0;
         for (int j = 0; j < self_dim; j++) {
             dst_idx += coord[j] * new_strides[j];
         }
 
-        assert(dst_idx >= res.data->numel);
-
+        assert(dst_idx < res.data->numel);
         res.data->flex[dst_idx] = self.data->flex[i];
     }
 
@@ -235,13 +228,4 @@ Tensor Tensor_matmul(Tensor self, Tensor other) {
     }
 
     return res;
-}
-
-bool TensorShape_equals(Tensor a, Tensor b) {
-    for (int i = 0; i < 4; i++) {
-        if (a.shape[i] != b.shape[i]) {
-            return false;
-        }
-    }
-    return true;
 }
