@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 void cten_assert(bool cond, const char* fmt, ...) {
     if(!cond) {
@@ -95,4 +96,48 @@ bool cten_elemwise_broadcast(Tensor* a, Tensor* b) {
     }
 
     return true;
+}
+
+void normalize(float X[][4], int num_samples) {
+    float mean[4] = {0}, stddev[4] = {0};
+
+    for (int j = 0; j < 4; j++) {
+        for (int i = 0; i < num_samples; i++) {
+            mean[j] += X[i][j];
+        }
+        mean[j] /= num_samples;
+    }
+
+    for (int j = 0; j < 4; j++) {
+        for (int i = 0; i < num_samples; i++) {
+            stddev[j] += (X[i][j] - mean[j]) * (X[i][j] - mean[j]);
+        }
+        stddev[j] = sqrt(stddev[j] / num_samples);
+    }
+
+    for (int j = 0; j < 4; j++) {
+        for (int i = 0; i < num_samples; i++) {
+            X[i][j] = (X[i][j] - mean[j]) / (stddev[j] + 1e-8);
+        }
+    }
+}
+
+void swap(float *a, float *b, int n) {
+    for (int i = 0; i < n; i++) {
+        float temp = a[i];
+        a[i] = b[i];
+        b[i] = temp;
+    }
+}
+
+void shuffle(float X[N_SAMPLES][N_FEATURES], int y[N_SAMPLES]) {
+    for (int i = N_SAMPLES - 1; i > 0; i--) {
+        int j = rand() % (i + 1);
+
+        swap(X[i], X[j], N_FEATURES);
+
+        int temp = y[i];
+        y[i] = y[j];
+        y[j] = temp;
+    }
 }
