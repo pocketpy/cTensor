@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <time.h>  // For seeding the random number generator
 
 enum MemoryPoolIds {
     PoolId_Default = 0,
@@ -28,45 +29,72 @@ int main() {
     // load iris dataset
     const float(*X)[4];
     const int* y;
-
     int n_samples = load_iris_dataset(&X, &y);
     int n_features = 4;
     int n_classes = 3;
 
+    //shuffling
+    int* indices = malloc(n_samples * sizeof(int));
+    for (int i = 0; i < n_samples; i++) {
+        indices[i] = i;
+    }
+    // Seed Used and doing Fisher-Yates shuffle
+    srand((unsigned)time(NULL));
+    for (int i = n_samples - 1; i > 0; i--) {
+        int j = rand() % (i + 1);
+        int tmp = indices[i];
+        indices[i] = indices[j];
+        indices[j] = tmp;
+    }
+
+    float (*X_shuffled)[4] = malloc(n_samples * sizeof(*X_shuffled));
+    int* y_shuffled = malloc(n_samples * sizeof(int));
+    for (int i = 0; i < n_samples; i++) {
+        int idx = indices[i];
+        for (int j = 0; j < n_features; j++) {
+            X_shuffled[i][j] = X[idx][j];
+        }
+        y_shuffled[i] = y[idx];
+    }
+    free(indices);
+    X = (const float(*)[4])X_shuffled;
+    y = (const int*)y_shuffled;
+
     int n_train_samples = n_samples * 0.8;
     int n_test_samples = n_samples - n_train_samples;
-
+    
     printf("n_samples: %d\n", n_samples);
     printf("n_train_samples: %d\n", n_train_samples);
     printf("n_test_samples: %d\n", n_test_samples);
 
+    //normalize the dataset
     float mean[4] = {0}, std[4] = {0};
     for (int i = 0; i < n_train_samples; i++) {
-        for (int j = 0; j < 4; j++) {
+        for (int j = 0; j < n_features; j++) {
             mean[j] += X[i][j];
         }
     }
-    for (int j = 0; j < 4; j++) {
+    for (int j = 0; j < n_features; j++) {
         mean[j] /= n_train_samples;
     }
     for (int i = 0; i < n_train_samples; i++) {
-        for (int j = 0; j < 4; j++) {
+        for (int j = 0; j < n_features; j++) {
             std[j] += (X[i][j] - mean[j]) * (X[i][j] - mean[j]);
         }
     }
-    for (int j = 0; j < 4; j++) {
+    for (int j = 0; j < n_features; j++) {
         std[j] = sqrtf(std[j] / n_train_samples);
         // Avoid division by zero
         if (std[j] == 0) std[j] = 1.0f;
     }
 
+    // Normalize the entire dataset
     float(*X_norm)[4] = malloc(n_samples * sizeof(*X_norm));
     for (int i = 0; i < n_samples; i++) {
-        for (int j = 0; j < 4; j++) {
+        for (int j = 0; j < n_features; j++) {
             X_norm[i][j] = (X[i][j] - mean[j]) / std[j];
         }
     }
-    //Normalize the input
     X = (const float(*)[4])X_norm;
 
     // create model
@@ -147,7 +175,7 @@ int main() {
     cten_end_eval();
 
     // free model
-    cten_free(PoolId_Model);
+    cten_free(PoolId_Model); 
 
     cten_finalize();
     return 0;
