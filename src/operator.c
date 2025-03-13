@@ -129,15 +129,22 @@ Tensor Tensor_sum(Tensor self) {
 }
 
 static Tensor GradFn_matmul(Tensor self, int i) {
-    Tensor grad;
-    if (i == 0) {
-        // Gradient with respect to first input: dL/dC * B^T
-        grad = Tensor_matmul(self, Tensor_transpose(Tensor_detach(self.node->inputs[1])));
-    } else {
-        // Gradient with respect to second input: A^T * dL/dC
-        grad = Tensor_matmul(Tensor_transpose(Tensor_detach(self.node->inputs[0])), self);
-    }
-    return grad;
+    // Tensor grad;
+    // if (i == 0) {
+    //     // Gradient with respect to first input: dL/dC * B^T
+    //     Tensor upstream_grad = self.node->grad; // This should be dL/dC
+    //     Tensor transposed_other = Tensor_transpose(Tensor_detach(self.node->inputs[1]));
+    //     Tensor_print(self);
+    //     Tensor_print(upstream_grad);
+    //     Tensor_print(transposed_other);
+    //     grad = Tensor_matmul(upstream_grad, transposed_other);
+    // } else {
+    //     // Gradient with respect to second input: A^T * dL/dC
+    //     Tensor upstream_grad = self.node->grad; // This should be dL/dC
+    //     Tensor transposed_first = Tensor_transpose(Tensor_detach(self.node->inputs[0]));
+    //     grad = Tensor_matmul(transposed_first, upstream_grad);
+    // }
+    return Tensor_transpose(Tensor_detach(self.node->inputs[1-i]));;
 }
 
 Tensor Tensor_matmul(Tensor self, Tensor other) {
@@ -155,7 +162,7 @@ Tensor Tensor_matmul(Tensor self, Tensor other) {
     TensorShape res_shape;
     memcpy(res_shape, self.shape, sizeof(TensorShape));
     res_shape[self_dim - 1] = p;
-    Tensor res = Tensor_new(res_shape, self.node != NULL || other.node != NULL);
+    Tensor res = Tensor_new(res_shape, self.node != NULL || other.node != NULL); //here weight/bias have .node != NULL, so res have GradNode
 
     for(int i = 0; i < m; i++) {
         for(int j = 0; j < p; j++) {
