@@ -31,11 +31,15 @@ Tensor Tensor_add(Tensor self, Tensor other) {
         res.node->inputs[0] = self;
         res.node->inputs[1] = other;
         res.node->n_inputs = 2;
+        res.node->name = "Add";
     }
     return res;
 }
 
 Tensor Tensor_mul(Tensor self, Tensor other) {
+    if(!cten_elemwise_broadcast(&self, &other)) {
+        cten_assert_shape("Tensor_mul() cannot broadcast", self.shape, other.shape);
+    }
     bool requires_grad = !cten_is_eval() && (self.node != NULL || other.node != NULL);
     Tensor res = Tensor_new(self.shape, requires_grad);
     for(int i = 0; i < self.data->numel; i++) {
@@ -46,6 +50,7 @@ Tensor Tensor_mul(Tensor self, Tensor other) {
         res.node->inputs[0] = self;
         res.node->inputs[1] = other;
         res.node->n_inputs = 2;
+        res.node->name = "Mul";
     }
     return res;
 }
@@ -97,6 +102,7 @@ Tensor Tensor_mean(Tensor self) {
         res.node->grad_fn = GradFn_mean;
         res.node->inputs[0] = self;
         res.node->n_inputs = 1;
+        res.node->name = "Mean";
     }
     return res;
 }
@@ -117,16 +123,21 @@ Tensor Tensor_sum(Tensor self) {
         res.node->grad_fn = GradFn_sum;
         res.node->inputs[0] = self;
         res.node->n_inputs = 1;
+        res.node->name = "Sum";
     }
     return res;
 }
 
 static Tensor GradFn_matmul(Tensor self, int i) {
-    Tensor _0 = self.node->inputs[i];
-    Tensor _1 = self.node->inputs[1 - i];
-    _0 = Tensor_detach(_0);
-    _1 = Tensor_detach(_1);
-    return Tensor_matmul(_0, _1);
+    Tensor grad;
+    if (i == 0) {
+        // Gradient with respect to first input: dL/dC * B^T
+        grad = Tensor_matmul(self, Tensor_transpose(Tensor_detach(self.node->inputs[1])));
+    } else {
+        // Gradient with respect to second input: A^T * dL/dC
+        grad = Tensor_matmul(Tensor_transpose(Tensor_detach(self.node->inputs[0])), self);
+    }
+    return grad;
 }
 
 Tensor Tensor_matmul(Tensor self, Tensor other) {
@@ -161,6 +172,7 @@ Tensor Tensor_matmul(Tensor self, Tensor other) {
         res.node->inputs[0] = self;
         res.node->inputs[1] = other;
         res.node->n_inputs = 2;
+        res.node->name = "Matmul";
     }
 
     return res;

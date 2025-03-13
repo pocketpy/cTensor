@@ -61,6 +61,27 @@ Tensor Tensor_ones(TensorShape shape, bool requires_grad) {
     }
     return self;
 }
+Tensor Tensor_transpose(Tensor self) {
+    int dim = TensorShape_dim(self.shape);
+    if(dim < 2){
+        return self; 
+    }
+    TensorShape new_shape;
+    new_shape[0] = self.shape[1];
+    new_shape[1] = self.shape[0];
+    for(int i = 2; i < 4; i++) {
+        new_shape[i] = self.shape[i];
+    }
+    Tensor result = Tensor_new(new_shape, false);
+    int rows = self.shape[0];
+    int cols = self.shape[1];
+    for(int i = 0; i < rows; i++) {
+        for(int j = 0; j < cols; j++) {
+            result.data->flex[j * rows + i] = self.data->flex[i * cols + j];
+        }
+    }
+    return result;
+}
 
 float Tensor_get(Tensor self, int i, int j, int k, int l) {
     assert((self.shape[0] == 0 && i == 0) || (i >= 0 && i < self.shape[0]));
@@ -99,8 +120,9 @@ void Tensor_backward(Tensor self, Tensor grad) {
         self.node->grad = Tensor_add(self.node->grad, grad);
     }
     for(int i = 0; i < self.node->n_inputs; i++) {
-        grad = Tensor_mul(grad, self.node->grad_fn(self, i));
-        Tensor_backward(self.node->inputs[i], grad);
+        Tensor multiplied = Tensor_mul(grad, self.node->grad_fn(self, i));
+        Tensor_backward(self.node->inputs[i], multiplied);
+
     }
 }
 

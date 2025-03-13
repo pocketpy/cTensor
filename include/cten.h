@@ -24,6 +24,7 @@ typedef struct GradNode {
     struct Tensor (*grad_fn)(struct Tensor self, int i);
     struct Tensor inputs[4];
     int n_inputs;
+    const char* name;
 } GradNode;
 
 void cten_initilize();
@@ -39,6 +40,7 @@ int TensorShape_tostring(TensorShape shape, char* buf, int size);
 Tensor Tensor_new(TensorShape shape, bool requires_grad);
 Tensor Tensor_zeros(TensorShape shape, bool requires_grad);
 Tensor Tensor_ones(TensorShape shape, bool requires_grad);
+Tensor Tensor_transpose(Tensor self);
 
 float Tensor_get(Tensor self, int i, int j, int k, int l);
 void Tensor_set(Tensor self, int i, int j, int k, int l, float value);
