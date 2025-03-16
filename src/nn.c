@@ -19,7 +19,7 @@ static Tensor GradFn_relu(Tensor self, int i) {
     Tensor input = self.node->inputs[i];
     Tensor res = Tensor_new(input.shape, false);
     for(int i = 0; i < input.data->numel; i++) {
-        res.data->flex[i] = input.data->flex[i] > 0 ? 1 : 0;
+        res.data->flex[i] = input.data->flex[i] > 0 ? 1.0f : 0.0f;
     }
     return res;
 }
@@ -36,6 +36,9 @@ Tensor nn_relu(Tensor self) {
         res.node->inputs[0] = self;
         res.node->n_inputs = 1;
         res.node->name = "Relu";
+        printf("Relu Grad_fn\n");
+        Tensor_print(res.node->grad_fn(res, 0)); 
+
     }
     return res;
 }
@@ -53,7 +56,6 @@ Tensor nn_random_init(TensorShape shape, bool requires_grad) {
     return res;
 }
 
-/* nn.softmax - Correct implementation */
 static Tensor GradFn_softmax(Tensor self, int i) {
     Tensor input = self.node->inputs[i];
     Tensor grad = Tensor_new(input.shape, false);
@@ -116,29 +118,32 @@ Tensor nn_softmax(Tensor self) {
         res.node->grad_fn = GradFn_softmax;
         res.node->inputs[0] = self;
         res.node->n_inputs = 1; 
-        res.node->name = "Softmax";     
+        res.node->name = "Softmax";   
+        printf("Softmax Grad_fn\n");
+        Tensor_print(res.node->grad_fn(res, 0));   
     }
     return res;
 }
 
 /* nn.cross_entropy */
 static Tensor GradFn_crossentropy(Tensor self, int i) {
-    if (i == 0) {
-        return Tensor_zeros(self.node->inputs[0].shape, false);
-    } else if (i == 1) {
+    if (i == 1) { // Gradient w.r.t. y_pred
         Tensor y_true = self.node->inputs[0];
         Tensor y_pred = self.node->inputs[1];
-        
         int n_samples = y_true.shape[0];
         int n_classes = y_true.shape[1];
         
         Tensor grad = Tensor_new(y_pred.shape, false);
         
-        for(int i = 0; i < n_samples; i++) {
-            for(int j = 0; j < n_classes; j++) {
+        for (int i = 0; i < n_samples; i++) {
+            for (int j = 0; j < n_classes; j++) {
                 float y_true_val = y_true.data->flex[i * n_classes + j];
                 float y_pred_val = y_pred.data->flex[i * n_classes + j];
-                grad.data->flex[i * n_classes + j] = (y_pred_val - y_true_val) / n_samples;
+                if (y_true_val == 0) {
+                    grad.data->flex[i * n_classes + j] = 0;
+                } else {
+                    grad.data->flex[i * n_classes + j] = -y_true_val / y_pred_val;
+                }
             }
         }
         return grad;
@@ -182,8 +187,8 @@ Tensor nn_crossentropy(Tensor y_true, Tensor y_pred) {
         res.node->inputs[0] = y_true;
         res.node->inputs[1] = y_pred;
         res.node->n_inputs = 2;
-        res.node->name = "Cross-entropy";
-        printf("Cross-entropy Grad_fn\n");
+        res.node->name = "Cross-entropy";   
+        printf("Cross-entropy Grad_fn(y_pred)\n");
         Tensor_print(res.node->grad_fn(res, 1));    
     }
 
