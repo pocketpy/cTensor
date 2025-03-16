@@ -33,7 +33,30 @@ void cten_assert_dim(const char* title, int a, int b) {
 bool cten_elemwise_broadcast(Tensor* a, Tensor* b) {
     int a_dim = TensorShape_dim(a->shape);
     int b_dim = TensorShape_dim(b->shape);
-    if(a_dim != b_dim) return false;
+    
+    if (a_dim == 1 && a->shape[0] == 1 && b_dim > 0) {
+        Tensor a_ = Tensor_new(b->shape, a->node != NULL);
+        float scalar_value = a->data->flex[0];
+        int total_elements = TensorShape_numel(b->shape);
+        for (int i = 0; i < total_elements; i++) {
+            a_.data->flex[i] = scalar_value;
+        }
+        *a = a_;
+        return true;
+    }
+    
+    if (b_dim == 1 && b->shape[0] == 1 && a_dim > 0) {
+        Tensor b_ = Tensor_new(a->shape, b->node != NULL);
+        float scalar_value = b->data->flex[0];
+        int total_elements = TensorShape_numel(a->shape);
+        for (int i = 0; i < total_elements; i++) {
+            b_.data->flex[i] = scalar_value;
+        }
+        *b = b_;
+        return true;
+    }
+    
+    if (a_dim != b_dim) return false;
     int a_broadcast = -1;
     for(int i = 0; i < a_dim; i++) {
         if(a->shape[i] == b->shape[i]) continue;

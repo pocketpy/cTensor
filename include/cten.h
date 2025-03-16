@@ -91,6 +91,7 @@ Tensor nn_tanh(Tensor input);
 Tensor nn_softmax(Tensor input);
 Tensor nn_random_init(TensorShape shape, bool requires_grad);
 Tensor nn_crossentropy(Tensor y_true, Tensor y_pred);
+Tensor nn_softmax_crossentropy(Tensor y_true, Tensor logits);
 
 /* Memory Management */
 typedef int64_t PoolId;

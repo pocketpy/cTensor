@@ -194,3 +194,73 @@ Tensor nn_crossentropy(Tensor y_true, Tensor y_pred) {
 
     return res;
 }
+
+static Tensor GradFn_softmax_crossentropy(Tensor self, int i) {
+    if (i == 1) {
+        Tensor y_true = self.node->inputs[0];
+        Tensor logits = self.node->inputs[1];
+        
+        Tensor y_pred = Tensor_new(logits.shape, false);
+        int self_dim = TensorShape_dim(logits.shape);
+        int last_dim_size = logits.shape[self_dim - 1];
+        int outer_size = logits.data->numel / last_dim_size;
+
+        for(int outer = 0; outer < outer_size; outer++) {
+            float max_val = -INFINITY;
+            float sum = 0;
+
+            for(int d = 0; d < last_dim_size; d++) {
+                int index = outer * last_dim_size + d;
+                max_val = fmaxf(max_val, logits.data->flex[index]);
+            }
+
+            for(int d = 0; d < last_dim_size; d++) {
+                int index = outer * last_dim_size + d;
+                y_pred.data->flex[index] = expf(logits.data->flex[index] - max_val);
+                sum += y_pred.data->flex[index];
+            }
+
+            for(int d = 0; d < last_dim_size; d++) {
+                int index = outer * last_dim_size + d;
+                y_pred.data->flex[index] /= sum;
+            }
+        }
+        
+        Tensor grad = Tensor_new(y_pred.shape, false);
+        int n_samples = y_pred.shape[0];
+        int n_classes = y_pred.shape[1];
+        
+        for (int i = 0; i < n_samples; i++) {
+            for (int j = 0; j < n_classes; j++) {
+                grad.data->flex[i * n_classes + j] = 
+                    y_pred.data->flex[i * n_classes + j] - y_true.data->flex[i * n_classes + j];
+            }
+        }
+        
+        return grad;
+    }
+    return Tensor_zeros((TensorShape){1}, false);
+}
+
+Tensor nn_softmax_crossentropy(Tensor y_true, Tensor logits) {
+    bool requires_grad = !cten_is_eval() && logits.node != NULL;
+    //disable gradient computation
+    cten_begin_eval(); 
+    Tensor y_pred = nn_softmax(logits);
+    Tensor loss = nn_crossentropy(y_true, y_pred);
+    cten_end_eval();
+    Tensor res = Tensor_zeros((TensorShape){1}, requires_grad);
+    res.data->flex[0] = loss.data->flex[0];
+    
+    if(requires_grad) {
+        res.node->grad_fn = GradFn_softmax_crossentropy;
+        res.node->inputs[0] = y_true;
+        res.node->inputs[1] = logits;
+        res.node->n_inputs = 2;
+        res.node->name = "SoftmaxCrossEntropy";
+        printf("SoftmaxCrossEntropy Grad_fn(y_pred)\n");
+        Tensor_print(res.node->grad_fn(res, 1));   
+    }
+    
+    return res;
+}
