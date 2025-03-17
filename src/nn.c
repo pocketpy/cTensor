@@ -36,8 +36,6 @@ Tensor nn_relu(Tensor self) {
         res.node->inputs[0] = self;
         res.node->n_inputs = 1;
         res.node->name = "Relu";
-        printf("Relu Grad_fn\n");
-        Tensor_print(res.node->grad_fn(res, 0)); 
 
     }
     return res;
@@ -118,9 +116,7 @@ Tensor nn_softmax(Tensor self) {
         res.node->grad_fn = GradFn_softmax;
         res.node->inputs[0] = self;
         res.node->n_inputs = 1; 
-        res.node->name = "Softmax";   
-        printf("Softmax Grad_fn\n");
-        Tensor_print(res.node->grad_fn(res, 0));   
+        res.node->name = "Softmax";     
     }
     return res;
 }
@@ -187,9 +183,7 @@ Tensor nn_crossentropy(Tensor y_true, Tensor y_pred) {
         res.node->inputs[0] = y_true;
         res.node->inputs[1] = y_pred;
         res.node->n_inputs = 2;
-        res.node->name = "Cross-entropy";   
-        printf("Cross-entropy Grad_fn(y_pred)\n");
-        Tensor_print(res.node->grad_fn(res, 1));    
+        res.node->name = "Cross-entropy";       
     }
 
     return res;
@@ -257,9 +251,7 @@ Tensor nn_softmax_crossentropy(Tensor y_true, Tensor logits) {
         res.node->inputs[0] = y_true;
         res.node->inputs[1] = logits;
         res.node->n_inputs = 2;
-        res.node->name = "SoftmaxCrossEntropy";
-        printf("SoftmaxCrossEntropy Grad_fn(y_pred)\n");
-        Tensor_print(res.node->grad_fn(res, 1));   
+        res.node->name = "SoftmaxCrossEntropy"; 
     }
     
     return res;

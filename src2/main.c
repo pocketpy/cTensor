@@ -19,100 +19,9 @@ Tensor Model_forward(Model* model, Tensor x) {
     x = nn_linear(x, model->weight_1, model->bias_1);
     x = nn_relu(x);
     x = nn_linear(x, model->weight_2, model->bias_2);
-    x = nn_softmax(x);
     return x;
 }
 
-//TESTING PURPOSE ONLY
-void Model_backward(Model* model, Tensor input, Tensor y_true, Tensor y_pred) {
-    int batch_size = input.shape[0];
-    int n_features = input.shape[1];
-    int n_hidden = model->weight_1.shape[1];
-    int n_classes = model->weight_2.shape[1];
-
-    Tensor output_grad = Tensor_ones((TensorShape){batch_size, n_classes}, false);
-    for (int i = 0; i < batch_size; i++) {
-        for (int j = 0; j < n_classes; j++) {
-            output_grad.data->flex[i * n_classes + j] = 
-                y_pred.data->flex[i * n_classes + j] - y_true.data->flex[i * n_classes + j];
-        }
-    }
-    printf("Output gradient:\n");
-    Tensor_print(output_grad);
-    
-    Tensor hidden_output = nn_linear(input, model->weight_1, model->bias_1);
-    hidden_output = nn_relu(hidden_output);
-    
-    Tensor weight2_grad = Tensor_zeros(model->weight_2.shape, false);
-    for (int b = 0; b < batch_size; b++) {
-        for (int i = 0; i < n_hidden; i++) {
-            for (int j = 0; j < n_classes; j++) {
-                weight2_grad.data->flex[i * n_classes + j] += 
-                    hidden_output.data->flex[b * n_hidden + i] * output_grad.data->flex[b * n_classes + j];
-            }
-        }
-    }
-    
-    Tensor bias2_grad = Tensor_zeros(model->bias_2.shape, false);
-    for (int b = 0; b < batch_size; b++) {
-        for (int j = 0; j < n_classes; j++) {
-            bias2_grad.data->flex[j] += output_grad.data->flex[b * n_classes + j];
-        }
-    }
-
-    
-    Tensor weight2_T = Tensor_transpose(model->weight_2);
-    Tensor hidden_grad = Tensor_zeros(hidden_output.shape, false);
-    for (int i = 0; i < batch_size; i++) {
-        for (int j = 0; j < n_hidden; j++) {
-            for (int k = 0; k < n_classes; k++) {
-                hidden_grad.data->flex[i * n_hidden + j] += 
-                    output_grad.data->flex[i * n_classes + k] * weight2_T.data->flex[j * n_classes + k];
-            }
-        }
-    }
-    
-    Tensor hidden_input = nn_linear(input, model->weight_1, model->bias_1);
-    for (int i = 0; i < batch_size * n_hidden; i++) {
-        if (hidden_input.data->flex[i] <= 0) {
-            hidden_grad.data->flex[i] = 0;
-        }
-    }
-
-    Tensor weight1_grad = Tensor_zeros(model->weight_1.shape, false);
-    for (int b = 0; b < batch_size; b++) {
-        for (int i = 0; i < n_features; i++) {
-            for (int j = 0; j < n_hidden; j++) {
-                weight1_grad.data->flex[i * n_hidden + j] += 
-                    input.data->flex[b * n_features + i] * hidden_grad.data->flex[b * n_hidden + j];
-            }
-        }
-    }
-    printf("Weight 1 gradient:\n");
-    Tensor_print(weight1_grad);
-    
-    Tensor bias1_grad = Tensor_zeros(model->bias_1.shape, false);
-    for (int b = 0; b < batch_size; b++) {
-        for (int j = 0; j < n_hidden; j++) {
-            bias1_grad.data->flex[j] += hidden_grad.data->flex[b * n_hidden + j];
-        }
-    }
-    printf("Bias 1 gradient:\n");
-    Tensor_print(bias1_grad);
-    
-    if (model->weight_1.node != NULL) {
-        model->weight_1.node->grad = weight1_grad;
-    }
-    if (model->bias_1.node != NULL) {
-        model->bias_1.node->grad = bias1_grad;
-    }
-    if (model->weight_2.node != NULL) {
-        model->weight_2.node->grad = weight2_grad;
-    }
-    if (model->bias_2.node != NULL) {
-        model->bias_2.node->grad = bias2_grad;
-    }
-}
 
 int main() {
     cten_initilize();
@@ -151,8 +60,8 @@ int main() {
     X = (const float(*)[4])X_shuffled;
     y = (const int*)y_shuffled;
 
-    int n_train_samples = n_samples * 0.8;
-    int n_test_samples = n_samples - n_train_samples;
+    int n_train_samples = n_samples * 0.8; 
+    int n_test_samples = n_samples - n_train_samples; 
     
     printf("n_samples: %d\n", n_samples);
     printf("n_train_samples: %d\n", n_train_samples);
@@ -200,7 +109,7 @@ int main() {
     // create optimizer
     cten_begin_malloc(PoolId_Optimizer);
     optim_sgd* optimizer = optim_sgd_new(4, (Tensor*)&model);
-    optim_sgd_config(optimizer, 0.001f, 0.0f);
+    optim_sgd_config(optimizer, 0.01f, 0.0f);
     cten_end_malloc();
 
     // train model
@@ -215,7 +124,7 @@ int main() {
             cten_begin_malloc(PoolId_Default);
             
             // Debug print
-            // printf("Batch %d: using %d samples\n", i/batch_size, actual_batch_size);
+            printf("Batch %d: using %d samples\n", i/batch_size, actual_batch_size);
             
             Tensor input = Tensor_zeros((TensorShape){actual_batch_size, n_features}, false);
             Tensor y_true = Tensor_zeros((TensorShape){actual_batch_size, n_classes}, false);
@@ -231,21 +140,16 @@ int main() {
             // zero the gradients
             optim_sgd_zerograd(optimizer);
             // forward pass
-            Tensor y_pred = Model_forward(&model, input);
-            Tensor loss = nn_crossentropy(y_true, y_pred);
+            Tensor logit = Model_forward(&model, input);
+            Tensor loss = nn_softmax_crossentropy(y_true, logit);
             epoch_loss += loss.data->flex[0];
             num_batches++;
             
-            // backward pass
-            printf("Backward pass\n");
-            Tensor grad = Tensor_ones((TensorShape){actual_batch_size,n_classes}, false);
+            Tensor grad = Tensor_ones((TensorShape){1}, false);
             Tensor_backward(loss, grad);
 
-
-            // printf("\nStarting custom backpropagation\n");
-            // Model_backward(&model, input, y_true, y_pred);
+            
             optim_sgd_step(optimizer);
-
             cten_end_malloc();
             // free temporary tensors
             cten_free(PoolId_Default);
@@ -270,7 +174,8 @@ int main() {
         y_true.data->flex[0 * n_classes + y[i]] = 1.0f; //Writing 0 here just to follow the architecture of the code
 
         // forward pass
-        Tensor y_pred = Model_forward(&model, input);
+        Tensor logit = Model_forward(&model, input);
+        Tensor y_pred = nn_softmax(logit);
         Tensor loss = nn_crossentropy(y_true, y_pred);
         // calculate accuracy
         int pred_classes[1];

@@ -111,18 +111,32 @@ void Tensor_backward(Tensor self, Tensor grad) {
     if(self.node == NULL) return;
     if(grad.data == NULL) {
         assert(self.data->numel == 1);
-        grad = Tensor_ones((TensorShape){0}, false);
+        grad = Tensor_ones((TensorShape){1}, false);
     }
+    
     assert(grad.node == NULL);
     if(self.node->grad.data == NULL) {
         self.node->grad = grad;
     } else {
         self.node->grad = Tensor_add(self.node->grad, grad);
     }
-    for(int i = 0; i < self.node->n_inputs; i++) {
-        Tensor multiplied = Tensor_mul(grad, self.node->grad_fn(self, i));
-        Tensor_backward(self.node->inputs[i], multiplied);
 
+    for(int i = 0; i < self.node->n_inputs; i++) {
+        if (self.node->inputs[i].data == NULL) continue;
+        Tensor combined_grad;  
+        Tensor input_grad = self.node->grad_fn(self, i); 
+        if(strcmp(self.node->name, "Matmul") == 0){
+            if (i == 0){
+                combined_grad = Tensor_matmul(grad, input_grad);
+            }
+            else{
+                combined_grad = Tensor_matmul(input_grad, grad);
+            }
+        }
+        else{
+            combined_grad = Tensor_mul(grad, input_grad);
+        }       
+        Tensor_backward(self.node->inputs[i], combined_grad);
     }
 }
 

@@ -129,21 +129,6 @@ Tensor Tensor_sum(Tensor self) {
 }
 
 static Tensor GradFn_matmul(Tensor self, int i) {
-    // Tensor grad;
-    // if (i == 0) {
-    //     // Gradient with respect to first input: dL/dC * B^T
-    //     Tensor upstream_grad = self.node->grad; // This should be dL/dC
-    //     Tensor transposed_other = Tensor_transpose(Tensor_detach(self.node->inputs[1]));
-    //     Tensor_print(self);
-    //     Tensor_print(upstream_grad);
-    //     Tensor_print(transposed_other);
-    //     grad = Tensor_matmul(upstream_grad, transposed_other);
-    // } else {
-    //     // Gradient with respect to second input: A^T * dL/dC
-    //     Tensor upstream_grad = self.node->grad; // This should be dL/dC
-    //     Tensor transposed_first = Tensor_transpose(Tensor_detach(self.node->inputs[0]));
-    //     grad = Tensor_matmul(transposed_first, upstream_grad);
-    // }
     return Tensor_transpose(Tensor_detach(self.node->inputs[1-i]));;
 }
 
