@@ -45,6 +45,7 @@ Tensor Tensor_transpose(Tensor self);
 float Tensor_get(Tensor self, int i, int j, int k, int l);
 void Tensor_set(Tensor self, int i, int j, int k, int l, float value);
 void Tensor_normalize_dataset(const float (*X)[4], float (*X_norm)[4], int n_samples, int n_train_samples, int n_features);Tensor Tensor_detach(Tensor self);
+void Tensor_shuffle_dataset(const float (*X)[4], const int *y,float (*X_shuffled)[4], int *y_shuffled, int n_samples, int n_features);
 void Tensor_backward(Tensor self, Tensor grad);
 int Tensor_backward_apply(Tensor self, void (*f)(Tensor, void*), void* ctx);
 

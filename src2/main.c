@@ -33,30 +33,10 @@ int main() {
     int n_features = 4;
     int n_classes = 3;
 
-    //shuffling
-    int* indices = malloc(n_samples * sizeof(int));
-    for (int i = 0; i < n_samples; i++) {
-        indices[i] = i;
-    }
-    // Seed Used and doing Fisher-Yates shuffle
-    srand((unsigned)time(NULL));
-    for (int i = n_samples - 1; i > 0; i--) {
-        int j = rand() % (i + 1);
-        int tmp = indices[i];
-        indices[i] = indices[j];
-        indices[j] = tmp;
-    }
-
+    // Shuffle the dataset
     float (*X_shuffled)[4] = malloc(n_samples * sizeof(*X_shuffled));
     int* y_shuffled = malloc(n_samples * sizeof(int));
-    for (int i = 0; i < n_samples; i++) {
-        int idx = indices[i];
-        for (int j = 0; j < n_features; j++) {
-            X_shuffled[i][j] = X[idx][j];
-        }
-        y_shuffled[i] = y[idx];
-    }
-    free(indices);
+    Tensor_shuffle_dataset(X, y, X_shuffled, y_shuffled, n_samples, n_features);
     X = (const float(*)[4])X_shuffled;
     y = (const int*)y_shuffled;
 
