@@ -41,7 +41,7 @@ Tensor nn_relu(Tensor self) {
     return res;
 }
 
-Tensor nn_random_init(TensorShape shape, bool requires_grad) {
+Tensor Glorot_init(TensorShape shape, bool requires_grad) {
     Tensor res = Tensor_new(shape, requires_grad);
     int fan_in = shape[0];
     int fan_out = shape[1];

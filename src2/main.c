@@ -100,9 +100,9 @@ int main() {
     // create model
     Model model;
     cten_begin_malloc(PoolId_Model);
-    model.weight_1 = nn_random_init((TensorShape){n_features, 32}, true);
+    model.weight_1 = Glorot_init((TensorShape){n_features, 32}, true);
     model.bias_1 = Tensor_zeros((TensorShape){1, 32}, true);
-    model.weight_2 = nn_random_init((TensorShape){32, n_classes}, true);
+    model.weight_2 = Glorot_init((TensorShape){32, n_classes}, true);
     model.bias_2 = Tensor_zeros((TensorShape){1, n_classes}, true);
     cten_end_malloc();
 
