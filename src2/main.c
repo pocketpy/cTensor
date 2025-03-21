@@ -68,33 +68,8 @@ int main() {
     printf("n_test_samples: %d\n", n_test_samples);
 
     //normalize the dataset
-    float mean[4] = {0}, std[4] = {0};
-    for (int i = 0; i < n_train_samples; i++) {
-        for (int j = 0; j < n_features; j++) {
-            mean[j] += X[i][j];
-        }
-    }
-    for (int j = 0; j < n_features; j++) {
-        mean[j] /= n_train_samples;
-    }
-    for (int i = 0; i < n_train_samples; i++) {
-        for (int j = 0; j < n_features; j++) {
-            std[j] += (X[i][j] - mean[j]) * (X[i][j] - mean[j]);
-        }
-    }
-    for (int j = 0; j < n_features; j++) {
-        std[j] = sqrtf(std[j] / n_train_samples);
-        // Avoid division by zero
-        if (std[j] == 0) std[j] = 1.0f;
-    }
-
-    // Normalize the entire dataset
     float(*X_norm)[4] = malloc(n_samples * sizeof(*X_norm));
-    for (int i = 0; i < n_samples; i++) {
-        for (int j = 0; j < n_features; j++) {
-            X_norm[i][j] = (X[i][j] - mean[j]) / std[j];
-        }
-    }
+    Tensor_normalize_dataset(X, X_norm, n_samples, n_train_samples, n_features);
     X = (const float(*)[4])X_norm;
 
     // create model

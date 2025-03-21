@@ -5,6 +5,37 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
+
+void Tensor_normalize_dataset(const float (*X)[4], float (*X_norm)[4], int n_samples, int n_train_samples, int n_features) {
+    float mean[4] = {0}, std[4] = {0};
+    
+    for (int i = 0; i < n_train_samples; i++) {
+        for (int j = 0; j < n_features; j++) {
+            mean[j] += X[i][j];
+        }
+    }
+    for (int j = 0; j < n_features; j++) {
+        mean[j] /= n_train_samples;
+    }
+    
+    for (int i = 0; i < n_train_samples; i++) {
+        for (int j = 0; j < n_features; j++) {
+            std[j] += (X[i][j] - mean[j]) * (X[i][j] - mean[j]);
+        }
+    }
+    for (int j = 0; j < n_features; j++) {
+        std[j] = sqrtf(std[j] / n_train_samples);
+        // Avoid division by zero
+        if (std[j] == 0) std[j] = 1.0f;
+    }
+
+    for (int i = 0; i < n_samples; i++) {
+        for (int j = 0; j < n_features; j++) {
+            X_norm[i][j] = (X[i][j] - mean[j]) / std[j];
+        }
+    }
+}
 
 int TensorShape_numel(TensorShape shape) {
     int numel = 1;
