@@ -75,7 +75,7 @@ int main() {
         int num_batches = 0;
         for(int i = 0; i < n_train_samples; i += batch_size) {
             int actual_batch_size = i + batch_size <= n_train_samples ? batch_size : n_train_samples - i;
-            printf(" batch: %d/%d samples\n", i, n_train_samples);
+                printf(" batch: %d/%d samples\n", i, n_train_samples);
             cten_begin_malloc(PoolId_Default);            
             Tensor input = Tensor_zeros((TensorShape){actual_batch_size, n_features}, false);
             Tensor y_true = Tensor_zeros((TensorShape){actual_batch_size, n_classes}, false);
