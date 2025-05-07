@@ -97,6 +97,13 @@ Tensor Tensor_new(TensorShape shape, bool requires_grad) {
     int numel = TensorShape_numel(shape);
     self.data = _cten_malloc(sizeof(FloatBuffer) + sizeof(float) * numel);
     self.data->numel = numel;
+    
+    //Initialize tensor with random values
+    float* data_ptr = self.data->flex;
+    for (int i = 0; i < numel; i++) {
+        data_ptr[i] = ((float)rand() / RAND_MAX) * 2.0f - 1.0f;
+    }
+    
     if(requires_grad) {
         self.node = _cten_malloc(sizeof(GradNode));
         memset(self.node, 0, sizeof(GradNode));
