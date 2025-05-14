@@ -33,7 +33,30 @@ void cten_assert_dim(const char* title, int a, int b) {
 bool cten_elemwise_broadcast(Tensor* a, Tensor* b) {
     int a_dim = TensorShape_dim(a->shape);
     int b_dim = TensorShape_dim(b->shape);
-    if(a_dim != b_dim) return false;
+    
+    if (a_dim == 1 && a->shape[0] == 1 && b_dim > 0) {
+        Tensor a_ = Tensor_new(b->shape, a->node != NULL);
+        float scalar_value = a->data->flex[0];
+        int total_elements = TensorShape_numel(b->shape);
+        for (int i = 0; i < total_elements; i++) {
+            a_.data->flex[i] = scalar_value;
+        }
+        *a = a_;
+        return true;
+    }
+    
+    if (b_dim == 1 && b->shape[0] == 1 && a_dim > 0) {
+        Tensor b_ = Tensor_new(a->shape, b->node != NULL);
+        float scalar_value = b->data->flex[0];
+        int total_elements = TensorShape_numel(a->shape);
+        for (int i = 0; i < total_elements; i++) {
+            b_.data->flex[i] = scalar_value;
+        }
+        *b = b_;
+        return true;
+    }
+    
+    if (a_dim != b_dim) return false;
     int a_broadcast = -1;
     for(int i = 0; i < a_dim; i++) {
         if(a->shape[i] == b->shape[i]) continue;
@@ -75,4 +98,60 @@ bool cten_elemwise_broadcast(Tensor* a, Tensor* b) {
         *a = a_;
     }
     return true;
+}
+
+void Tensor_normalize_dataset(const float (*X)[4], float (*X_norm)[4], int n_samples, int n_train_samples, int n_features) {
+    float mean[4] = {0}, std[4] = {0};
+    
+    for (int i = 0; i < n_train_samples; i++) {
+        for (int j = 0; j < n_features; j++) {
+            mean[j] += X[i][j];
+        }
+    }
+    for (int j = 0; j < n_features; j++) {
+        mean[j] /= n_train_samples;
+    }
+    
+    for (int i = 0; i < n_train_samples; i++) {
+        for (int j = 0; j < n_features; j++) {
+            std[j] += (X[i][j] - mean[j]) * (X[i][j] - mean[j]);
+        }
+    }
+    for (int j = 0; j < n_features; j++) {
+        std[j] = sqrtf(std[j] / n_train_samples);
+        // Avoid division by zero
+        if (std[j] == 0) std[j] = 1.0f;
+    }
+
+    for (int i = 0; i < n_samples; i++) {
+        for (int j = 0; j < n_features; j++) {
+            X_norm[i][j] = (X[i][j] - mean[j]) / std[j];
+        }
+    }
+}
+
+void Tensor_shuffle_dataset(const float (*X)[4], const int *y,float (*X_shuffled)[4], int *y_shuffled, int n_samples, int n_features) {
+    int* indices = malloc(n_samples * sizeof(int));
+    for (int i = 0; i < n_samples; i++) {
+        indices[i] = i;
+    }
+    
+    // Fisher-Yates shuffle
+    srand((unsigned)time(NULL));
+    for (int i = n_samples - 1; i > 0; i--) {
+        int j = rand() % (i + 1);
+        int tmp = indices[i];
+        indices[i] = indices[j];
+        indices[j] = tmp;
+    }
+
+    for (int i = 0; i < n_samples; i++) {
+        int idx = indices[i];
+        for (int j = 0; j < n_features; j++) {
+            X_shuffled[i][j] = X[idx][j];
+        }
+        y_shuffled[i] = y[idx];
+    }
+    
+    free(indices);
 }

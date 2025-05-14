@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
+#include <time.h>
 
 int TensorShape_numel(TensorShape shape) {
     int numel = 1;
@@ -39,6 +41,13 @@ Tensor Tensor_new(TensorShape shape, bool requires_grad) {
     int numel = TensorShape_numel(shape);
     self.data = _cten_malloc(sizeof(FloatBuffer) + sizeof(float) * numel);
     self.data->numel = numel;
+    
+    //Initialize tensor with random values
+    float* data_ptr = self.data->flex;
+    for (int i = 0; i < numel; i++) {
+        data_ptr[i] = ((float)rand() / RAND_MAX) * 2.0f - 1.0f;
+    }
+    
     if(requires_grad) {
         self.node = _cten_malloc(sizeof(GradNode));
         memset(self.node, 0, sizeof(GradNode));
@@ -60,6 +69,27 @@ Tensor Tensor_ones(TensorShape shape, bool requires_grad) {
         self.data->flex[i] = 1.0f;
     }
     return self;
+}
+Tensor Tensor_transpose(Tensor self) {
+    int dim = TensorShape_dim(self.shape);
+    if(dim < 2){
+        return self; 
+    }
+    TensorShape new_shape;
+    new_shape[0] = self.shape[1];
+    new_shape[1] = self.shape[0];
+    for(int i = 2; i < 4; i++) {
+        new_shape[i] = self.shape[i];
+    }
+    Tensor result = Tensor_new(new_shape, false);
+    int rows = self.shape[0];
+    int cols = self.shape[1];
+    for(int i = 0; i < rows; i++) {
+        for(int j = 0; j < cols; j++) {
+            result.data->flex[j * rows + i] = self.data->flex[i * cols + j];
+        }
+    }
+    return result;
 }
 
 float Tensor_get(Tensor self, int i, int j, int k, int l) {
@@ -90,17 +120,32 @@ void Tensor_backward(Tensor self, Tensor grad) {
     if(self.node == NULL) return;
     if(grad.data == NULL) {
         assert(self.data->numel == 1);
-        grad = Tensor_ones((TensorShape){0}, false);
+        grad = Tensor_ones((TensorShape){1}, false);
     }
+    
     assert(grad.node == NULL);
     if(self.node->grad.data == NULL) {
         self.node->grad = grad;
     } else {
         self.node->grad = Tensor_add(self.node->grad, grad);
     }
+
     for(int i = 0; i < self.node->n_inputs; i++) {
-        grad = Tensor_mul(grad, self.node->grad_fn(self, i));
-        Tensor_backward(self.node->inputs[i], grad);
+        if (self.node->inputs[i].data == NULL) continue;
+        Tensor combined_grad;  
+        Tensor input_grad = self.node->grad_fn(self, i); 
+        if(strcmp(self.node->name, "Matmul") == 0){
+            if (i == 0){
+                combined_grad = Tensor_matmul(grad, input_grad);
+            }
+            else{
+                combined_grad = Tensor_matmul(input_grad, grad);
+            }
+        }
+        else{
+            combined_grad = Tensor_mul(grad, input_grad);
+        }       
+        Tensor_backward(self.node->inputs[i], combined_grad);
     }
 }
 

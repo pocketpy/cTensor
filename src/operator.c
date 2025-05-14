@@ -31,11 +31,15 @@ Tensor Tensor_add(Tensor self, Tensor other) {
         res.node->inputs[0] = self;
         res.node->inputs[1] = other;
         res.node->n_inputs = 2;
+        res.node->name = "Add";
     }
     return res;
 }
 
 Tensor Tensor_mul(Tensor self, Tensor other) {
+    if(!cten_elemwise_broadcast(&self, &other)) {
+        cten_assert_shape("Tensor_mul() cannot broadcast", self.shape, other.shape);
+    }
     bool requires_grad = !cten_is_eval() && (self.node != NULL || other.node != NULL);
     Tensor res = Tensor_new(self.shape, requires_grad);
     for(int i = 0; i < self.data->numel; i++) {
@@ -46,6 +50,7 @@ Tensor Tensor_mul(Tensor self, Tensor other) {
         res.node->inputs[0] = self;
         res.node->inputs[1] = other;
         res.node->n_inputs = 2;
+        res.node->name = "Mul";
     }
     return res;
 }
@@ -97,6 +102,7 @@ Tensor Tensor_mean(Tensor self) {
         res.node->grad_fn = GradFn_mean;
         res.node->inputs[0] = self;
         res.node->n_inputs = 1;
+        res.node->name = "Mean";
     }
     return res;
 }
@@ -117,16 +123,13 @@ Tensor Tensor_sum(Tensor self) {
         res.node->grad_fn = GradFn_sum;
         res.node->inputs[0] = self;
         res.node->n_inputs = 1;
+        res.node->name = "Sum";
     }
     return res;
 }
 
 static Tensor GradFn_matmul(Tensor self, int i) {
-    Tensor _0 = self.node->inputs[i];
-    Tensor _1 = self.node->inputs[1 - i];
-    _0 = Tensor_detach(_0);
-    _1 = Tensor_detach(_1);
-    return Tensor_matmul(_0, _1);
+    return Tensor_transpose(Tensor_detach(self.node->inputs[1-i]));;
 }
 
 Tensor Tensor_matmul(Tensor self, Tensor other) {
@@ -144,7 +147,7 @@ Tensor Tensor_matmul(Tensor self, Tensor other) {
     TensorShape res_shape;
     memcpy(res_shape, self.shape, sizeof(TensorShape));
     res_shape[self_dim - 1] = p;
-    Tensor res = Tensor_new(res_shape, self.node != NULL || other.node != NULL);
+    Tensor res = Tensor_new(res_shape, self.node != NULL || other.node != NULL); //here weight/bias have .node != NULL, so res have GradNode
 
     for(int i = 0; i < m; i++) {
         for(int j = 0; j < p; j++) {
@@ -161,7 +164,37 @@ Tensor Tensor_matmul(Tensor self, Tensor other) {
         res.node->inputs[0] = self;
         res.node->inputs[1] = other;
         res.node->n_inputs = 2;
+        res.node->name = "Matmul";
     }
 
+    return res;
+}
+
+static Tensor GradFn_sub(Tensor self, int i) {
+    // f(x, y) = x - y; f'(x) = 1; f'(y) = -1
+    Tensor input = self.node->inputs[i];
+    Tensor res = Tensor_ones(input.shape, false);
+    if(i == 1) {
+        res = Tensor_mulf(res, -1);
+    }
+    return res;
+}
+
+Tensor Tensor_sub(Tensor self, Tensor other) {
+    if (!cten_elemwise_broadcast(&self, &other)) {
+        cten_assert_shape("Tensor_sub() cannot broadcast", self.shape, other.shape);
+    }
+    bool requires_grad = !cten_is_eval() && (self.node != NULL || other.node != NULL);
+    Tensor res = Tensor_new(self.shape, requires_grad);
+    for (int i = 0; i < self.data->numel; i++) {
+        res.data->flex[i] = self.data->flex[i] - other.data->flex[i];
+    }
+    if (requires_grad) {
+        res.node->grad_fn = GradFn_sub; // Define GradFn_sub if needed
+        res.node->inputs[0] = self;
+        res.node->inputs[1] = other;
+        res.node->n_inputs = 2;
+        res.node->name = "Sub";
+    }
     return res;
 }
