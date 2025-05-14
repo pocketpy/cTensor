@@ -8,62 +8,6 @@
 #include <math.h>
 #include <time.h>
 
-void Tensor_normalize_dataset(const float (*X)[4], float (*X_norm)[4], int n_samples, int n_train_samples, int n_features) {
-    float mean[4] = {0}, std[4] = {0};
-    
-    for (int i = 0; i < n_train_samples; i++) {
-        for (int j = 0; j < n_features; j++) {
-            mean[j] += X[i][j];
-        }
-    }
-    for (int j = 0; j < n_features; j++) {
-        mean[j] /= n_train_samples;
-    }
-    
-    for (int i = 0; i < n_train_samples; i++) {
-        for (int j = 0; j < n_features; j++) {
-            std[j] += (X[i][j] - mean[j]) * (X[i][j] - mean[j]);
-        }
-    }
-    for (int j = 0; j < n_features; j++) {
-        std[j] = sqrtf(std[j] / n_train_samples);
-        // Avoid division by zero
-        if (std[j] == 0) std[j] = 1.0f;
-    }
-
-    for (int i = 0; i < n_samples; i++) {
-        for (int j = 0; j < n_features; j++) {
-            X_norm[i][j] = (X[i][j] - mean[j]) / std[j];
-        }
-    }
-}
-
-void Tensor_shuffle_dataset(const float (*X)[4], const int *y,float (*X_shuffled)[4], int *y_shuffled, int n_samples, int n_features) {
-    int* indices = malloc(n_samples * sizeof(int));
-    for (int i = 0; i < n_samples; i++) {
-        indices[i] = i;
-    }
-    
-    // Fisher-Yates shuffle
-    srand((unsigned)time(NULL));
-    for (int i = n_samples - 1; i > 0; i--) {
-        int j = rand() % (i + 1);
-        int tmp = indices[i];
-        indices[i] = indices[j];
-        indices[j] = tmp;
-    }
-
-    for (int i = 0; i < n_samples; i++) {
-        int idx = indices[i];
-        for (int j = 0; j < n_features; j++) {
-            X_shuffled[i][j] = X[idx][j];
-        }
-        y_shuffled[i] = y[idx];
-    }
-    
-    free(indices);
-}
-
 int TensorShape_numel(TensorShape shape) {
     int numel = 1;
     for(int i = 0; i < sizeof(TensorShape) / sizeof(shape[0]); i++) {
