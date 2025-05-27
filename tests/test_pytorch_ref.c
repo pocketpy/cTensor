@@ -35,9 +35,9 @@ void test_add_pytorch_ref() {
     bool pass = compare_tensors(result, expected_output, tolerance);
 
     if (pass) {
-        printf("  Test on Tensor_add Operator: PASS\n");
+        printf("Test on Tensor_add Operator: PASS\n");
     } else {
-        printf("  Test on Tensor_add Operator: FAIL\n");
+        printf("Test on Tensor_add Operator: FAIL\n");
         printf("    cTensor Result:\n");
         print_tensor_data(result);
         printf("    PyTorch Reference:\n");
@@ -71,9 +71,9 @@ void test_matmul_pytorch_ref() {
     bool pass = compare_tensors(result, expected_output, tolerance);
 
     if (pass) {
-        printf("  Test on Tensor_matmul Operator: PASS\n");
+        printf("Test on Tensor_matmul Operator: PASS\n");
     } else {
-        printf("  Test on Tensor_matmul Operator: FAIL\n");
+        printf("Test on Tensor_matmul Operator: FAIL\n");
         printf("    cTensor Result:\n");
         print_tensor_data(result);
         printf("    PyTorch Reference:\n");

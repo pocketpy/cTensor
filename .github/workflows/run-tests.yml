@@ -86,8 +86,9 @@ jobs:
     - name: Run tests
       shell: pwsh
       run: |
-        mkdir -p test_results
-        ./build/bin/Debug/cten_tests.exe > test_results/results-windows.txt 2>&1 || echo "Test execution reported an error, proceeding to upload results."
+        New-Item -Path test_results -ItemType Directory -Force
+        .\build\bin\Debug\cten_tests.exe > test_results\results-windows.txt 2>&1 || echo "Test execution reported an error, proceeding to upload results."
+        Get-Content test_results\results-windows.txt
 
     - name: Upload Windows results
       uses: actions/upload-artifact@v4
