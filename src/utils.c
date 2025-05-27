@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>    
+#include <time.h>    
 
 void cten_assert(bool cond, const char* fmt, ...) {
     if(!cond) {
