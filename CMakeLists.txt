@@ -26,15 +26,37 @@ if(NOT WIN32)
 endif()
 
 # Testing setup
-file(GLOB TEST_SOURCES "tests/*.c")
+# Test utilities and main runner
+set(TEST_UTIL_SOURCES
+    tests/csv_reporter.c
+    tests/test_utils.c
+    tests/cten_tests.c
+)
 
-# Create test executable with library sources
-add_executable(cten_tests ${TEST_SOURCES} ${LIB_SOURCES})
+# Operator-specific tests
+file(GLOB_RECURSE OPERATOR_TEST_SOURCES "tests/Operator/*.c")
 
-# Include tests directory for test_utils.h
-target_include_directories(cten_tests PRIVATE tests)
+# Gradient-specific tests (can be empty initially)
+file(GLOB_RECURSE GRAD_TEST_SOURCES "tests/Grad/*.c")
 
-# Set C standard for tests
+# Combine all test sources
+set(ALL_TEST_SOURCES
+    ${TEST_UTIL_SOURCES}
+    ${OPERATOR_TEST_SOURCES}
+    ${GRAD_TEST_SOURCES}
+)
+
+# Create test executable with library sources and all test sources
+add_executable(cten_tests ${ALL_TEST_SOURCES} ${LIB_SOURCES})
+
+
+target_compile_definitions(cten_tests PRIVATE "CTEN_BUILD_DIR_PATH=\"${CMAKE_BINARY_DIR}\"")
+
+target_include_directories(cten_tests PRIVATE
+    tests/Operator
+    tests/Grad
+)
+
 set_target_properties(cten_tests PROPERTIES
     C_STANDARD 11
     C_STANDARD_REQUIRED ON
@@ -52,4 +74,11 @@ endif()
 
 # Enable testing
 enable_testing()
-add_test(NAME OperatorTests COMMAND cten_tests)
+add_test(NAME AllTests COMMAND cten_tests)
+
+# Optional: Define a custom target to build and run tests easily
+add_custom_target(run_all_tests
+    COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
+    DEPENDS cten_tests
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+)
