@@ -28,7 +28,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Set up CMake and C Compiler
       uses: lukka/get-cmake@latest
@@ -54,7 +54,7 @@ jobs:
       shell: bash
 
     - name: Upload test report artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.artifact_name }}
         path: build/cten_test_report_${{ matrix.platform_report_suffix }}.csv
@@ -67,10 +67,10 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.x'
 
@@ -78,21 +78,21 @@ jobs:
       run: mkdir -p reports
 
     - name: Download Ubuntu report
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: report-ubuntu.csv
         path: reports/
       continue-on-error: true
 
     - name: Download macOS report
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: report-macos.csv
         path: reports/
       continue-on-error: true
 
     - name: Download Windows report
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: report-windows.csv
         path: reports/
