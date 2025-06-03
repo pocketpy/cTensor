@@ -92,7 +92,7 @@ static Tensor GradFn_mean(Tensor self, int i) {
 }
 
 Tensor Tensor_mean(Tensor self) {
-    Tensor res = Tensor_new((TensorShape){0}, self.node != NULL);
+    Tensor res = Tensor_new((TensorShape){1, 0, 0, 0}, self.node != NULL);
     float sum = 0;
     for(int i = 0; i < self.data->numel; i++) {
         sum += self.data->flex[i];
@@ -113,7 +113,7 @@ static Tensor GradFn_sum(Tensor self, int i) {
 }
 
 Tensor Tensor_sum(Tensor self) {
-    Tensor res = Tensor_new((TensorShape){0}, self.node != NULL);
+    Tensor res = Tensor_new((TensorShape){1, 0, 0, 0}, self.node != NULL);
     float sum = 0;
     for(int i = 0; i < self.data->numel; i++) {
         sum += self.data->flex[i];
