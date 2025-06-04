@@ -20,6 +20,11 @@ file(GLOB_RECURSE ALL_SOURCES "src/*.c" "src2/*.c")
 # Create main executable
 add_executable(cten_exe ${ALL_SOURCES})
 
+# Add MSVC-specific compiler options for main executable
+if(MSVC)
+    target_compile_options(cten_exe PRIVATE /wd4305)
+endif()
+
 # Link math library (cross-platform)
 if(NOT WIN32)
     target_link_libraries(cten_exe PRIVATE m)
@@ -49,6 +54,10 @@ set(ALL_TEST_SOURCES
 # Create test executable with library sources and all test sources
 add_executable(cten_tests ${ALL_TEST_SOURCES} ${LIB_SOURCES})
 
+# Add MSVC-specific compiler options for tests
+if(MSVC)
+    target_compile_options(cten_tests PRIVATE /wd4305)
+endif()
 
 target_compile_definitions(cten_tests PRIVATE "CTEN_BUILD_DIR_PATH=\"${CMAKE_BINARY_DIR}\"")
 
