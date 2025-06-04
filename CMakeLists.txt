@@ -23,6 +23,7 @@ add_executable(cten_exe ${ALL_SOURCES})
 # Add MSVC-specific compiler options for main executable
 if(MSVC)
     target_compile_options(cten_exe PRIVATE /wd4305)
+    target_compile_definitions(cten_exe PRIVATE _CRT_SECURE_NO_WARNINGS)
 endif()
 
 # Link math library (cross-platform)
@@ -57,6 +58,7 @@ add_executable(cten_tests ${ALL_TEST_SOURCES} ${LIB_SOURCES})
 # Add MSVC-specific compiler options for tests
 if(MSVC)
     target_compile_options(cten_tests PRIVATE /wd4305)
+    target_compile_definitions(cten_tests PRIVATE _CRT_SECURE_NO_WARNINGS)
 endif()
 
 target_compile_definitions(cten_tests PRIVATE "CTEN_BUILD_DIR_PATH=\"${CMAKE_BINARY_DIR}\"")
