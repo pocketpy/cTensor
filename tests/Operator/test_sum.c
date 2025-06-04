@@ -20,9 +20,7 @@ void test_sum_operator() {
         Tensor expected_res = create_test_tensor(s_shape, exp_d, false);
         Tensor actual_res = Tensor_sum(t1);
 
-        if (compare_tensors(&actual_res, &expected_res, op_name, tc_name, TEST_FLOAT_TOLERANCE)) {
-            csv_reporter_add_entry(op_name, tc_name, true, NULL);
-        }
+        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
 
     // Test Case 2: Sum of a vector tensor
@@ -36,9 +34,7 @@ void test_sum_operator() {
         Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
         Tensor actual_res = Tensor_sum(t1);
 
-        if (compare_tensors(&actual_res, &expected_res, op_name, tc_name, TEST_FLOAT_TOLERANCE)) {
-            csv_reporter_add_entry(op_name, tc_name, true, NULL);
-        }
+        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
 
     // Test Case 3: Sum of a matrix tensor
@@ -52,9 +48,7 @@ void test_sum_operator() {
         Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
         Tensor actual_res = Tensor_sum(t1);
 
-        if (compare_tensors(&actual_res, &expected_res, op_name, tc_name, TEST_FLOAT_TOLERANCE)) {
-            csv_reporter_add_entry(op_name, tc_name, true, NULL);
-        }
+        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
 
     // Test Case 4: Sum of a tensor with negative numbers
@@ -68,9 +62,7 @@ void test_sum_operator() {
         Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
         Tensor actual_res = Tensor_sum(t1);
 
-        if (compare_tensors(&actual_res, &expected_res, op_name, tc_name, TEST_FLOAT_TOLERANCE)) {
-            csv_reporter_add_entry(op_name, tc_name, true, NULL);
-        }
+        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
 
     cten_free(pool_id);

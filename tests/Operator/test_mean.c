@@ -21,9 +21,7 @@ void test_mean_operator() {
         Tensor expected_res = create_test_tensor(exp_shape_scalar, exp_d, false);
         Tensor actual_res = Tensor_mean(t1);
 
-        if (compare_tensors(&actual_res, &expected_res, op_name, tc_name, TEST_FLOAT_TOLERANCE)) {
-            csv_reporter_add_entry(op_name, tc_name, true, NULL);
-        }
+        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
 
     // Test Case 2: Mean of a vector
@@ -36,9 +34,7 @@ void test_mean_operator() {
         Tensor expected_res = create_test_tensor(exp_shape_scalar, exp_d, false);
         Tensor actual_res = Tensor_mean(t1);
 
-        if (compare_tensors(&actual_res, &expected_res, op_name, tc_name, TEST_FLOAT_TOLERANCE)) {
-            csv_reporter_add_entry(op_name, tc_name, true, NULL);
-        }
+        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
 
     // Test Case 3: Mean of a matrix
@@ -51,9 +47,7 @@ void test_mean_operator() {
         Tensor expected_res = create_test_tensor(exp_shape_scalar, exp_d, false);
         Tensor actual_res = Tensor_mean(t1);
 
-        if (compare_tensors(&actual_res, &expected_res, op_name, tc_name, TEST_FLOAT_TOLERANCE)) {
-            csv_reporter_add_entry(op_name, tc_name, true, NULL);
-        }
+        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
     
     // Test Case 4: Mean of a matrix with negative numbers
@@ -66,9 +60,7 @@ void test_mean_operator() {
         Tensor expected_res = create_test_tensor(exp_shape_scalar, exp_d, false);
         Tensor actual_res = Tensor_mean(t1);
 
-        if (compare_tensors(&actual_res, &expected_res, op_name, tc_name, TEST_FLOAT_TOLERANCE)) {
-            csv_reporter_add_entry(op_name, tc_name, true, NULL);
-        }
+        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
 
     // Test Case 5: Mean of a tensor with all zeros
@@ -81,9 +73,7 @@ void test_mean_operator() {
         Tensor expected_res = create_test_tensor(exp_shape_scalar, exp_d, false);
         Tensor actual_res = Tensor_mean(t1);
 
-        if (compare_tensors(&actual_res, &expected_res, op_name, tc_name, TEST_FLOAT_TOLERANCE)) {
-            csv_reporter_add_entry(op_name, tc_name, true, NULL);
-        }
+        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
 
     cten_free(pool_id);

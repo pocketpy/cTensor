@@ -23,9 +23,7 @@ void test_matmul_operator() {
         Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
         Tensor actual_res = Tensor_matmul(t1, t2);
 
-        if (compare_tensors(&actual_res, &expected_res, op_name, tc_name, TEST_FLOAT_TOLERANCE)) {
-            csv_reporter_add_entry(op_name, tc_name, true, NULL);
-        }
+        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
 
     // Test Case 2: Rectangular Matrix Multiplication (2x3 * 3x2)
@@ -40,9 +38,7 @@ void test_matmul_operator() {
         Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
         Tensor actual_res = Tensor_matmul(t1, t2);
 
-        if (compare_tensors(&actual_res, &expected_res, op_name, tc_name, TEST_FLOAT_TOLERANCE)) {
-            csv_reporter_add_entry(op_name, tc_name, true, NULL);
-        }
+        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
 
     // Test Case 3: Matrix-Vector (2x2 * 2x1) (Vector as column matrix)
@@ -57,9 +53,7 @@ void test_matmul_operator() {
         Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
         Tensor actual_res = Tensor_matmul(t_mat, t_vec);
 
-        if (compare_tensors(&actual_res, &expected_res, op_name, tc_name, TEST_FLOAT_TOLERANCE)) {
-            csv_reporter_add_entry(op_name, tc_name, true, NULL);
-        }
+        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
 
     // Test Case 4: Vector-Matrix (1x2 * 2x2) (Vector as row matrix)
@@ -74,9 +68,7 @@ void test_matmul_operator() {
         Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
         Tensor actual_res = Tensor_matmul(t_vec, t_mat);
 
-        if (compare_tensors(&actual_res, &expected_res, op_name, tc_name, TEST_FLOAT_TOLERANCE)) {
-            csv_reporter_add_entry(op_name, tc_name, true, NULL);
-        }
+        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
 
     cten_free(pool_id);

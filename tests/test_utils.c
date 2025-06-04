@@ -52,17 +52,15 @@ void print_tensor(const Tensor* t, const char* name) {
     printf("\n");
 }
 
-bool compare_tensors(const Tensor* t_observed, const Tensor* t_expected, const char* operator_name, const char* base_test_case_name, float tolerance) {
-    char test_point_identifier[256];
+bool compare_tensors(const Tensor* t_observed, const Tensor* t_expected, const char* operator_name, const char* test_point_name, int sub_test_index, float tolerance) {
     char failure_detail_buffer[512];
 
     if (t_observed == NULL || t_expected == NULL) {
-        snprintf(test_point_identifier, sizeof(test_point_identifier), "%s_tensor_null_check", base_test_case_name);
         const char* detail = "observed_is_NULL";
         if (t_observed == NULL && t_expected == NULL) detail = "both_are_NULL";
         else if (t_expected == NULL) detail = "expected_is_NULL";
-        snprintf(failure_detail_buffer, sizeof(failure_detail_buffer), "%s/%s/%s", detail, "non-NULL_expected_or_vice_versa", PLATFORM_NAME);
-        csv_reporter_add_entry(operator_name, test_point_identifier, false, failure_detail_buffer);
+        snprintf(failure_detail_buffer, sizeof(failure_detail_buffer), "%s/%s/%s", detail, "not_null", PLATFORM_NAME);
+        csv_reporter_record_result(operator_name, test_point_name, sub_test_index, failure_detail_buffer);
         return false;
     }
 
@@ -73,32 +71,29 @@ bool compare_tensors(const Tensor* t_observed, const Tensor* t_expected, const c
     int dim_obs = TensorShape_dim(shape_obs_copy_for_dim);
     int dim_exp = TensorShape_dim(shape_exp_copy_for_dim);
     if (dim_obs != dim_exp) {
-        snprintf(test_point_identifier, sizeof(test_point_identifier), "%s_dim_check", base_test_case_name);
         snprintf(failure_detail_buffer, sizeof(failure_detail_buffer), "%d/%d/%s_dim_mismatch", dim_obs, dim_exp, PLATFORM_NAME);
-        csv_reporter_add_entry(operator_name, test_point_identifier, false, failure_detail_buffer);
+        csv_reporter_record_result(operator_name, test_point_name, sub_test_index, failure_detail_buffer);
         return false;
     }
 
     // 2. Compare shapes
     for (int i = 0; i < dim_obs; ++i) {
         if (t_observed->shape[i] != t_expected->shape[i]) {
-            snprintf(test_point_identifier, sizeof(test_point_identifier), "%s_shape_check_dim%d", base_test_case_name, i);
             snprintf(failure_detail_buffer, sizeof(failure_detail_buffer), "%d/%d/%s_shape_mismatch_at_dim%d", t_observed->shape[i], t_expected->shape[i], PLATFORM_NAME, i);
-            csv_reporter_add_entry(operator_name, test_point_identifier, false, failure_detail_buffer);
+            csv_reporter_record_result(operator_name, test_point_name, sub_test_index, failure_detail_buffer);
             return false;
         }
     }
 
     // Check for NULL data buffers
     if (t_observed->data == NULL || t_expected->data == NULL) {
-        snprintf(test_point_identifier, sizeof(test_point_identifier), "%s_data_buffer_null_check", base_test_case_name);
         const char* detail = "observed_data_is_NULL";
         if (t_observed->data == NULL && t_expected->data == NULL && t_observed->shape[0] == 0);
         else if (t_observed->data == NULL && t_expected->data == NULL) detail = "both_data_are_NULL";
         else if (t_expected->data == NULL) detail = "expected_data_is_NULL";
         else {
             snprintf(failure_detail_buffer, sizeof(failure_detail_buffer), "%s/%s/%s", detail, "non-NULL_data_expected_or_vice_versa", PLATFORM_NAME);
-            csv_reporter_add_entry(operator_name, test_point_identifier, false, failure_detail_buffer);
+            csv_reporter_record_result(operator_name, test_point_name, sub_test_index, failure_detail_buffer);
             return false;
         }
     }
@@ -106,10 +101,9 @@ bool compare_tensors(const Tensor* t_observed, const Tensor* t_expected, const c
     // Handle case where one data is NULL but other is not (and not an empty tensor case)
     if ((t_observed->data == NULL && t_expected->data != NULL && t_expected->data->numel > 0) || 
         (t_observed->data != NULL && t_expected->data == NULL && t_observed->data->numel > 0)) {
-        snprintf(test_point_identifier, sizeof(test_point_identifier), "%s_data_buffer_null_mismatch", base_test_case_name);
         const char* detail = (t_observed->data == NULL) ? "observed_data_NULL_expected_not_NULL" : "observed_data_not_NULL_expected_NULL";
         snprintf(failure_detail_buffer, sizeof(failure_detail_buffer), "%s/%s/%s", detail, "data_buffer_discrepancy", PLATFORM_NAME);
-        csv_reporter_add_entry(operator_name, test_point_identifier, false, failure_detail_buffer);
+        csv_reporter_record_result(operator_name, test_point_name, sub_test_index, failure_detail_buffer);
         return false;
     }
 
@@ -119,9 +113,8 @@ bool compare_tensors(const Tensor* t_observed, const Tensor* t_expected, const c
 
     // 3. Compare number of elements
     if (numel_obs != numel_exp) {
-        snprintf(test_point_identifier, sizeof(test_point_identifier), "%s_numel_check", base_test_case_name);
         snprintf(failure_detail_buffer, sizeof(failure_detail_buffer), "%zu/%zu/%s_numel_mismatch", numel_obs, numel_exp, PLATFORM_NAME);
-        csv_reporter_add_entry(operator_name, test_point_identifier, false, failure_detail_buffer);
+        csv_reporter_record_result(operator_name, test_point_name, sub_test_index, failure_detail_buffer);
         return false;
     }
 
@@ -133,14 +126,15 @@ bool compare_tensors(const Tensor* t_observed, const Tensor* t_expected, const c
     // 4. Compare data element-wise (only if data buffers are not NULL and numel > 0)
     for (size_t i = 0; i < numel_obs; ++i) {
         if (!compare_floats(t_observed->data->flex[i], t_expected->data->flex[i], tolerance)) {
-            snprintf(test_point_identifier, sizeof(test_point_identifier), "%s_data_val_idx%zu", base_test_case_name, i);
             snprintf(failure_detail_buffer, sizeof(failure_detail_buffer), "%.*g/%.*g/%s",
                      15, t_observed->data->flex[i], 15, t_expected->data->flex[i], PLATFORM_NAME);
-            csv_reporter_add_entry(operator_name, test_point_identifier, false, failure_detail_buffer);
+            csv_reporter_record_result(operator_name, test_point_name, sub_test_index, failure_detail_buffer);
             return false; // Fail on first mismatch
         }
     }
     
+    // All tests passed, record success
+    csv_reporter_record_result(operator_name, test_point_name, sub_test_index, "/");
     return true;
 }
 

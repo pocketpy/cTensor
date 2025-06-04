@@ -22,9 +22,7 @@ void test_mul_operator() {
         Tensor expected_res = create_test_tensor(s_shape, exp_d, false);
         Tensor actual_res = Tensor_mul(t1, t2);
 
-        if (compare_tensors(&actual_res, &expected_res, op_name, tc_name, TEST_FLOAT_TOLERANCE)) {
-            csv_reporter_add_entry(op_name, tc_name, true, NULL);
-        }
+        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
 
     // Test Case 2: Vector element-wise multiplication
@@ -39,9 +37,7 @@ void test_mul_operator() {
         Tensor expected_res = create_test_tensor(v_shape, exp_d, false);
         Tensor actual_res = Tensor_mul(t1, t2);
 
-        if (compare_tensors(&actual_res, &expected_res, op_name, tc_name, TEST_FLOAT_TOLERANCE)) {
-            csv_reporter_add_entry(op_name, tc_name, true, NULL);
-        }
+        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
 
     // Test Case 3: Matrix element-wise multiplication
@@ -56,9 +52,7 @@ void test_mul_operator() {
         Tensor expected_res = create_test_tensor(m_shape, exp_d, false);
         Tensor actual_res = Tensor_mul(t1, t2);
 
-        if (compare_tensors(&actual_res, &expected_res, op_name, tc_name, TEST_FLOAT_TOLERANCE)) {
-            csv_reporter_add_entry(op_name, tc_name, true, NULL);
-        }
+        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
 
     // Test Case 4: Broadcasting (matrix * scalar-like tensor)
@@ -76,9 +70,7 @@ void test_mul_operator() {
         Tensor actual_res = Tensor_mul(t_mat, t_scalar_original); 
         Tensor expected_res = create_test_tensor(expected_shape, exp_data, false);
 
-        if (compare_tensors(&actual_res, &expected_res, op_name, tc_name, TEST_FLOAT_TOLERANCE)) {
-            csv_reporter_add_entry(op_name, tc_name, true, NULL);
-        }
+        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
 
     cten_free(pool_id);

@@ -11,18 +11,34 @@ void test_add_operator() {
 
     // Test Case 1: Scalar addition (represented as 1x1 tensors)
     {
-        const char* tc_name = "add_scalar";
         TensorShape s_shape = {1, 0, 0, 0};
-        float d1[] = {2.5f}; 
-        float d2[] = {3.5f};
-        float exp_d[] = {6.0f};
-        Tensor t1 = create_test_tensor(s_shape, d1, false);
-        Tensor t2 = create_test_tensor(s_shape, d2, false);
-        Tensor expected_res = create_test_tensor(s_shape, exp_d, false);
-        Tensor actual_res = Tensor_add(t1, t2);
 
-        if (compare_tensors(&actual_res, &expected_res, op_name, tc_name, TEST_FLOAT_TOLERANCE)) {
-            csv_reporter_add_entry(op_name, tc_name, true, NULL);
+        // Sub-test 1
+        {
+            const char* tc_name = "add_scalar";
+            float d1[] = {2.5f};
+            float d2[] = {3.5f};
+            float exp_d[] = {6.0f};
+            Tensor t1 = create_test_tensor(s_shape, d1, false);
+            Tensor t2 = create_test_tensor(s_shape, d2, false);
+            Tensor expected_res = create_test_tensor(s_shape, exp_d, false);
+            Tensor actual_res = Tensor_add(t1, t2);
+
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+        }
+
+        // Sub-test 2
+        {
+            const char* tc_name = "add_scalar";  
+            float d1[] = {10.0f}; 
+            float d2[] = {5.0f};
+            float exp_d[] = {15.0f}; 
+            Tensor t1 = create_test_tensor(s_shape, d1, false);
+            Tensor t2 = create_test_tensor(s_shape, d2, false);
+            Tensor expected_res = create_test_tensor(s_shape, exp_d, false);
+            Tensor actual_res = Tensor_add(t1, t2);
+
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 2, TEST_FLOAT_TOLERANCE);
         }
     }
 
@@ -38,9 +54,7 @@ void test_add_operator() {
         Tensor expected_res = create_test_tensor(v_shape, exp_d, false);
         Tensor actual_res = Tensor_add(t1, t2);
 
-        if (compare_tensors(&actual_res, &expected_res, op_name, tc_name, TEST_FLOAT_TOLERANCE)) {
-            csv_reporter_add_entry(op_name, tc_name, true, NULL);
-        }
+        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
 
     // Test Case 3: Matrix addition (2D tensors)
@@ -55,9 +69,7 @@ void test_add_operator() {
         Tensor expected_res = create_test_tensor(m_shape, exp_d, false);
         Tensor actual_res = Tensor_add(t1, t2);
 
-        if (compare_tensors(&actual_res, &expected_res, op_name, tc_name, TEST_FLOAT_TOLERANCE)) {
-            csv_reporter_add_entry(op_name, tc_name, true, NULL);
-        }
+        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
     
     // Test Case 4: Broadcasting (vector + scalar-like tensor)
@@ -91,9 +103,7 @@ void test_add_operator() {
         Tensor expected_res = create_test_tensor(expected_shape, exp_data, false);
 
         // We compare actual_res against an expected_res that has the final broadcasted shape and values.
-        if (compare_tensors(&actual_res, &expected_res, op_name, tc_name, TEST_FLOAT_TOLERANCE)) {
-            csv_reporter_add_entry(op_name, tc_name, true, NULL);
-        }
+        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
 
     cten_free(pool_id);

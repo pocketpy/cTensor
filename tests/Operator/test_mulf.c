@@ -21,9 +21,7 @@ void test_mulf_operator() {
         Tensor expected_res = create_test_tensor(s_shape, exp_d, false);
         Tensor actual_res = Tensor_mulf(t1, scalar_val);
 
-        if (compare_tensors(&actual_res, &expected_res, op_name, tc_name, TEST_FLOAT_TOLERANCE)) {
-            csv_reporter_add_entry(op_name, tc_name, true, NULL);
-        }
+        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
 
     // Test Case 2: Vector tensor multiplied by float
@@ -37,9 +35,7 @@ void test_mulf_operator() {
         Tensor expected_res = create_test_tensor(v_shape, exp_d, false);
         Tensor actual_res = Tensor_mulf(t1, scalar_val);
 
-        if (compare_tensors(&actual_res, &expected_res, op_name, tc_name, TEST_FLOAT_TOLERANCE)) {
-            csv_reporter_add_entry(op_name, tc_name, true, NULL);
-        }
+        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
 
     // Test Case 3: Matrix tensor multiplied by float
@@ -53,9 +49,7 @@ void test_mulf_operator() {
         Tensor expected_res = create_test_tensor(m_shape, exp_d, false);
         Tensor actual_res = Tensor_mulf(t1, scalar_val);
 
-        if (compare_tensors(&actual_res, &expected_res, op_name, tc_name, TEST_FLOAT_TOLERANCE)) {
-            csv_reporter_add_entry(op_name, tc_name, true, NULL);
-        }
+        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
 
     // Test Case 4: Tensor multiplied by zero
@@ -69,9 +63,7 @@ void test_mulf_operator() {
         Tensor expected_res = create_test_tensor(m_shape, exp_d, false);
         Tensor actual_res = Tensor_mulf(t1, scalar_val);
 
-        if (compare_tensors(&actual_res, &expected_res, op_name, tc_name, TEST_FLOAT_TOLERANCE)) {
-            csv_reporter_add_entry(op_name, tc_name, true, NULL);
-        }
+        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
 
     cten_free(pool_id);

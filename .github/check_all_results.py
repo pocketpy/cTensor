@@ -25,35 +25,50 @@ def parse_reports(report_paths):
         try:
             with open(report_path, 'r', newline='') as csvfile:
                 reader = csv.DictReader(csvfile)
-                # Check for essential headers
-                expected_headers = ['Operator', 'TestPoint', 'ResultDetail']
-                if not reader.fieldnames or not all(header in reader.fieldnames for header in expected_headers):
-                    print(f"Error: Report file {report_path} has missing or incorrect headers.", file=sys.stderr)
-                    print(f"Expected headers: {expected_headers}, Got: {reader.fieldnames}", file=sys.stderr)
+                expected_base_headers = ['Operator', 'TestPoint']
+                if not reader.fieldnames or not all(header in reader.fieldnames for header in expected_base_headers):
+                    print(f"Error: Report file {report_path} has missing or incorrect base headers.", file=sys.stderr)
+                    print(f"Expected base headers: {expected_base_headers}, Got: {reader.fieldnames}", file=sys.stderr)
                     passed_all_reports = False
                     all_failures.append({
                         "file": os.path.basename(report_path),
                         "operator": "N/A",
-                        "test_point": "INVALID_HEADERS",
-                        "details": f"Report file {report_path} has invalid or missing CSV headers."
+                        "test_point": "INVALID_BASE_HEADERS",
+                        "details": f"Report file {report_path} has invalid or missing base CSV headers (Operator, TestPoint)."
                     })
                     continue
 
                 report_has_failures = False
                 print(f"Processing report: {report_path}")
-                for row_num, row in enumerate(reader, 1):
+                
+                sub_test_headers = [h for h in reader.fieldnames if h not in expected_base_headers]
+                if not sub_test_headers:
+                    print(f"Warning: Report file {report_path} has no sub-test columns after 'Operator' and 'TestPoint'.", file=sys.stderr)
+
+                for _, row in enumerate(reader, 1):
                     operator = row.get('Operator', 'N/A')
                     test_point = row.get('TestPoint', 'N/A')
-                    result_detail = row.get('ResultDetail', 'ERROR_MISSING_RESULT_DETAIL')
+                    row_failed = False
+                    failure_details_for_row = []
 
-                    if result_detail != '/':
+                    if not sub_test_headers:
+                        pass
+                    else:
+                        for sub_test_header in sub_test_headers:
+                            result_detail = row.get(sub_test_header, '')
+                            
+                            if result_detail != '/' and result_detail != '':
+                                row_failed = True
+                                failure_details_for_row.append(f"Sub-test '{sub_test_header}': {result_detail}")
+
+                    if row_failed:
                         passed_all_reports = False
                         report_has_failures = True
                         all_failures.append({
                             "file": os.path.basename(report_path),
                             "operator": operator,
                             "test_point": test_point,
-                            "details": result_detail
+                            "details": "; ".join(failure_details_for_row)
                         })
                 if report_has_failures:
                     print(f"Failures found in {os.path.basename(report_path)}.", file=sys.stderr)

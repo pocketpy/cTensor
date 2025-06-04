@@ -2,8 +2,11 @@ import os
 import re
 import sys
 
-OPERATOR_FILE_PATH = "src/operator.c"
-TEST_DIR_PATH = "tests/Operator"
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.abspath(os.path.join(SCRIPT_DIR, os.pardir))
+
+OPERATOR_FILE_PATH = os.path.join(PROJECT_ROOT, "src", "operator.c")
+TEST_DIR_PATH = os.path.join(PROJECT_ROOT, "tests", "Operator")
 
 def get_defined_operators(operator_file):
     """Extracts operator names (Tensor_XXX) from the operator source file."""

@@ -1,27 +1,19 @@
 #ifndef CSV_REPORTER_H
 #define CSV_REPORTER_H
 
-#include <stdio.h>
-#include <stdbool.h>
+#include <stdio.h> 
 
 // Returns 0 on success, -1 on failure.
-int csv_reporter_init(const char* filename);
+int csv_reporter_init(const char *filename);
 
-// Appends a test result to the CSV report.
+// Records a test result for a specific sub-test within a test point.
+// operator_name: Name of the operator being tested (e.g., "add").
 
-// operator_name: Name of the cTensor operator (e.g., "add", "mul").
+// test_point_name: The base name for the test case, defining a row in the CSV (e.g., "add_scalar").
 
-// test_case_identifier: A unique string identifying the specific test case or aspect being tested
-//                       (e.g., "add_scalar", "add_vector_shape_check", "add_matrix_element_0_0").
-
-// passed: true if the test aspect passed, false if failed.
-
-// failure_detail: If 'passed' is false, this string contains the failure information,
-//                 formatted as "observed/expected/platform" for value mismatches,
-//                 or a descriptive string for other failures (e.g., "shape_mismatch").
-//                 If 'passed' is true, this argument is ignored.
-
-void csv_reporter_add_entry(const char* operator_name, const char* test_case_identifier, bool passed, const char* failure_detail);
+// sub_test_index: A 1-based index specifying the sub-test column for this result (e.g., 1, 2, 3...).
+// result_detail: A string describing the result (e.g., "/" for pass, or "observed/expected/platform" for fail).
+void csv_reporter_record_result(const char *operator_name, const char *test_point_name, int sub_test_index, const char *result_detail);
 void csv_reporter_close();
 
 #endif
