@@ -44,7 +44,7 @@ void test_add_operator() {
 
     // Test Case 2: Vector addition (1D tensors)
     {
-        const char* tc_name = "add_vector_3el";
+        const char* tc_name = "add_vector_1D";
         TensorShape v_shape = {3, 0, 0, 0};
         float d1[] = {1.0f, 2.0f, 3.0f};
         float d2[] = {4.0f, 5.0f, 6.0f};
@@ -107,7 +107,7 @@ void test_add_operator() {
     }
 
     // TODO: Problem in Broadcasting
-    
+
     // // Test Case 5: Advanced Broadcasting
     // {
     //     const char* tc_name = "add_advanced_broadcasting";
