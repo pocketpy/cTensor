@@ -66,6 +66,8 @@ Tensor Tensor_matmul(Tensor self, Tensor other);
 
 Tensor Tensor_neg(Tensor self);
 Tensor Tensor_abs(Tensor self);
+Tensor Tensor_square(Tensor self);
+Tensor Tensor_reciprocal(Tensor self);
 
 Tensor Tensor_sum(Tensor self);
 Tensor Tensor_mean(Tensor self);
