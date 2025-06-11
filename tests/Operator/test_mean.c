@@ -26,7 +26,7 @@ void test_mean_operator() {
 
     // Test Case 2: Mean of a vector
     {
-        const char* tc_name = "mean_vector_3el";
+        const char* tc_name = "mean_vector_1D";
         TensorShape v_shape = {3, 0, 0, 0};
         float d1[] = {1.0f, 2.0f, 3.0f}; // Sum = 6, Count = 3, Mean = 2
         float exp_d[] = {2.0f};
@@ -74,6 +74,106 @@ void test_mean_operator() {
         Tensor actual_res = Tensor_mean(t1);
 
         compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+    }
+
+    // Test Case 6: Large Tensor Reductions
+    {
+        const char* tc_name = "mean_large_tensor_reductions";
+        
+        // Sub-test 1: Large tensor mean (1,000 elements)
+        {
+            TensorShape large_shape = {1000, 0, 0, 0};
+            float large_data[1000];
+            for(int i = 0; i < 1000; i++) large_data[i] = 1.0f;
+            
+            float exp_d[] = {1.0f}; // Mean of 1000 ones = 1.0
+            TensorShape exp_shape = {1, 0, 0, 0};
+            
+            Tensor t1 = create_test_tensor(large_shape, large_data, false);
+            Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
+            Tensor actual_res = Tensor_mean(t1);
+
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+        }
+
+        // Sub-test 2: Large count division (stress test - 5,000 elements)
+        {
+            TensorShape stress_shape = {5000, 0, 0, 0};
+            float stress_data[5000];
+            for(int i = 0; i < 5000; i++) stress_data[i] = 2.0f;
+            
+            float exp_d[] = {2.0f}; // Mean of 5000 twos = 2.0
+            TensorShape exp_shape = {1, 0, 0, 0};
+            
+            Tensor t1 = create_test_tensor(stress_shape, stress_data, false);
+            Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
+            Tensor actual_res = Tensor_mean(t1);
+
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 2, TEST_FLOAT_TOLERANCE);
+        }
+    }
+
+    // Test Case 7: Higher Dimensional Tensors
+    {
+        const char* tc_name = "mean_higher_dimensional_tensors";
+        
+        // Sub-test 1: 3D tensor mean
+        {
+            TensorShape shape_3d = {2, 3, 4, 0};
+            float d1[24];
+            float sum = 0.0f;
+            for(int i = 0; i < 24; i++) {
+                d1[i] = (float)(i + 1);
+                sum += d1[i];
+            }
+            
+            float exp_d[] = {sum / 24.0f}; // Mean of 1+2+...+24 = 300/24 = 12.5
+            TensorShape exp_shape = {1, 0, 0, 0};
+            
+            Tensor t1 = create_test_tensor(shape_3d, d1, false);
+            Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
+            Tensor actual_res = Tensor_mean(t1);
+
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+        }
+
+        // Sub-test 2: 4D tensor mean
+        {
+            TensorShape shape_4d = {2, 3, 4, 5};
+            float d1[120];
+            float sum = 0.0f;
+            for(int i = 0; i < 120; i++) {
+                d1[i] = (float)(i + 1);
+                sum += d1[i];
+            }
+            
+            float exp_d[] = {sum / 120.0f}; // Mean of 1+2+...+120 = 7260/120 = 60.5
+            TensorShape exp_shape = {1, 0, 0, 0};
+            
+            Tensor t1 = create_test_tensor(shape_4d, d1, false);
+            Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
+            Tensor actual_res = Tensor_mean(t1);
+
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 2, TEST_FLOAT_TOLERANCE);
+        }
+    }
+
+    // Test Case 8: Edge Cases
+    {
+        const char* tc_name = "mean_edge_cases";
+        
+        // Sub-test 1: Single element mean (division by 1)
+        {
+            TensorShape single_shape = {1, 0, 0, 0};
+            float d1[] = {42.5f};
+            float exp_d[] = {42.5f}; // Mean of single element is itself
+            
+            Tensor t1 = create_test_tensor(single_shape, d1, false);
+            Tensor expected_res = create_test_tensor(exp_shape_scalar, exp_d, false);
+            Tensor actual_res = Tensor_mean(t1);
+
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+        }
     }
 
     cten_free(pool_id);
