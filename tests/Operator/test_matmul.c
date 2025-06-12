@@ -187,7 +187,51 @@ void test_matmul_operator() {
         }
     }
 
-    // Test Case 7: Special Matrix Content
+    // Test Case 7: Larger Matrix Multiplication
+    {
+        const char* tc_name = "matmul_larger_matrices";
+        
+        // Sub-test 1: Larger matrix multiplication (4x3 * 3x5)
+        {
+            TensorShape s1_shape = {4, 3, 0, 0};
+            float d1[] = {0.4008f, 0.5596f, 0.1552f, 0.1819f, 0.8618f, 0.9461f, 0.3733f, 0.2707f, 0.6440f, 0.4087f, 0.0254f, 0.1562f};
+            TensorShape s2_shape = {3, 5, 0, 0};
+            float d2[] = {0.7160f, 0.6589f, 0.0271f, 0.2220f, 0.2311f, 0.6719f, 0.0197f, 0.1041f, 0.7999f, 0.1785f, 0.6527f, 0.2382f, 0.0994f, 0.2432f, 0.7223f};
+            TensorShape exp_shape = {4, 5, 0, 0};
+            float exp_d[] = {0.7643f, 0.3121f, 0.0846f, 0.5744f, 0.3047f, 1.3269f, 0.3622f, 0.1887f, 0.9598f, 0.8793f, 0.8696f, 0.4047f, 0.1023f, 0.4560f, 0.5997f, 0.4116f, 0.3070f, 0.0292f, 0.1490f, 0.2118f};
+
+            Tensor t1 = create_test_tensor(s1_shape, d1, false);
+            Tensor t2 = create_test_tensor(s2_shape, d2, false);
+            Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
+            Tensor actual_res = Tensor_matmul(t1, t2);
+
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+        }
+    }
+
+    // Test Case 8: Batch Matrix Multiplication
+    {
+        const char* tc_name = "matmul_batch_matrices";
+        
+        // Sub-test 1: Batch matrix multiplication (2x3x4 * 2x4x5)
+        {
+            TensorShape s1_shape = {2, 3, 4, 0};
+            float d1[] = {0.8557f, 0.8302f, 0.3972f, 0.6681f, 0.2050f, 0.2931f, 0.8963f, 0.0130f, 0.0855f, 0.2079f, 0.0265f, 0.1814f, 0.5830f, 0.4214f, 0.8927f, 0.8174f, 0.3418f, 0.2594f, 0.3797f, 0.5903f, 0.2681f, 0.6241f, 0.4094f, 0.5520f};
+            TensorShape s2_shape = {2, 4, 5, 0};
+            float d2[] = {0.4361f, 0.2945f, 0.9485f, 0.7636f, 0.1401f, 0.8685f, 0.4874f, 0.8946f, 0.7999f, 0.4252f, 0.0225f, 0.2687f, 0.5416f, 0.6335f, 0.2579f, 0.1394f, 0.8349f, 0.9844f, 0.5257f, 0.1717f, 0.2723f, 0.0184f, 0.9143f, 0.1178f, 0.5765f, 0.2741f, 0.5542f, 0.6514f, 0.8297f, 0.2064f, 0.0110f, 0.1369f, 0.9000f, 0.8739f, 0.5974f, 0.6005f, 0.6650f, 0.1754f, 0.9144f, 0.4188f};
+            TensorShape exp_shape = {2, 3, 5, 0};
+            float exp_d[] = {1.1962f, 1.3212f, 2.4271f, 1.9203f, 0.6900f, 0.3659f, 0.4549f, 0.9549f, 0.9656f, 0.3868f, 0.2437f, 0.2851f, 0.4600f, 0.3438f, 0.1384f, 0.7750f, 0.9101f, 1.7544f, 1.9459f, 1.2987f, 0.5228f, 0.5946f, 0.9268f, 1.1271f, 0.7246f, 0.5801f, 0.7740f, 1.1170f, 1.4120f, 0.7591f};
+
+            Tensor t1 = create_test_tensor(s1_shape, d1, false);
+            Tensor t2 = create_test_tensor(s2_shape, d2, false);
+            Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
+            Tensor actual_res = Tensor_matmul(t1, t2);
+
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+        }
+    }
+
+    // Test Case 9: Special Matrix Content
     {
         const char* tc_name = "matmul_special_matrix_content";
         
@@ -207,7 +251,7 @@ void test_matmul_operator() {
     }
     // TODO: Problem in Broadcasting
     
-    // // Test Case 8: Broadcasting
+    // // Test Case 10: Broadcasting
     // {
     //     const char* tc_name = "matmul_broadcasting";
         
