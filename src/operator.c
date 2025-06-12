@@ -91,79 +91,12 @@ static Tensor GradFn_mean(Tensor self, int i) {
     return res;
 }
 
-Tensor Tensor_mean_dim(Tensor self, int dim) {
-    int ndim = TensorShape_dim(self.shape);
-    if (dim < 0 || dim >= ndim) {
-        return self; // Return original tensor to avoid crash
-    }
-    
-    TensorShape out_shape = {0, 0, 0, 0};
-    int dim_size = self.shape[dim];
-    int out_dim = 0;
-    for (int i = 0; i < ndim; i++) {
-        if (i != dim) {
-            out_shape[out_dim++] = self.shape[i];
-        }
-    }
-    
-    Tensor res = Tensor_new(out_shape, self.node != NULL);
-    
-
-    int total_elements = 1;
-    for (int i = 0; i < ndim; i++) {
-        if (i != dim) {
-            total_elements *= self.shape[i];
-        }
-    }
-    
-    // Initialize result tensor with zeros
-    res = Tensor_zeros(out_shape, false);
-    
-    // Calculate mean along the specified dimension
-    for (int i = 0; i < self.data->numel; i++) {
-        // Calculate the multi-dimensional index for this element
-        int remaining = i;
-        int indices[4] = {0, 0, 0, 0};
-        int stride = self.data->numel;
-        for (int j = 0; j < ndim; j++) {
-            stride /= self.shape[j];
-            indices[j] = remaining / stride;
-            remaining %= stride;
-        }
-        
-        int out_idx = 0;
-        int out_dim_idx = 0;
-        int out_stride = 1;
-        for (int j = ndim - 1; j >= 0; j--) {
-            if (j != dim) {
-                out_idx += indices[j] * out_stride;
-                out_stride *= out_shape[out_dim_idx++];
-            }
-        }
-        
-        res.data->flex[out_idx] += self.data->flex[i];
-    }
-    
-    for (int i = 0; i < res.data->numel; i++) {
-        res.data->flex[i] /= dim_size;
-    }
-    
-    if (res.node != NULL) {
-        res.node->grad_fn = GradFn_mean;
-        res.node->inputs[0] = self;
-        res.node->n_inputs = 1;
-        res.node->name = "MeanDim";
-    }
-    
-    return res;
-}
-
 Tensor Tensor_mean(Tensor self) {
     int ndim = TensorShape_dim(self.shape);
     if (ndim == 3) {
-        return Tensor_mean_dim(self, 1);
+        return Tensor_reduce_dim(self, 1, "mean");
     } else if (ndim == 4) {
-        return Tensor_mean_dim(self, 2);
+        return Tensor_reduce_dim(self, 2, "mean");
     } else {
         // Default behavior for other cases - reduce to scalar
         Tensor res = Tensor_new((TensorShape){1, 0, 0, 0}, self.node != NULL);
@@ -186,67 +119,15 @@ static Tensor GradFn_sum(Tensor self, int i) {
     return Tensor_ones(self.node->inputs[i].shape, false);
 }
 
-Tensor Tensor_sum_dim(Tensor self, int dim) {
-    int ndim = TensorShape_dim(self.shape);
-    if (dim < 0 || dim >= ndim) {
-        return self; // Return original tensor to avoid crash
-    }
-    
-    TensorShape out_shape = {0, 0, 0, 0};
-    int dim_size = self.shape[dim];
-    int out_dim = 0;
-    for (int i = 0; i < ndim; i++) {
-        if (i != dim) {
-            out_shape[out_dim++] = self.shape[i];
-        }
-    }
-    
-    Tensor res = Tensor_zeros(out_shape, false);
-    
-    // Calculate sum along the specified dimension
-    for (int i = 0; i < self.data->numel; i++) {
-        // Calculate the multi-dimensional index for this element
-        int remaining = i;
-        int indices[4] = {0, 0, 0, 0};
-        int stride = self.data->numel;
-        for (int j = 0; j < ndim; j++) {
-            stride /= self.shape[j];
-            indices[j] = remaining / stride;
-            remaining %= stride;
-        }
-        
-        // Calculate the corresponding index in the output tensor
-        int out_idx = 0;
-        int out_dim_idx = 0;
-        int out_stride = 1;
-        for (int j = ndim - 1; j >= 0; j--) {
-            if (j != dim) {
-                out_idx += indices[j] * out_stride;
-                out_stride *= out_shape[out_dim_idx++];
-            }
-        }
-        
-        // Add to the accumulator
-        res.data->flex[out_idx] += self.data->flex[i];
-    }
-    
-    if (res.node != NULL) {
-        res.node->grad_fn = GradFn_sum; // We still use the same grad function
-        res.node->inputs[0] = self;
-        res.node->n_inputs = 1;
-        res.node->name = "Sum";
-    }
-    return res;
-}
 
 Tensor Tensor_sum(Tensor self) {
     int ndim = TensorShape_dim(self.shape);
     
     if (ndim == 3) {
-        return Tensor_sum_dim(self, 1); 
+        return Tensor_reduce_dim(self, 1, "sum"); 
     }
     else if (ndim == 4) {
-        return Tensor_sum_dim(self, 2);
+        return Tensor_reduce_dim(self, 2, "sum");
     }
     // Default case: sum all elements (scalar result)
     else {

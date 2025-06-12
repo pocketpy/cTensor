@@ -121,3 +121,4 @@ void cten_assert_dim(const char* title, int a, int b);
 
 bool cten_elemwise_broadcast(Tensor* a, Tensor* b);
 int load_iris_dataset(const float (**X)[4], const int** y);
+Tensor Tensor_reduce_dim(Tensor self, int dim, const char* operation);

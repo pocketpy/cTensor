@@ -157,3 +157,57 @@ void Tensor_shuffle_dataset(const float (*X)[4], const int *y,float (*X_shuffled
     
     free(indices);
 }
+
+Tensor Tensor_reduce_dim(Tensor self, int dim, const char* operation) {
+    int ndim = TensorShape_dim(self.shape);
+    if (dim < 0 || dim >= ndim) {
+        return self; // Return original tensor to avoid crash
+    }
+    
+    TensorShape out_shape = {0, 0, 0, 0};
+    int dim_size = self.shape[dim];
+    int out_dim = 0;
+    for (int i = 0; i < ndim; i++) {
+        if (i != dim) {
+            out_shape[out_dim++] = self.shape[i];
+        }
+    }
+    
+    Tensor res = Tensor_zeros(out_shape, false);
+    
+    // Calculate sum along the specified dimension
+    for (int i = 0; i < self.data->numel; i++) {
+        // Calculate the multi-dimensional index for this element
+        int remaining = i;
+        int indices[4] = {0, 0, 0, 0};
+        int stride = self.data->numel;
+        for (int j = 0; j < ndim; j++) {
+            stride /= self.shape[j];
+            indices[j] = remaining / stride;
+            remaining %= stride;
+        }
+        
+        // Calculate the corresponding index in the output tensor
+        int out_idx = 0;
+        int out_dim_idx = 0;
+        int out_stride = 1;
+        for (int j = ndim - 1; j >= 0; j--) {
+            if (j != dim) {
+                out_idx += indices[j] * out_stride;
+                out_stride *= out_shape[out_dim_idx++];
+            }
+        }
+        
+        // Add to the accumulator
+        res.data->flex[out_idx] += self.data->flex[i];
+    }
+    
+    // If computing mean, divide by dimension size
+    if (strcmp(operation, "mean") == 0) {
+        for (int i = 0; i < res.data->numel; i++) {
+            res.data->flex[i] /= dim_size;
+        }
+    }
+    
+    return res;
+}
