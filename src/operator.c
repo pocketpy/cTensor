@@ -91,11 +91,11 @@ static Tensor GradFn_mean(Tensor self, int i) {
     return res;
 }
 
-Tensor Tensor_mean(Tensor self) {
+Tensor Tensor_mean(Tensor self, int dim) {
     int ndim = TensorShape_dim(self.shape);
     
-    if (ndim == 3) {
-        Tensor res = Tensor_reduce_dim(self, 1, "mean");
+    if (dim >= 0 && dim < ndim) {
+        Tensor res = Tensor_reduce_dim(self, dim, "mean");
         if(res.node != NULL) {
             res.node->grad_fn = GradFn_mean;
             res.node->inputs[0] = self;
@@ -103,19 +103,7 @@ Tensor Tensor_mean(Tensor self) {
             res.node->name = "Mean";
         }
         return res;
-    }
-    else if (ndim == 4) {
-        Tensor res = Tensor_reduce_dim(self, 2, "mean");
-        if(res.node != NULL) {
-            res.node->grad_fn = GradFn_mean;
-            res.node->inputs[0] = self;
-            res.node->n_inputs = 1;
-            res.node->name = "Mean";
-        }
-        return res;
-    }
-    else {
-        // Default behavior for other cases - reduce to scalar
+    } else {
         Tensor res = Tensor_new((TensorShape){1, 0, 0, 0}, self.node != NULL);
         float sum = 0;
         for(int i = 0; i < self.data->numel; i++) {
@@ -136,12 +124,11 @@ static Tensor GradFn_sum(Tensor self, int i) {
     return Tensor_ones(self.node->inputs[i].shape, false);
 }
 
-
-Tensor Tensor_sum(Tensor self) {
+Tensor Tensor_sum(Tensor self, int dim) {
     int ndim = TensorShape_dim(self.shape);
     
-    if (ndim == 3) {
-        Tensor res = Tensor_reduce_dim(self, 1, "sum");
+    if (dim >= 0 && dim < ndim) {
+        Tensor res = Tensor_reduce_dim(self, dim, "sum");
         if(res.node != NULL) {
             res.node->grad_fn = GradFn_sum;
             res.node->inputs[0] = self;
@@ -149,19 +136,7 @@ Tensor Tensor_sum(Tensor self) {
             res.node->name = "Sum";
         }
         return res;
-    }
-    else if (ndim == 4) {
-        Tensor res = Tensor_reduce_dim(self, 2, "sum");
-        if(res.node != NULL) {
-            res.node->grad_fn = GradFn_sum;
-            res.node->inputs[0] = self;
-            res.node->n_inputs = 1;
-            res.node->name = "Sum";
-        }
-        return res;
-    }
-    else {
-        // Default case: sum all elements (scalar result)
+    } else {
         Tensor res = Tensor_new((TensorShape){1, 0, 0, 0}, self.node != NULL);
         float sum = 0;
         for(int i = 0; i < self.data->numel; i++) {

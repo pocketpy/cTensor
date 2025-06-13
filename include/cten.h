@@ -67,8 +67,8 @@ Tensor Tensor_matmul(Tensor self, Tensor other);
 Tensor Tensor_neg(Tensor self);
 Tensor Tensor_abs(Tensor self);
 
-Tensor Tensor_sum(Tensor self);
-Tensor Tensor_mean(Tensor self);
+Tensor Tensor_sum(Tensor self,int dim);
+Tensor Tensor_mean(Tensor self,int dim);
 Tensor Tensor_max(Tensor self);
 Tensor Tensor_min(Tensor self);
 

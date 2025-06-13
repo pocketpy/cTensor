@@ -161,14 +161,14 @@ void Tensor_shuffle_dataset(const float (*X)[4], const int *y,float (*X_shuffled
 Tensor Tensor_reduce_dim(Tensor self, int dim, const char* operation) {
     int ndim = TensorShape_dim(self.shape);
     if (dim < 0 || dim >= ndim) {
-        return self; // Return original tensor to avoid crash
+        return self;
     }
     
     TensorShape out_shape = {0, 0, 0, 0};
-    int out_ndim = 0;
+    int out_idx = 0;
     for (int i = 0; i < ndim; i++) {
         if (i != dim) {
-            out_shape[out_ndim++] = self.shape[i];
+            out_shape[out_idx++] = self.shape[i];
         }
     }
     
@@ -180,25 +180,22 @@ Tensor Tensor_reduce_dim(Tensor self, int dim, const char* operation) {
     for (int out_i = 0; out_i < total_out_elements; out_i++) {
         int out_indices[4] = {0};
         int remaining = out_i;
-        for (int j = out_ndim - 1; j >= 0; j--) {
+        for (int j = out_idx - 1; j >= 0; j--) {
             out_indices[j] = remaining % out_shape[j];
             remaining /= out_shape[j];
         }
         
-        // For each element in the reduced dimension
         for (int d = 0; d < dim_size; d++) {
-            // Construct input indices by inserting the dimension value
             int in_indices[4] = {0};
-            int out_idx = 0;
+            int out_pos = 0;
             for (int j = 0; j < ndim; j++) {
                 if (j == dim) {
                     in_indices[j] = d;
                 } else {
-                    in_indices[j] = out_indices[out_idx++];
+                    in_indices[j] = out_indices[out_pos++];
                 }
             }
             
-            // Convert multi-dimensional input indices to linear index
             int in_linear = 0;
             int stride = 1;
             for (int j = ndim - 1; j >= 0; j--) {
@@ -206,7 +203,6 @@ Tensor Tensor_reduce_dim(Tensor self, int dim, const char* operation) {
                 stride *= self.shape[j];
             }
             
-            // Accumulate
             res.data->flex[out_i] += self.data->flex[in_linear];
         }
         
