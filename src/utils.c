@@ -165,47 +165,53 @@ Tensor Tensor_reduce_dim(Tensor self, int dim, const char* operation) {
     }
     
     TensorShape out_shape = {0, 0, 0, 0};
-    int dim_size = self.shape[dim];
-    int out_dim = 0;
+    int out_ndim = 0;
     for (int i = 0; i < ndim; i++) {
         if (i != dim) {
-            out_shape[out_dim++] = self.shape[i];
+            out_shape[out_ndim++] = self.shape[i];
         }
     }
     
-    Tensor res = Tensor_zeros(out_shape, false);
+    int dim_size = self.shape[dim];
+    Tensor res = Tensor_zeros(out_shape, self.node != NULL);
     
-    // Calculate sum along the specified dimension
-    for (int i = 0; i < self.data->numel; i++) {
-        // Calculate the multi-dimensional index for this element
-        int remaining = i;
-        int indices[4] = {0, 0, 0, 0};
-        int stride = self.data->numel;
-        for (int j = 0; j < ndim; j++) {
-            stride /= self.shape[j];
-            indices[j] = remaining / stride;
-            remaining %= stride;
+    int total_out_elements = res.data->numel;
+    
+    for (int out_i = 0; out_i < total_out_elements; out_i++) {
+        int out_indices[4] = {0};
+        int remaining = out_i;
+        for (int j = out_ndim - 1; j >= 0; j--) {
+            out_indices[j] = remaining % out_shape[j];
+            remaining /= out_shape[j];
         }
         
-        // Calculate the corresponding index in the output tensor
-        int out_idx = 0;
-        int out_dim_idx = 0;
-        int out_stride = 1;
-        for (int j = ndim - 1; j >= 0; j--) {
-            if (j != dim) {
-                out_idx += indices[j] * out_stride;
-                out_stride *= out_shape[out_dim_idx++];
+        // For each element in the reduced dimension
+        for (int d = 0; d < dim_size; d++) {
+            // Construct input indices by inserting the dimension value
+            int in_indices[4] = {0};
+            int out_idx = 0;
+            for (int j = 0; j < ndim; j++) {
+                if (j == dim) {
+                    in_indices[j] = d;
+                } else {
+                    in_indices[j] = out_indices[out_idx++];
+                }
             }
+            
+            // Convert multi-dimensional input indices to linear index
+            int in_linear = 0;
+            int stride = 1;
+            for (int j = ndim - 1; j >= 0; j--) {
+                in_linear += in_indices[j] * stride;
+                stride *= self.shape[j];
+            }
+            
+            // Accumulate
+            res.data->flex[out_i] += self.data->flex[in_linear];
         }
         
-        // Add to the accumulator
-        res.data->flex[out_idx] += self.data->flex[i];
-    }
-    
-    // If computing mean, divide by dimension size
-    if (strcmp(operation, "mean") == 0) {
-        for (int i = 0; i < res.data->numel; i++) {
-            res.data->flex[i] /= dim_size;
+        if (strcmp(operation, "mean") == 0) {
+            res.data->flex[out_i] /= dim_size;
         }
     }
     

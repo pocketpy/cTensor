@@ -93,11 +93,28 @@ static Tensor GradFn_mean(Tensor self, int i) {
 
 Tensor Tensor_mean(Tensor self) {
     int ndim = TensorShape_dim(self.shape);
+    
     if (ndim == 3) {
-        return Tensor_reduce_dim(self, 1, "mean");
-    } else if (ndim == 4) {
-        return Tensor_reduce_dim(self, 2, "mean");
-    } else {
+        Tensor res = Tensor_reduce_dim(self, 1, "mean");
+        if(res.node != NULL) {
+            res.node->grad_fn = GradFn_mean;
+            res.node->inputs[0] = self;
+            res.node->n_inputs = 1;
+            res.node->name = "Mean";
+        }
+        return res;
+    }
+    else if (ndim == 4) {
+        Tensor res = Tensor_reduce_dim(self, 2, "mean");
+        if(res.node != NULL) {
+            res.node->grad_fn = GradFn_mean;
+            res.node->inputs[0] = self;
+            res.node->n_inputs = 1;
+            res.node->name = "Mean";
+        }
+        return res;
+    }
+    else {
         // Default behavior for other cases - reduce to scalar
         Tensor res = Tensor_new((TensorShape){1, 0, 0, 0}, self.node != NULL);
         float sum = 0;
@@ -124,13 +141,27 @@ Tensor Tensor_sum(Tensor self) {
     int ndim = TensorShape_dim(self.shape);
     
     if (ndim == 3) {
-        return Tensor_reduce_dim(self, 1, "sum"); 
+        Tensor res = Tensor_reduce_dim(self, 1, "sum");
+        if(res.node != NULL) {
+            res.node->grad_fn = GradFn_sum;
+            res.node->inputs[0] = self;
+            res.node->n_inputs = 1;
+            res.node->name = "Sum";
+        }
+        return res;
     }
     else if (ndim == 4) {
-        return Tensor_reduce_dim(self, 2, "sum");
+        Tensor res = Tensor_reduce_dim(self, 2, "sum");
+        if(res.node != NULL) {
+            res.node->grad_fn = GradFn_sum;
+            res.node->inputs[0] = self;
+            res.node->n_inputs = 1;
+            res.node->name = "Sum";
+        }
+        return res;
     }
-    // Default case: sum all elements (scalar result)
     else {
+        // Default case: sum all elements (scalar result)
         Tensor res = Tensor_new((TensorShape){1, 0, 0, 0}, self.node != NULL);
         float sum = 0;
         for(int i = 0; i < self.data->numel; i++) {
