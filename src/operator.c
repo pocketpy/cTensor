@@ -2,9 +2,18 @@
 #include "cten_internal.h"
 
 #include <assert.h>
+#include <limits.h>
 #include <math.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
+
+#ifdef Tensor_mean
+#undef Tensor_mean
+#endif
+#ifdef Tensor_sum
+#undef Tensor_sum
+#endif
 
 static Tensor GradFn_add(Tensor self, int i) {
     // f(x, y) = x + y; f'(x) = 1; f'(y) = 1
@@ -82,7 +91,7 @@ void Tensor_argmax(Tensor self, int* out) {
     }
 }
 
-static Tensor GradFn_mean(Tensor self, int i) {
+Tensor GradFn_mean(Tensor self, int i) {
     // f(x) = mean(x); f'(x) = 1 / x.numel()
     Tensor res = Tensor_new(self.shape, false);
     for(int i = 0; i < res.data->numel; i++) {
@@ -91,10 +100,20 @@ static Tensor GradFn_mean(Tensor self, int i) {
     return res;
 }
 
-Tensor Tensor_mean(Tensor self, int dim) {
+Tensor Tensor_mean(Tensor self, ...) {
     int ndim = TensorShape_dim(self.shape);
+    int dim = INT_MIN; // Default value to trigger the "else" block
     
-    if (dim >= 0 && dim < ndim) {
+    va_list args;
+    va_start(args, self);
+    
+    if (va_arg_is_present(args)) {
+        dim = va_arg(args, int);
+    }
+    va_end(args);
+    
+
+    if (dim != INT_MIN) {
         Tensor res = Tensor_reduce_dim(self, dim, "mean");
         if(res.node != NULL) {
             res.node->grad_fn = GradFn_mean;
@@ -119,15 +138,25 @@ Tensor Tensor_mean(Tensor self, int dim) {
         return res;
     }
 }
-static Tensor GradFn_sum(Tensor self, int i) {
+Tensor GradFn_sum(Tensor self, int i) {
     // f(x) = sum(x); f'(x) = 1
     return Tensor_ones(self.node->inputs[i].shape, false);
 }
 
-Tensor Tensor_sum(Tensor self, int dim) {
+Tensor Tensor_sum(Tensor self, ...) {
     int ndim = TensorShape_dim(self.shape);
+    int dim = INT_MIN; // Default value to trigger the "else" block
     
-    if (dim >= 0 && dim < ndim) {
+    va_list args;
+    va_start(args, self);
+    
+    if (va_arg_is_present(args)) {
+        dim = va_arg(args, int);
+    }
+    va_end(args);
+    
+
+    if (dim != INT_MIN) {
         Tensor res = Tensor_reduce_dim(self, dim, "sum");
         if(res.node != NULL) {
             res.node->grad_fn = GradFn_sum;

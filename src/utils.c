@@ -7,6 +7,65 @@
 #include <string.h>
 #include <math.h>    
 #include <time.h>    
+#include <limits.h>
+
+bool va_arg_is_present(va_list args) {
+    (void)args;
+    return false;
+}
+
+Tensor GradFn_mean(Tensor self, int i);
+Tensor GradFn_sum(Tensor self, int i);
+
+Tensor Tensor_mean_all(Tensor self) {
+    float total = 0.0f;
+    for(int i = 0; i < self.data->numel; i++) total += self.data->flex[i];
+    Tensor res = Tensor_new((TensorShape){1,0,0,0}, self.node != NULL);
+    res.data->flex[0] = total / self.data->numel;
+    if(res.node != NULL) {
+        res.node->grad_fn = GradFn_mean;
+        res.node->inputs[0] = self;
+        res.node->n_inputs = 1;
+        res.node->name = "Mean";
+    }
+    return res;
+}
+
+Tensor Tensor_mean_dim(Tensor self, int dim) {
+    Tensor res = Tensor_reduce_dim(self, dim, "mean");
+    if(res.node != NULL) {
+        res.node->grad_fn = GradFn_mean;
+        res.node->inputs[0] = self;
+        res.node->n_inputs = 1;
+        res.node->name = "Mean";
+    }
+    return res;
+}
+
+Tensor Tensor_sum_all(Tensor self) {
+    float total = 0.0f;
+    for(int i = 0; i < self.data->numel; i++) total += self.data->flex[i];
+    Tensor res = Tensor_new((TensorShape){1,0,0,0}, self.node != NULL);
+    res.data->flex[0] = total;
+    if(res.node != NULL) {
+        res.node->grad_fn = GradFn_sum;
+        res.node->inputs[0] = self;
+        res.node->n_inputs = 1;
+        res.node->name = "Sum";
+    }
+    return res;
+}
+
+Tensor Tensor_sum_dim(Tensor self, int dim) {
+    Tensor res = Tensor_reduce_dim(self, dim, "sum");
+    if(res.node != NULL) {
+        res.node->grad_fn = GradFn_sum;
+        res.node->inputs[0] = self;
+        res.node->n_inputs = 1;
+        res.node->name = "Sum";
+    }
+    return res;
+}
 
 void cten_assert(bool cond, const char* fmt, ...) {
     if(!cond) {
@@ -160,8 +219,16 @@ void Tensor_shuffle_dataset(const float (*X)[4], const int *y,float (*X_shuffled
 
 Tensor Tensor_reduce_dim(Tensor self, int dim, const char* operation) {
     int ndim = TensorShape_dim(self.shape);
-    if (dim < 0 || dim >= ndim) {
-        return self;
+    if (dim < 0){
+        if (dim < -ndim) {
+            printf("dim %d out of range", dim);
+            exit(-1);
+        }
+        dim += ndim;
+    }
+    if (dim >= ndim) {
+        printf("dim %d out of range", dim);
+        exit(-1);
     }
     
     TensorShape out_shape = {0, 0, 0, 0};
