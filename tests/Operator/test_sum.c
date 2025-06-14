@@ -18,7 +18,7 @@ void test_sum_operator() {
         float exp_d[] = {5.0f};
         Tensor t1 = create_test_tensor(s_shape, d1, false);
         Tensor expected_res = create_test_tensor(s_shape, exp_d, false);
-        Tensor actual_res = Tensor_sum(t1, -1);
+        Tensor actual_res = Tensor_sum(t1);
 
         compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
@@ -32,7 +32,7 @@ void test_sum_operator() {
         TensorShape exp_shape = {1, 0, 0, 0};
         Tensor t1 = create_test_tensor(v_shape, d1, false);
         Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
-        Tensor actual_res = Tensor_sum(t1,-1);
+        Tensor actual_res = Tensor_sum(t1);
 
         compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
@@ -46,7 +46,7 @@ void test_sum_operator() {
         TensorShape exp_shape = {1, 0, 0, 0};
         Tensor t1 = create_test_tensor(m_shape, d1, false);
         Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
-        Tensor actual_res = Tensor_sum(t1,-1);
+        Tensor actual_res = Tensor_sum(t1);
 
         compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
@@ -60,7 +60,7 @@ void test_sum_operator() {
         TensorShape exp_shape = {1, 0, 0, 0};
         Tensor t1 = create_test_tensor(v_shape, d1, false);
         Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
-        Tensor actual_res = Tensor_sum(t1,-1);
+        Tensor actual_res = Tensor_sum(t1);
 
         compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
@@ -80,7 +80,7 @@ void test_sum_operator() {
             
             Tensor t1 = create_test_tensor(large_shape, large_data, false);
             Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
-            Tensor actual_res = Tensor_sum(t1,-1);
+            Tensor actual_res = Tensor_sum(t1);
 
             compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
         }
@@ -96,7 +96,7 @@ void test_sum_operator() {
             
             Tensor t1 = create_test_tensor(stress_shape, stress_data, false);
             Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
-            Tensor actual_res = Tensor_sum(t1,-1);
+            Tensor actual_res = Tensor_sum(t1);
 
             compare_tensors(&actual_res, &expected_res, op_name, tc_name, 2, TEST_FLOAT_TOLERANCE);
         }
@@ -107,6 +107,7 @@ void test_sum_operator() {
         const char* tc_name = "sum_higher_dimensional_tensors";
         
         // Sub-test 1: 3D tensor sum along axis 1 (3x4x5 -> 3x5)
+        // Here testing negative index for axis so 1 become -2
         {
             TensorShape shape_3d = {3, 4, 5, 0};
             float d1[] = {0.3831f, 0.5189f, 0.0470f, 0.1663f, 0.7380f, 0.0828f, 0.6032f, 0.2453f, 0.3893f, 0.2887f, 0.3557f, 0.7190f, 0.2971f, 0.5664f, 0.4761f, 0.6637f, 0.9368f, 0.7326f, 0.2149f, 0.0312f, 0.2623f, 0.5951f, 0.0514f, 0.4964f, 0.5968f, 0.3342f, 0.7709f, 0.1066f, 0.0751f, 0.7282f, 0.4955f, 0.6884f, 0.4348f, 0.2464f, 0.8191f, 0.7994f, 0.6947f, 0.2721f, 0.5902f, 0.3610f, 0.0916f, 0.9173f, 0.1368f, 0.9502f, 0.4460f, 0.1851f, 0.5419f, 0.8729f, 0.7322f, 0.8066f, 0.6588f, 0.6923f, 0.8492f, 0.2497f, 0.4894f, 0.2212f, 0.9877f, 0.9441f, 0.0394f, 0.7056f};
@@ -115,7 +116,7 @@ void test_sum_operator() {
             
             Tensor t1 = create_test_tensor(shape_3d, d1, false);
             Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
-            Tensor actual_res = Tensor_sum(t1, 1);
+            Tensor actual_res = Tensor_sum(t1, -2);
 
             compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
         }

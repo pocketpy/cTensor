@@ -19,7 +19,7 @@ void test_mean_operator() {
         float exp_d[] = {5.0f};
         Tensor t1 = create_test_tensor(s_shape, d1, false);
         Tensor expected_res = create_test_tensor(exp_shape_scalar, exp_d, false);
-        Tensor actual_res = Tensor_mean(t1,-1);
+        Tensor actual_res = Tensor_mean(t1);
 
         compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
@@ -32,7 +32,7 @@ void test_mean_operator() {
         float exp_d[] = {2.0f};
         Tensor t1 = create_test_tensor(v_shape, d1, false);
         Tensor expected_res = create_test_tensor(exp_shape_scalar, exp_d, false);
-        Tensor actual_res = Tensor_mean(t1,-1);
+        Tensor actual_res = Tensor_mean(t1);
 
         compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
@@ -45,7 +45,7 @@ void test_mean_operator() {
         float exp_d[] = {2.5f};
         Tensor t1 = create_test_tensor(m_shape, d1, false);
         Tensor expected_res = create_test_tensor(exp_shape_scalar, exp_d, false);
-        Tensor actual_res = Tensor_mean(t1,-1);
+        Tensor actual_res = Tensor_mean(t1);
 
         compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
@@ -58,7 +58,7 @@ void test_mean_operator() {
         float exp_d[] = {0.5f};
         Tensor t1 = create_test_tensor(m_shape, d1, false);
         Tensor expected_res = create_test_tensor(exp_shape_scalar, exp_d, false);
-        Tensor actual_res = Tensor_mean(t1,-1);
+        Tensor actual_res = Tensor_mean(t1);
 
         compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
@@ -71,7 +71,7 @@ void test_mean_operator() {
         float exp_d[] = {0.0f};
         Tensor t1 = create_test_tensor(v_shape, d1, false);
         Tensor expected_res = create_test_tensor(exp_shape_scalar, exp_d, false);
-        Tensor actual_res = Tensor_mean(t1,-1);
+        Tensor actual_res = Tensor_mean(t1);
 
         compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
@@ -91,7 +91,7 @@ void test_mean_operator() {
             
             Tensor t1 = create_test_tensor(large_shape, large_data, false);
             Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
-            Tensor actual_res = Tensor_mean(t1,-1);
+            Tensor actual_res = Tensor_mean(t1);
 
             compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
         }
@@ -107,7 +107,7 @@ void test_mean_operator() {
             
             Tensor t1 = create_test_tensor(stress_shape, stress_data, false);
             Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
-            Tensor actual_res = Tensor_mean(t1,-1);
+            Tensor actual_res = Tensor_mean(t1);
 
             compare_tensors(&actual_res, &expected_res, op_name, tc_name, 2, TEST_FLOAT_TOLERANCE);
         }
@@ -133,6 +133,7 @@ void test_mean_operator() {
         }
 
         // Sub-test 2: 4D tensor mean along axis 2 (2x3x4x5 -> 2x3x5)
+        // Testing negative index case so 2 becomes -2
         {
             TensorShape shape_4d = {2, 3, 4, 5};
             float d1[] = {0.8715f, 0.9735f, 0.9689f, 0.7497f, 0.1301f, 0.7583f, 0.0246f, 0.0221f, 0.3236f, 0.4886f, 0.7704f, 0.6833f, 0.4459f, 0.2736f, 0.9971f, 0.4262f, 0.4514f, 0.1636f, 0.7948f, 0.6937f, 0.2208f, 0.0824f, 0.6805f, 0.6545f, 0.2733f, 0.9509f, 0.1511f, 0.4323f, 0.9436f, 0.4197f, 0.6385f, 0.3976f, 0.2742f, 0.9840f, 0.4093f, 0.8941f, 0.2300f, 0.2131f, 0.0311f, 0.6517f, 0.3685f, 0.8644f, 0.4732f, 0.9682f, 0.1855f, 0.8686f, 0.7766f, 0.7709f, 0.8448f, 0.7610f, 0.6262f, 0.1312f, 0.0325f, 0.9208f, 0.6167f, 0.7965f, 0.4815f, 0.1173f, 0.1252f, 0.6856f, 0.4303f, 0.2005f, 0.4916f, 0.0642f, 0.5820f, 0.2690f, 0.7976f, 0.3104f, 0.4552f, 0.0116f, 0.0724f, 0.3925f, 0.4799f, 0.6000f, 0.2917f, 0.6950f, 0.8601f, 0.7799f, 0.0396f, 0.4805f, 0.1049f, 0.2420f, 0.9867f, 0.1425f, 0.4989f, 0.6182f, 0.7025f, 0.5596f, 0.0098f, 0.3265f, 0.5177f, 0.0879f, 0.3506f, 0.0332f, 0.0786f, 0.3969f, 0.1327f, 0.5675f, 0.6895f, 0.8006f, 0.2002f, 0.1675f, 0.1046f, 0.6364f, 0.7065f, 0.0316f, 0.9362f, 0.0520f, 0.5413f, 0.7091f, 0.8710f, 0.7141f, 0.8017f, 0.3395f, 0.8148f, 0.0801f, 0.8948f, 0.5476f, 0.8173f, 0.4523f};
@@ -141,11 +142,14 @@ void test_mean_operator() {
             
             Tensor t1 = create_test_tensor(shape_4d, d1, false);
             Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
-            Tensor actual_res = Tensor_mean(t1, 2);
+            Tensor actual_res = Tensor_mean(t1, -2); // Testing negative index case so 2 becomes -2
 
             compare_tensors(&actual_res, &expected_res, op_name, tc_name, 2, TEST_FLOAT_TOLERANCE);
         }
         // Sub-test 3: 4D tensor mean along axis 1 and axis 2 (2x3x4x5 -> 2x5)
+        // Here I want to test the negative index case, Here first we do mean along axis 2 (which is -2)
+        // Now we become (2x3x5) and then we do mean along axis 1 (which is -2) again
+        // Now we become (2x5)
         {
             TensorShape shape_4d = {2, 3, 4, 5};
             float d1[120] = {
@@ -182,8 +186,8 @@ void test_mean_operator() {
             
             Tensor t1 = create_test_tensor(shape_4d, d1, false);
             Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
-            Tensor temp_res = Tensor_mean(t1, 2);
-            Tensor actual_res = Tensor_mean(temp_res, 1);
+            Tensor temp_res = Tensor_mean(t1, -2);
+            Tensor actual_res = Tensor_mean(temp_res, -2);
 
             compare_tensors(&actual_res, &expected_res, op_name, tc_name, 3, TEST_FLOAT_TOLERANCE);
         }
@@ -201,7 +205,7 @@ void test_mean_operator() {
             
             Tensor t1 = create_test_tensor(single_shape, d1, false);
             Tensor expected_res = create_test_tensor(exp_shape_scalar, exp_d, false);
-            Tensor actual_res = Tensor_mean(t1,-1);
+            Tensor actual_res = Tensor_mean(t1);
 
             compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
         }
