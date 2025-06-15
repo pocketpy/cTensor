@@ -21,6 +21,10 @@ void test_mean_operator();
 void test_matmul_operator();
 void test_mulf_operator();
 void test_sum_operator();
+void test_pow_operator();
+void test_reciprocal_operator();
+void test_square_operator();
+void test_div_operator();
 
 int main() {
     printf("Starting cTensor Test Suite on %s...\n", PLATFORM_NAME);
@@ -71,6 +75,18 @@ int main() {
 
     test_sum_operator();
     printf("Sum operator tests finished.\n");
+
+    test_pow_operator();
+    printf("Pow operator tests finished.\n");
+
+    test_reciprocal_operator();
+    printf("Reciprocal operator tests finished.\n");
+
+    test_square_operator();
+    printf("Square operator tests finished.\n");
+
+    test_div_operator();
+    printf("Div operator tests finished.\n");
 
     //other test functions
 

@@ -72,6 +72,8 @@ Tensor Tensor_matmul(Tensor self, Tensor other);
 
 Tensor Tensor_neg(Tensor self);
 Tensor Tensor_abs(Tensor self);
+Tensor Tensor_square(Tensor self);
+Tensor Tensor_reciprocal(Tensor self);
 
 /* Helper functions that the macros dispatch to */
 Tensor Tensor_mean_all(Tensor self);
