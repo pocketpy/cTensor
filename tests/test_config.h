@@ -1,7 +1,7 @@
 #ifndef TEST_CONFIG_H
 #define TEST_CONFIG_H
 
-#define TEST_FLOAT_TOLERANCE 1e-2f
+#define TEST_FLOAT_TOLERANCE 1e-4f
 
 #if defined(_WIN32) || defined(_WIN64)
     #define PLATFORM_NAME "windows"
