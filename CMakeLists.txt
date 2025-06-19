@@ -43,7 +43,7 @@ set(TEST_UTIL_SOURCES
 file(GLOB_RECURSE OPERATOR_TEST_SOURCES "tests/Operator/*.c")
 
 # Gradient-specific tests (can be empty initially)
-file(GLOB_RECURSE GRAD_TEST_SOURCES "tests/Grad/*.c")
+file(GLOB_RECURSE GRAD_TEST_SOURCES "tests/Grad/*.c" "tests/Backward/*.c")
 
 # Combine all test sources
 set(ALL_TEST_SOURCES

@@ -26,6 +26,11 @@ void test_reciprocal_operator();
 void test_square_operator();
 void test_div_operator();
 
+// Backward tests
+void test_add_backward();
+void test_mul_backward();
+void test_matmul_backward();
+
 int main() {
     printf("Starting cTensor Test Suite on %s...\n", PLATFORM_NAME);
 
@@ -88,6 +93,16 @@ int main() {
     test_div_operator();
     printf("Div operator tests finished.\n");
 
+    // Backward tests
+    test_add_backward();
+    printf("Add backward tests finished.\n");
+
+    test_mul_backward();
+    printf("Mul backward tests finished.\n");
+
+    test_matmul_backward();
+    printf("Matmul backward tests finished.\n");
+    
     //other test functions
 
     csv_reporter_close();
