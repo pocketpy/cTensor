@@ -30,7 +30,7 @@ void test_matmul_backward() {
         Tensor A = create_test_tensor(a_shape, a_data, true);
         Tensor B = create_test_tensor(b_shape, b_data, true);
         Tensor C = Tensor_matmul(A, B);  // C = A @ B (2x2 result)
-        Tensor C_sum = Tensor_sum_all(C);  // sum to scalar for backward
+        Tensor C_sum = Tensor_sum(C);  // sum to scalar for backward
         
         Tensor grad_dummy = {0};
         Tensor_backward(C_sum, grad_dummy);
@@ -61,7 +61,7 @@ void test_matmul_backward() {
         Tensor A = create_test_tensor(shape, a_data, true);
         Tensor B = create_test_tensor(shape, b_data, true);
         Tensor C = Tensor_matmul(A, B);
-        Tensor C_sum = Tensor_sum_all(C);  // sum to scalar for backward
+        Tensor C_sum = Tensor_sum(C);  // sum to scalar for backward
         
         Tensor grad_dummy = {0};
         Tensor_backward(C_sum, grad_dummy);
@@ -93,7 +93,7 @@ void test_matmul_backward() {
         Tensor A = create_test_tensor(a_shape, a_data, true);
         Tensor B = create_test_tensor(b_shape, b_data, true);
         Tensor C = Tensor_matmul(A, B);  // C = A @ B (3x4 result)
-        Tensor C_sum = Tensor_sum_all(C);  // sum to scalar for backward
+        Tensor C_sum = Tensor_sum(C);  // sum to scalar for backward
         
         Tensor grad_dummy = {0};
         Tensor_backward(C_sum, grad_dummy);
@@ -130,7 +130,7 @@ void test_matmul_backward() {
         
         Tensor AB = Tensor_matmul(A, B);  // AB = A (since B is identity)
         Tensor prod = Tensor_mul(AB, W);  // prod = A * W
-        Tensor z = Tensor_sum_all(prod);  // z = sum(A * W) (scalar)
+        Tensor z = Tensor_sum(prod);  // z = sum(A * W) (scalar)
         
         Tensor grad_dummy = {0};
         Tensor_backward(z, grad_dummy);

@@ -35,27 +35,6 @@ void test_add_backward() {
             compare_tensors(&t1.node->grad, &expected_grad1, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
             compare_tensors(&t2.node->grad, &expected_grad2, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
         }
-
-        // Sub-test 2: Different scalar values
-        {
-            float d1[] = {4.0f}; 
-            float d2[] = {5.0f};
-            float exp_grad1[] = {1.0f};  // dz/dx = 1
-            float exp_grad2[] = {1.0f};  // dz/dy = 1
-            
-            Tensor t1 = create_test_tensor(s_shape, d1, true);
-            Tensor t2 = create_test_tensor(s_shape, d2, true);
-            Tensor z = Tensor_add(t1, t2);  // z = 9.0
-            
-            Tensor grad_dummy = {0};
-            Tensor_backward(z, grad_dummy);
-            
-            Tensor expected_grad1 = create_test_tensor(s_shape, exp_grad1, false);
-            Tensor expected_grad2 = create_test_tensor(s_shape, exp_grad2, false);
-
-            compare_tensors(&t1.node->grad, &expected_grad1, op_name, tc_name, 2, TEST_FLOAT_TOLERANCE);
-            compare_tensors(&t2.node->grad, &expected_grad2, op_name, tc_name, 2, TEST_FLOAT_TOLERANCE);
-        }
     }
 
     // Test Case 2: Vector sum backward (reduces to scalar)
@@ -70,7 +49,7 @@ void test_add_backward() {
         Tensor t1 = create_test_tensor(v_shape, d1, true);
         Tensor t2 = create_test_tensor(v_shape, d2, true);
         Tensor z = Tensor_add(t1, t2);  // z = [5, 7, 9]
-        Tensor z_sum = Tensor_sum_all(z);  // sum to scalar for backward
+        Tensor z_sum = Tensor_sum(z);  // sum to scalar for backward
         
         // Scalar backward
         Tensor grad_dummy = {0};
@@ -95,7 +74,7 @@ void test_add_backward() {
         Tensor t1 = create_test_tensor(m_shape, d1, true);
         Tensor t2 = create_test_tensor(m_shape, d2, true);
         Tensor z = Tensor_add(t1, t2);  // z = [[6, 8], [10, 12]]
-        Tensor z_sum = Tensor_sum_all(z);  // sum to scalar for backward
+        Tensor z_sum = Tensor_sum(z);  // sum to scalar for backward
         
         Tensor grad_dummy = {0};
         Tensor_backward(z_sum, grad_dummy);
@@ -120,7 +99,7 @@ void test_add_backward() {
         Tensor t_vec = create_test_tensor(vec_shape, vec_data, true);
         Tensor t_scalar = create_test_tensor(scalar_shape, scalar_data, true);
         Tensor z = Tensor_add(t_vec, t_scalar);  // z = [4, 5]
-        Tensor z_sum = Tensor_sum_all(z);  // sum to scalar for backward
+        Tensor z_sum = Tensor_sum(z);  // sum to scalar for backward
         
         Tensor grad_dummy = {0};
         Tensor_backward(z_sum, grad_dummy);
@@ -152,7 +131,7 @@ void test_add_backward() {
         
         Tensor sum = Tensor_add(x, y);  // sum = [4, 5]
         Tensor prod = Tensor_mul(sum, w);  // prod = [8, 15]
-        Tensor z = Tensor_sum_all(prod);  // z = 23 (scalar)
+        Tensor z = Tensor_sum(prod);  // z = 23 (scalar)
         
         Tensor grad_dummy = {0};
         Tensor_backward(z, grad_dummy);

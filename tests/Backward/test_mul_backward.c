@@ -70,7 +70,7 @@ void test_mul_backward() {
         Tensor t1 = create_test_tensor(v_shape, d1, true);
         Tensor t2 = create_test_tensor(v_shape, d2, true);
         Tensor z = Tensor_mul(t1, t2);  // z = [8, 15]
-        Tensor z_sum = Tensor_sum_all(z);  // sum to scalar for backward
+        Tensor z_sum = Tensor_sum(z);  // sum to scalar for backward
         
         Tensor grad_dummy = {0};
         Tensor_backward(z_sum, grad_dummy);
@@ -94,7 +94,7 @@ void test_mul_backward() {
         Tensor t1 = create_test_tensor(m_shape, d1, true);
         Tensor t2 = create_test_tensor(m_shape, d2, true);
         Tensor z = Tensor_mul(t1, t2);  // z = [[5, 12], [21, 32]]
-        Tensor z_sum = Tensor_sum_all(z);  // sum to scalar for backward
+        Tensor z_sum = Tensor_sum(z);  // sum to scalar for backward
         
         Tensor grad_dummy = {0};
         Tensor_backward(z_sum, grad_dummy);
@@ -119,7 +119,7 @@ void test_mul_backward() {
         Tensor t_vec = create_test_tensor(vec_shape, vec_data, true);
         Tensor t_scalar = create_test_tensor(scalar_shape, scalar_data, true);
         Tensor z = Tensor_mul(t_vec, t_scalar);  // z = [8, 12]
-        Tensor z_sum = Tensor_sum_all(z);  // sum to scalar for backward
+        Tensor z_sum = Tensor_sum(z);  // sum to scalar for backward
         
         Tensor grad_dummy = {0};
         Tensor_backward(z_sum, grad_dummy);
@@ -151,7 +151,7 @@ void test_mul_backward() {
         
         Tensor sum = Tensor_add(x, y);  // sum = [4, 5]
         Tensor prod = Tensor_mul(sum, w);  // prod = [8, 15]
-        Tensor z = Tensor_sum_all(prod);  // z = 23 (scalar)
+        Tensor z = Tensor_sum(prod);  // z = 23 (scalar)
         
         Tensor grad_dummy = {0};
         Tensor_backward(z, grad_dummy);
