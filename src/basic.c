@@ -117,36 +117,201 @@ Tensor Tensor_detach(Tensor self) {
 }
 
 void Tensor_backward(Tensor self, Tensor grad) {
-    if(self.node == NULL) return;
+    printf("\n=== Starting Tensor_backward ===\n");
+    printf("self: "); Tensor_print(self); printf("\n");
+    printf("grad: "); Tensor_print(grad); printf("\n");
+    
+    if(self.node == NULL) {
+        printf("  - No computation graph (node is NULL), returning early\n");
+        return;
+    }
+    
     if(grad.data == NULL) {
+        printf("  - Gradient is NULL, initializing to ones (expected for scalar output)\n");
         assert(self.data->numel == 1);
-        grad = Tensor_ones((TensorShape){1}, false);
+        grad = Tensor_ones((TensorShape){1, 0, 0, 0}, false);
+        printf("  - New grad: "); Tensor_print(grad); printf("\n");
     }
     
     assert(grad.node == NULL);
+    
+    // Print current gradient status
+    printf("  - Current node gradient: ");
+    if (self.node->grad.data == NULL) {
+        printf("NULL\n");
+    } else {
+        Tensor_print(self.node->grad);
+        printf("\n");
+    }
+    
+    // Accumulate gradient
     if(self.node->grad.data == NULL) {
+        printf("  - Setting initial gradient\n");
+        Tensor_print(grad);
         self.node->grad = grad;
     } else {
+        printf("  - Adding to existing gradient\n");
+        printf("    Before add - self.node->grad: "); Tensor_print(self.node->grad); printf("\n");
+        printf("    Adding grad: "); Tensor_print(grad); printf("\n");
         self.node->grad = Tensor_add(self.node->grad, grad);
+        printf("    After add - self.node->grad: "); Tensor_print(self.node->grad); printf("\n");
     }
 
+    printf("\n  - Processing %d inputs\n", self.node->n_inputs);
+    printf("Where each input tensor are:\n");
     for(int i = 0; i < self.node->n_inputs; i++) {
-        if (self.node->inputs[i].data == NULL) continue;
-        Tensor combined_grad;  
-        Tensor input_grad = self.node->grad_fn(self, i); 
-        if(strcmp(self.node->name, "Matmul") == 0){
-            if (i == 0){
-                combined_grad = Tensor_matmul(grad, input_grad);
-            }
-            else{
-                combined_grad = Tensor_matmul(input_grad, grad);
+        Tensor_print(self.node->inputs[i]);
+    }
+    
+    for(int i = 0; i < self.node->n_inputs; i++) {
+        printf("\n  --- Input %d ---\n", i);
+        
+        if (self.node->inputs[i].data == NULL) {
+            printf("    - Input tensor is NULL, skipping\n");
+            continue;
+        }
+        
+        printf("    - Input tensor: "); Tensor_print(self.node->inputs[i]); printf("\n");
+        
+        // Get the original input tensor (before any broadcasting)
+        Tensor input_tensor = self.node->inputs[i];
+        
+        // Get gradient function for this input
+        printf("    - Getting gradient function for input %d\n", i);
+        Tensor input_grad = self.node->grad_fn(self, i);
+        printf("    - Gradient function returned: "); 
+        if (input_grad.data == NULL) {
+            printf("NULL\n");
+        } else {
+            Tensor_print(input_grad); 
+            printf(" (shape=[%d,%d,%d,%d])\n", 
+                   input_grad.shape[0], input_grad.shape[1], 
+                   input_grad.shape[2], input_grad.shape[3]);
+        }
+        
+        // *** FIRST: HANDLE BROADCASTING FOR INPUT_GRAD ***
+        // Check if input_grad shape needs reduction to match original input shape
+        bool input_grad_needs_reduction = false;
+        for (int dim = 0; dim < 4; dim++) {
+            if (input_grad.shape[dim] != input_tensor.shape[dim]) {
+                input_grad_needs_reduction = true;
+                break;
             }
         }
-        else{
+        
+        if (input_grad_needs_reduction) {
+            printf("    !!! INPUT_GRAD BROADCASTING REDUCTION NEEDED !!!\n");
+            printf("    - Input tensor shape: [%d,%d,%d,%d]\n", 
+                   input_tensor.shape[0], input_tensor.shape[1], 
+                   input_tensor.shape[2], input_tensor.shape[3]);
+            printf("    - Input grad shape: [%d,%d,%d,%d]\n", 
+                   input_grad.shape[0], input_grad.shape[1], 
+                   input_grad.shape[2], input_grad.shape[3]);
+            
+            // For element-wise operations, figure out the broadcasted shape
+            TensorShape broadcasted_shape;
+            for(int dim = 0; dim < 4; dim++) {
+                broadcasted_shape[dim] = (self.shape[dim] == 0) ? input_tensor.shape[dim] : self.shape[dim];
+            }
+            
+            printf("    - Inferred broadcasted shape: [%d,%d,%d,%d]\n", 
+                   broadcasted_shape[0], broadcasted_shape[1], 
+                   broadcasted_shape[2], broadcasted_shape[3]);
+            
+            // Reduce input_grad to match original input tensor shape
+            input_grad = reduce_gradient_for_broadcasting(input_grad, input_tensor.shape, broadcasted_shape);
+            
+            printf("    - Reduced input_grad: "); 
+            Tensor_print(input_grad); 
+            printf(" (shape=[%d,%d,%d,%d])\n", 
+                   input_grad.shape[0], input_grad.shape[1], 
+                   input_grad.shape[2], input_grad.shape[3]);
+        } else {
+            printf("    - No input_grad reduction needed - shapes match\n");
+        }
+        
+        // *** SECOND: COMPUTE COMBINED GRADIENT ***
+        // Handle different operation types
+        Tensor combined_grad;
+        if(strcmp(self.node->name, "Matmul") == 0) {
+            printf("    - Matmul operation detected\n");
+            if (i == 0) {
+                printf("    - First input (left matrix)\n");
+                printf("      Computing grad @ input_grad\n");
+                combined_grad = Tensor_matmul(grad, input_grad);
+            } else {
+                printf("    - Second input (right matrix)\n");
+                printf("      Computing input_grad @ grad\n");
+                combined_grad = Tensor_matmul(input_grad, grad);
+            }
+        } else {
+            printf("    - Element-wise operation detected\n");
+            printf("      Computing grad * input_grad\n");
+            Tensor_print(grad);
+            printf("\n*\n");
+            Tensor_print(input_grad);
             combined_grad = Tensor_mul(grad, input_grad);
-        }       
+        }
+        
+        printf("    - Combined gradient: "); 
+        if (combined_grad.data == NULL) {
+            printf("NULL\n");
+        } else {
+            Tensor_print(combined_grad); 
+            printf(" (shape=[%d,%d,%d,%d])\n", 
+                   combined_grad.shape[0], combined_grad.shape[1], 
+                   combined_grad.shape[2], combined_grad.shape[3]);
+        }
+        
+        // *** THIRD: FINAL SAFETY CHECK FOR COMBINED_GRAD ***
+        // Check if combined_grad shape matches the original input shape
+        bool final_needs_reduction = false;
+        for (int dim = 0; dim < 4; dim++) {
+            if (combined_grad.shape[dim] != input_tensor.shape[dim]) {
+                final_needs_reduction = true;
+                break;
+            }
+        }
+        
+        if (final_needs_reduction) {
+            printf("    !!! FINAL COMBINED_GRAD REDUCTION NEEDED !!!\n");
+            printf("    - Input tensor shape: [%d,%d,%d,%d]\n", 
+                   input_tensor.shape[0], input_tensor.shape[1], 
+                   input_tensor.shape[2], input_tensor.shape[3]);
+            printf("    - Combined grad shape: [%d,%d,%d,%d]\n", 
+                   combined_grad.shape[0], combined_grad.shape[1], 
+                   combined_grad.shape[2], combined_grad.shape[3]);
+            
+            // For element-wise operations, figure out the broadcasted shape
+            TensorShape broadcasted_shape;
+            for(int dim = 0; dim < 4; dim++) {
+                broadcasted_shape[dim] = (self.shape[dim] == 0) ? input_tensor.shape[dim] : self.shape[dim];
+            }
+            
+            printf("    - Inferred broadcasted shape: [%d,%d,%d,%d]\n", 
+                   broadcasted_shape[0], broadcasted_shape[1], 
+                   broadcasted_shape[2], broadcasted_shape[3]);
+            
+            // Apply final broadcasting reduction
+            combined_grad = reduce_gradient_for_broadcasting(combined_grad, input_tensor.shape, broadcasted_shape);
+            
+            printf("    - Final reduced gradient: "); 
+            Tensor_print(combined_grad); 
+            printf(" (shape=[%d,%d,%d,%d])\n", 
+                   combined_grad.shape[0], combined_grad.shape[1], 
+                   combined_grad.shape[2], combined_grad.shape[3]);
+        } else {
+            printf("    - No final reduction needed - shapes match perfectly\n");
+        }
+        
+        printf("    - Calling backward on input %d with gradient: ", i);
+        Tensor_print(combined_grad); 
+        printf("\n");
+        
         Tensor_backward(self.node->inputs[i], combined_grad);
+        printf("    - Back from backward() for input %d\n", i);
     }
+    printf("=== Finished Tensor_backward ===\n\n");
 }
 
 int Tensor_backward_apply(Tensor self, void (*f)(Tensor, void*), void* ctx) {

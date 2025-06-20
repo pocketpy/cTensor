@@ -76,5 +76,18 @@ void test_reciprocal_operator() {
         compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
 
+    // Test Case 4: 3D tensor reciprocal operations
+    {
+        const char* tc_name = "reciprocal_3d_tensor";
+        TensorShape t_shape = {2, 2, 2, 0};
+        float d1[] = {1.0f, 2.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f};
+        float exp_d[] = {1.0f, 0.5f, 0.25f, 0.2f, 0.1667f, 0.1429f, 0.125f, 0.1111f}; // [1/1, 1/2, 1/4, 1/5, 1/6, 1/7, 1/8, 1/9]
+        Tensor t1 = create_test_tensor(t_shape, d1, false);
+        Tensor expected_res = create_test_tensor(t_shape, exp_d, false);
+        Tensor actual_res = Tensor_reciprocal(t1);
+
+        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+    }
+
     cten_free(pool_id);
 }
