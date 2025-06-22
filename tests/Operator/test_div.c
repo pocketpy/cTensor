@@ -2,7 +2,9 @@
 #include "../test_utils.h"
 #include "../csv_reporter.h"
 #include "../test_config.h"
+#include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 void test_div_operator() {
     const char* op_name = "div";
@@ -85,8 +87,23 @@ void test_div_operator() {
 
         compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
-    
-    // Test Case 4: Broadcasting (vector divided by scalar)
+
+    // Test Case 4: 3D tensor division operations
+    {
+        const char* tc_name = "div_3d_tensor";
+        TensorShape t_shape = {2, 2, 2, 0};
+        float d1[] = {10.0f, 8.0f, 6.0f, 4.0f, 3.0f, 2.0f, 1.0f, 0.5f};
+        float d2[] = {2.0f, 4.0f, 3.0f, 2.0f, 1.5f, 1.0f, 0.5f, 0.25f};
+        float exp_d[] = {5.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f}; // [10/2, 8/4, 6/3, 4/2, 3/1.5, 2/1, 1/0.5, 0.5/0.25]
+        Tensor t1 = create_test_tensor(t_shape, d1, false);
+        Tensor t2 = create_test_tensor(t_shape, d2, false);
+        Tensor expected_res = create_test_tensor(t_shape, exp_d, false);
+        Tensor actual_res = Tensor_div(t1, t2);
+
+        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+    }
+
+    // Test Case 5: Broadcasting (vector divided by scalar)
     {
         const char* tc_name = "div_broadcast_vector_scalar";
         TensorShape vec_shape = {3, 0, 0, 0}; 
@@ -105,6 +122,23 @@ void test_div_operator() {
         Tensor expected_res = create_test_tensor(expected_shape, exp_data, false);
 
         compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+    }
+
+    // Test Case 6: Division by zero
+    {
+        const char* tc_name = "div_by_zero";
+        TensorShape s_shape = {1, 0, 0, 0};
+        float d1[] = {10.0f};
+        float d2[] = {0.0f};
+        Tensor t1 = create_test_tensor(s_shape, d1, false);
+        Tensor t2 = create_test_tensor(s_shape, d2, false);
+
+        Tensor actual_res = Tensor_div(t1, t2);
+        // Check if the result is very large (greater than 1e10 in absolute value)
+        if (fabs(actual_res.data->flex[0]) < 1e10) {
+            fprintf(stderr, "Test %s:%d failed: expected a very large number, got %f\n", tc_name, 1, actual_res.data->flex[0]);
+            abort();
+        }
     }
 
     cten_free(pool_id);
