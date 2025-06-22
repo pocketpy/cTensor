@@ -162,107 +162,55 @@ bool cten_elemwise_broadcast(Tensor* a, Tensor* b) {
 }
 
 Tensor reduce_gradient_for_broadcasting(Tensor grad, TensorShape original_shape, TensorShape broadcasted_shape) {
-    printf("    - reduce_gradient_for_broadcasting called:\n");
-    printf("      - Original shape: [%d,%d,%d,%d]\n", 
-           original_shape[0], original_shape[1], original_shape[2], original_shape[3]);
-    printf("      - Broadcasted shape: [%d,%d,%d,%d]\n", 
-           broadcasted_shape[0], broadcasted_shape[1], broadcasted_shape[2], broadcasted_shape[3]);
-    printf("      - Gradient shape: [%d,%d,%d,%d]\n", 
-           grad.shape[0], grad.shape[1], grad.shape[2], grad.shape[3]);
+    Tensor result = grad;
     
-    Tensor result = grad;  // Start with the full gradient
-    
-    // Handle each dimension from right to left (following NumPy broadcasting rules)
     for (int dim = 3; dim >= 0; dim--) {
         int orig_size = original_shape[dim];
         int broad_size = broadcasted_shape[dim];
         int grad_size = result.shape[dim];
         
-        printf("      - Dim %d: orig=%d, broad=%d, grad=%d\n", dim, orig_size, broad_size, grad_size);
-        
-        // Case 1: Dimension was broadcasted from size 1 to size N
+        // Case 1: dim was broadcasted from size 1 to size N
         if (orig_size == 1 && broad_size > 1 && grad_size == broad_size) {
-            printf("        - Reducing dimension %d (was broadcasted from 1 to %d)\n", dim, broad_size);
-            
-            // Sum along this dimension
-            Tensor summed = Tensor_sum(result, dim);  // This gives us a scalar or reduced tensor
-            printf("        - Summed result: "); Tensor_print(summed); printf("\n");
-            
-            // Now we need to reshape to have size 1 in the reduced dimension
-            // and preserve other dimensions
+            Tensor summed = Tensor_sum(result, dim);  
             TensorShape new_shape = {result.shape[0], result.shape[1], result.shape[2], result.shape[3]};
-            new_shape[dim] = 1;  // Set the reduced dimension to 1
-            
-            printf("        - Target shape after reduction: [%d,%d,%d,%d]\n", 
-                   new_shape[0], new_shape[1], new_shape[2], new_shape[3]);
-            
-            // Create new tensor with the correct shape
+            new_shape[dim] = 1;  
             result = Tensor_new(new_shape, false);
             
-            // Copy the summed data
             if (summed.data->numel == 1) {
-                // If summed is a scalar, replicate it to fill the new shape
                 for (int i = 0; i < result.data->numel; i++) {
                     result.data->flex[i] = summed.data->flex[0];
                 }
             } else {
-                // If summed has multiple elements, copy them
                 for (int i = 0; i < result.data->numel && i < summed.data->numel; i++) {
                     result.data->flex[i] = summed.data->flex[i];
                 }
             }
-            
-            printf("        - After reshaping: "); Tensor_print(result); 
-            printf(" (shape=[%d,%d,%d,%d])\n", result.shape[0], result.shape[1], result.shape[2], result.shape[3]);
         }
-        // Case 2: Dimension was added (original was 0, broadcasted > 0) 
+        // Case 2: dim was added (original was 0, broadcasted > 0) 
         else if (orig_size == 0 && broad_size > 0 && grad_size == broad_size) {
-            printf("        - Reducing dimension %d (was added, need to remove)\n", dim);
-            
-            // Sum along this dimension to remove it
             Tensor summed = Tensor_sum(result, dim);
-            printf("        - Summed result: "); Tensor_print(summed); printf("\n");
-            
-            // Create new shape with this dimension removed (set to 0)
             TensorShape new_shape = {result.shape[0], result.shape[1], result.shape[2], result.shape[3]};
             new_shape[dim] = 0;
-            
-            // Shift dimensions after the removed one
             for (int d = dim; d < 3; d++) {
                 if (d + 1 < 4) {
                     new_shape[d] = new_shape[d + 1];
                 }
             }
-            new_shape[3] = 0;  // Clear the last dimension
-            
-            printf("        - Target shape after removal: [%d,%d,%d,%d]\n", 
-                   new_shape[0], new_shape[1], new_shape[2], new_shape[3]);
-            
+            new_shape[3] = 0; //clearing last dim
             result = Tensor_new(new_shape, false);
-            
-            // Copy the summed data
             for (int i = 0; i < result.data->numel && i < summed.data->numel; i++) {
                 result.data->flex[i] = summed.data->flex[i];
             }
-            
-            printf("        - After dimension removal: "); Tensor_print(result); 
-            printf(" (shape=[%d,%d,%d,%d])\n", result.shape[0], result.shape[1], result.shape[2], result.shape[3]);
         }
-        // Case 3: No broadcasting on this dimension  
+        // Case 3: no broadcasting on this dim  
         else if (orig_size == broad_size && grad_size == broad_size) {
-            printf("        - No broadcasting on dimension %d\n", dim);
-            // No reduction needed
+            //do nothing
         }
         else {
-            printf("        - WARNING: Unexpected broadcasting pattern on dim %d\n", dim);
+            //have to think about this
+            cten_assert(false, "reduce_gradient_for_broadcasting: unexpected broadcasting pattern");
         }
     }
-    
-    printf("      - Final result: "); Tensor_print(result); 
-    printf(" (shape=[%d,%d,%d,%d])\n", result.shape[0], result.shape[1], result.shape[2], result.shape[3]);
-    printf("      - Expected original shape: [%d,%d,%d,%d]\n", 
-           original_shape[0], original_shape[1], original_shape[2], original_shape[3]);
-    
     return result;
 }
 
