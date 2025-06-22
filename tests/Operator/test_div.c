@@ -1,6 +1,5 @@
 #include "../../include/cten.h"
 #include "../test_utils.h"
-#include "../csv_reporter.h"
 #include "../test_config.h"
 #include <math.h>
 #include <stdio.h>
@@ -139,6 +138,101 @@ void test_div_operator() {
             fprintf(stderr, "Test %s:%d failed: expected a very large number, got %f\n", tc_name, 1, actual_res.data->flex[0]);
             abort();
         }
+    }
+
+    // Test Case 7: Division with negative numbers
+    {
+        const char* tc_name = "div_negative_numbers";
+        TensorShape s_shape = {1, 0, 0, 0};
+        float d1[] = {-10.0f};
+        float d2[] = {2.0f};
+        float exp_d[] = {-5.0f}; // -10 / 2 = -5
+        Tensor t1 = create_test_tensor(s_shape, d1, false);
+        Tensor t2 = create_test_tensor(s_shape, d2, false);
+        Tensor expected_res = create_test_tensor(s_shape, exp_d, false);
+        Tensor actual_res = Tensor_div(t1, t2);
+
+        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+    }
+
+    // Test Case 8: Division of negative numbers
+    {
+        const char* tc_name = "div_both_negative";
+        TensorShape s_shape = {1, 0, 0, 0};
+        float d1[] = {-10.0f};
+        float d2[] = {-2.0f};
+        float exp_d[] = {5.0f}; // -10 / -2 = 5
+        Tensor t1 = create_test_tensor(s_shape, d1, false);
+        Tensor t2 = create_test_tensor(s_shape, d2, false);
+        Tensor expected_res = create_test_tensor(s_shape, exp_d, false);
+        Tensor actual_res = Tensor_div(t1, t2);
+
+        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+    }
+
+    // TODO: Complex Broadcasting will handle later
+    // Test Case 9: Broadcasting (matrix divided by vector)
+    // {
+    //     const char* tc_name = "div_broadcast_matrix_vector";
+    //     TensorShape matrix_shape = {2, 3, 0, 0}; // 2x3 matrix
+    //     float matrix_data[] = {10.0f, 20.0f, 30.0f, 40.0f, 50.0f, 60.0f};
+    //     TensorShape vector_shape = {3, 0, 0, 0}; // vector with 3 elements
+    //     float vector_data[] = {2.0f, 5.0f, 10.0f};
+        
+    //     // Expected: broadcast vector to shape [2,3] then divide
+    //     TensorShape expected_shape = {2, 3, 0, 0};
+    //     float exp_data[] = {5.0f, 4.0f, 3.0f, 20.0f, 10.0f, 6.0f}; // [10/2, 20/5, 30/10, 40/2, 50/5, 60/10]
+
+    //     Tensor t_matrix = create_test_tensor(matrix_shape, matrix_data, false);
+    //     Tensor t_vector = create_test_tensor(vector_shape, vector_data, false);
+        
+    //     Tensor actual_res = Tensor_div(t_matrix, t_vector);
+    //     Tensor expected_res = create_test_tensor(expected_shape, exp_data, false);
+
+    //     compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+    // }
+
+    // Test Case 10: Identity division (dividing by itself)
+    {
+        const char* tc_name = "div_identity";
+        TensorShape v_shape = {3, 0, 0, 0};
+        float d[] = {10.0f, -5.0f, 2.5f};
+        float exp_d[] = {1.0f, 1.0f, 1.0f}; // [10/10, -5/-5, 2.5/2.5] = [1, 1, 1]
+        Tensor t = create_test_tensor(v_shape, d, false);
+        Tensor expected_res = create_test_tensor(v_shape, exp_d, false);
+        Tensor actual_res = Tensor_div(t, t);
+
+        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+    }
+
+    // Test Case 11: Very large and very small numbers
+    {
+        const char* tc_name = "div_extreme_values";
+        TensorShape s_shape = {1, 0, 0, 0};
+        float d1[] = {1e6f}; // large number
+        float d2[] = {1e-6f}; // small number
+        float exp_d[] = {1e12f}; // 1e6 / 1e-6 = 1e12
+        Tensor t1 = create_test_tensor(s_shape, d1, false);
+        Tensor t2 = create_test_tensor(s_shape, d2, false);
+        Tensor expected_res = create_test_tensor(s_shape, exp_d, false);
+        Tensor actual_res = Tensor_div(t1, t2);
+
+        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, 1e6f); // Using larger tolerance due to floating point precision
+    }
+
+    // Test Case 12: 4D tensor division
+    {
+        const char* tc_name = "div_4d_tensor";
+        TensorShape t_shape = {2, 2, 2, 1};
+        float d1[] = {10.0f, 20.0f, 30.0f, 40.0f, 50.0f, 60.0f, 70.0f, 80.0f};
+        float d2[] = {2.0f, 4.0f, 6.0f, 8.0f, 10.0f, 12.0f, 14.0f, 16.0f};
+        float exp_d[] = {5.0f, 5.0f, 5.0f, 5.0f, 5.0f, 5.0f, 5.0f, 5.0f}; // Element-wise division
+        Tensor t1 = create_test_tensor(t_shape, d1, false);
+        Tensor t2 = create_test_tensor(t_shape, d2, false);
+        Tensor expected_res = create_test_tensor(t_shape, exp_d, false);
+        Tensor actual_res = Tensor_div(t1, t2);
+
+        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
 
     cten_free(pool_id);

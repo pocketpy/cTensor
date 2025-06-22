@@ -101,5 +101,91 @@ void test_square_operator() {
         compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
 
+    // Test Case 5: 4D tensor square operations
+    {
+        const char* tc_name = "square_4d_tensor";
+        TensorShape t_shape = {2, 1, 2, 1}; // 2x1x2x1 tensor
+        float d1[] = {0.1f, -0.2f, 0.3f, -0.4f};
+        float exp_d[] = {0.01f, 0.04f, 0.09f, 0.16f}; // [0.1^2, (-0.2)^2, 0.3^2, (-0.4)^2]
+        Tensor t1 = create_test_tensor(t_shape, d1, false);
+        Tensor expected_res = create_test_tensor(t_shape, exp_d, false);
+        Tensor actual_res = Tensor_square(t1);
+
+        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+    }
+
+    // Test Case 6: Very large numbers
+    {
+        const char* tc_name = "square_large_numbers";
+        TensorShape s_shape = {1, 0, 0, 0};
+        float d1[] = {1000.0f};
+        float exp_d[] = {1000000.0f}; // 1000^2 = 1,000,000
+        Tensor t1 = create_test_tensor(s_shape, d1, false);
+        Tensor expected_res = create_test_tensor(s_shape, exp_d, false);
+        Tensor actual_res = Tensor_square(t1);
+
+        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, 0.1f); // Using larger tolerance due to potential floating point imprecision
+    }
+
+    // Test Case 7: Very small numbers
+    {
+        const char* tc_name = "square_small_numbers";
+        TensorShape s_shape = {1, 0, 0, 0};
+        float d1[] = {1e-4f};
+        float exp_d[] = {1e-8f}; // (1e-4)^2 = 1e-8
+        Tensor t1 = create_test_tensor(s_shape, d1, false);
+        Tensor expected_res = create_test_tensor(s_shape, exp_d, false);
+        Tensor actual_res = Tensor_square(t1);
+
+        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+    }
+
+    // Test Case 8: Mixed positive and negative values
+    {
+        const char* tc_name = "square_mixed_sign_vector";
+        TensorShape v_shape = {5, 0, 0, 0};
+        float d1[] = {1.0f, -2.0f, 3.0f, -4.0f, 5.0f};
+        float exp_d[] = {1.0f, 4.0f, 9.0f, 16.0f, 25.0f}; // [1^2, (-2)^2, 3^2, (-4)^2, 5^2]
+        Tensor t1 = create_test_tensor(v_shape, d1, false);
+        Tensor expected_res = create_test_tensor(v_shape, exp_d, false);
+        Tensor actual_res = Tensor_square(t1);
+
+        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+    }
+
+    // Test Case 9: Larger matrix
+    {
+        const char* tc_name = "square_3x3_matrix";
+        TensorShape m_shape = {3, 3, 0, 0};
+        float d1[] = {
+            1.0f, 2.0f, 3.0f,
+            -4.0f, -5.0f, -6.0f,
+            0.1f, 0.2f, 0.3f
+        };
+        float exp_d[] = {
+            1.0f, 4.0f, 9.0f,
+            16.0f, 25.0f, 36.0f,
+            0.01f, 0.04f, 0.09f
+        }; // Square of each element
+        Tensor t1 = create_test_tensor(m_shape, d1, false);
+        Tensor expected_res = create_test_tensor(m_shape, exp_d, false);
+        Tensor actual_res = Tensor_square(t1);
+
+        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+    }
+
+    // Test Case 10: Tensor with zeros and ones
+    {
+        const char* tc_name = "square_zeros_and_ones";
+        TensorShape v_shape = {4, 0, 0, 0};
+        float d1[] = {0.0f, 1.0f, 0.0f, 1.0f};
+        float exp_d[] = {0.0f, 1.0f, 0.0f, 1.0f}; // [0^2, 1^2, 0^2, 1^2]
+        Tensor t1 = create_test_tensor(v_shape, d1, false);
+        Tensor expected_res = create_test_tensor(v_shape, exp_d, false);
+        Tensor actual_res = Tensor_square(t1);
+
+        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+    }
+
     cten_free(pool_id);
 }
