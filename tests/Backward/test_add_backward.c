@@ -9,11 +9,11 @@ void test_add_backward() {
     PoolId pool_id = 0; 
     cten_begin_malloc(pool_id);
 
-    // Test Case 1: Scalar backward (1x1 tensors)
+    // Test Case 1: Simple backward (1x1 tensors)
     {
+        const char* tc_name = "Simple_backward";
         // Sub-test 1: Scalar backward
         {
-            const char* tc_name = "add_scalar_backward";
             TensorShape s_shape = {1, 0, 0, 0};
             float d1[] = {2.0f};
             float d2[] = {3.0f};
@@ -35,7 +35,6 @@ void test_add_backward() {
 
         // Sub-test 2: Vector sum backward
         {
-            const char* tc_name = "add_vector_sum_backward";
             TensorShape v_shape = {3, 0, 0, 0};
             float d1[] = {1.0f, 2.0f, 3.0f};
             float d2[] = {4.0f, 5.0f, 6.0f};
@@ -56,7 +55,6 @@ void test_add_backward() {
 
         // Sub-test 3: Matrix sum backward
         {
-            const char* tc_name = "add_matrix_sum_backward";
             TensorShape m_shape = {2, 2, 0, 0};
             float d1[] = {1.0f, 2.0f, 3.0f, 4.0f};
             float d2[] = {5.0f, 6.0f, 7.0f, 8.0f};
@@ -78,9 +76,9 @@ void test_add_backward() {
 
     // Test Case 2: Broadcasting backward
     {
+        const char* tc_name = "Broadcasting_backward";
         // Sub-test 1: Vector + Scalar
         {
-            const char* tc_name = "add_broadcast_vec_scalar_backward";
             TensorShape vec_shape = {2, 0, 0, 0};
             TensorShape scalar_shape = {1, 0, 0, 0};
             float vec_data[] = {1.0f, 2.0f};
@@ -104,7 +102,6 @@ void test_add_backward() {
 
         // Sub-test 2: Matrix + Row Vector
         {
-            const char* tc_name = "add_broadcast_matrix_row_backward";
             TensorShape mat_shape = {2, 3, 0, 0};
             TensorShape row_shape = {1, 3, 0, 0};
             float mat_data[] = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f};
@@ -128,7 +125,6 @@ void test_add_backward() {
 
         // Sub-test 3: Matrix + Column Vector
         {
-            const char* tc_name = "add_broadcast_matrix_col_backward";
             TensorShape mat_shape = {2, 3, 0, 0};
             TensorShape col_shape = {2, 1, 0, 0};
             float mat_data[] = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f};
@@ -152,7 +148,6 @@ void test_add_backward() {
 
         // Sub-test 4: 3D + 2D Tensor
         {
-            const char* tc_name = "add_broadcast_3d_2d_backward";
             TensorShape tensor3d_shape = {2, 2, 2, 0};
             TensorShape tensor2d_shape = {1, 2, 2, 0};
             float data3d[] = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f};
@@ -176,7 +171,6 @@ void test_add_backward() {
 
         // Sub-test 5: Multi-dim broadcast
         {
-            const char* tc_name = "add_broadcast_multi_dim_backward";
             TensorShape large_shape = {2, 3, 4, 0};
             TensorShape small_shape = {1, 1, 4, 0};
             float large_data[24];
@@ -202,10 +196,10 @@ void test_add_backward() {
     }
 
     // Test Case 3: Chained and Complex Graphs
-    {
+    {   
+        const char* tc_name = "Chained_and_Complex_Graphs_backward";
         // Sub-test 1: Complex computation graph (x+y)*w
         {
-            const char* tc_name = "add_complex_graph_backward";
             TensorShape v_shape = {2, 0, 0, 0};
             TensorShape s_shape = {1, 0, 0, 0};
             float x_data[] = {1.0f, 2.0f};
@@ -236,7 +230,6 @@ void test_add_backward() {
 
         // Sub-test 2: Chain of broadcasting operations (mat + row) + col
         {
-            const char* tc_name = "add_broadcast_chain_backward";
             TensorShape mat_shape = {2, 3, 0, 0};
             TensorShape row_shape = {1, 3, 0, 0};
             TensorShape col_shape = {2, 1, 0, 0};
@@ -267,16 +260,15 @@ void test_add_backward() {
         }
     }
 
-    // Test Case 4: Broadcasting with other ops (from user request)
-    // NOTE: This tests mul backward, but is included here as per user request.
+    // Test Case 4: Broadcasting with other ops
     {
         const char* tc_name = "mul_broadcast_scalar_backward";
         TensorShape mat_shape = {2, 2, 0, 0};
         TensorShape scalar_shape = {1, 0, 0, 0};
         float mat_data[] = {2.0f, 3.0f, 4.0f, 5.0f};
         float scalar_data[] = {2.0f};
-        float exp_grad_mat[] = {2.0f, 2.0f, 2.0f, 2.0f}; // grad is scalar value
-        float exp_grad_scalar[] = {14.0f}; // grad is sum of matrix elements
+        float exp_grad_mat[] = {2.0f, 2.0f, 2.0f, 2.0f};
+        float exp_grad_scalar[] = {14.0f};
 
         Tensor t_mat = create_test_tensor(mat_shape, mat_data, true);
         Tensor t_scalar = create_test_tensor(scalar_shape, scalar_data, true);
