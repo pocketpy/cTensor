@@ -12,13 +12,13 @@ void test_pow_operator() {
     // Test Case 1: Scalar power (represented as 1x1 tensors)
     {
         TensorShape s_shape = {1, 0, 0, 0};
+        const char* tc_name = "pow_scalar_basic";
 
         // Sub-test 1: Basic power
         {
-            const char* tc_name = "pow_scalar_basic";
-            float d1[] = {2.0f};
-            float d2[] = {3.0f};
-            float exp_d[] = {8.0f}; // 2^3 = 8
+            float d1[] = {3.557707f};
+            float d2[] = {2.050022f};
+            float exp_d[] = {13.486858f}; // 3.557707^2.050022 = 13.486858
             Tensor t1 = create_test_tensor(s_shape, d1, false);
             Tensor t2 = create_test_tensor(s_shape, d2, false);
             Tensor expected_res = create_test_tensor(s_shape, exp_d, false);
@@ -29,10 +29,9 @@ void test_pow_operator() {
 
         // Sub-test 2: Square root
         {
-            const char* tc_name = "pow_scalar_sqrt";
-            float d1[] = {9.0f};
-            float d2[] = {0.5f};
-            float exp_d[] = {3.0f}; // 9^0.5 = 3
+            float d1[] = {7.300352f};
+            float d2[] = {0.500000f};
+            float exp_d[] = {2.701916f}; // 7.300352^0.5 = 2.701916
             Tensor t1 = create_test_tensor(s_shape, d1, false);
             Tensor t2 = create_test_tensor(s_shape, d2, false);
             Tensor expected_res = create_test_tensor(s_shape, exp_d, false);
@@ -43,10 +42,9 @@ void test_pow_operator() {
 
         // Sub-test 3: Power of 0
         {
-            const char* tc_name = "pow_scalar_zero_power";
-            float d1[] = {5.0f};
-            float d2[] = {0.0f};
-            float exp_d[] = {1.0f}; // 5^0 = 1
+            float d1[] = {3.008897f};
+            float d2[] = {0.000000f};
+            float exp_d[] = {1.000000f}; // 3.008897^0 = 1.000000
             Tensor t1 = create_test_tensor(s_shape, d1, false);
             Tensor t2 = create_test_tensor(s_shape, d2, false);
             Tensor expected_res = create_test_tensor(s_shape, exp_d, false);
@@ -60,9 +58,9 @@ void test_pow_operator() {
     {
         const char* tc_name = "pow_vector_elements";
         TensorShape v_shape = {3, 0, 0, 0};
-        float d1[] = {1.0f, 2.0f, 3.0f};
-        float d2[] = {2.0f, 2.0f, 2.0f};
-        float exp_d[] = {1.0f, 4.0f, 9.0f}; // [1^2, 2^2, 3^2]
+        float d1[] = {2.498160f, 4.802857f, 3.927976f};
+        float d2[] = {2.000000f, 2.000000f, 2.000000f};
+        float exp_d[] = {6.240806f, 23.067438f, 15.428994f}; // [2.498160^2, 4.802857^2, 3.927976^2]
         Tensor t1 = create_test_tensor(v_shape, d1, false);
         Tensor t2 = create_test_tensor(v_shape, d2, false);
         Tensor expected_res = create_test_tensor(v_shape, exp_d, false);
@@ -75,9 +73,9 @@ void test_pow_operator() {
     {
         const char* tc_name = "pow_matrix_2x2";
         TensorShape m_shape = {2, 2, 0, 0};
-        float d1[] = {1.0f, 2.0f, 3.0f, 4.0f};
-        float d2[] = {3.0f, 2.0f, 1.0f, 0.5f};
-        float exp_d[] = {1.0f, 4.0f, 3.0f, 2.0f}; // [1^3, 2^2, 3^1, 4^0.5]
+        float d1[] = {3.394634f, 1.624075f, 1.623978f, 1.232334f};
+        float d2[] = {2.665440f, 2.002788f, 2.270181f, 0.551461f};
+        float exp_d[] = {25.989442f, 2.641186f, 3.006458f, 1.122104f}; // [3.394634^2.665440, 1.624075^2.002788, 1.623978^2.270181, 1.232334^0.551461]
         Tensor t1 = create_test_tensor(m_shape, d1, false);
         Tensor t2 = create_test_tensor(m_shape, d2, false);
         Tensor expected_res = create_test_tensor(m_shape, exp_d, false);
@@ -90,9 +88,9 @@ void test_pow_operator() {
     {
         const char* tc_name = "pow_3d_tensor";
         TensorShape t_shape = {2, 2, 2, 0};
-        float d1[] = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f};
-        float d2[] = {2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f};
-        float exp_d[] = {1.0f, 4.0f, 9.0f, 16.0f, 25.0f, 36.0f, 49.0f, 64.0f}; // [1^2, 2^2, 3^2, 4^2, 5^2, 6^2, 7^2, 8^2]
+        float d1[] = {4.879639f, 4.329771f, 1.849356f, 1.727300f, 1.733618f, 2.216969f, 3.099026f, 2.727780f};
+        float d2[] = {2.000000f, 2.000000f, 2.000000f, 2.000000f, 2.000000f, 2.000000f, 2.000000f, 2.000000f};
+        float exp_d[] = {23.810881f, 18.746913f, 3.420119f, 2.983565f, 3.005432f, 4.914951f, 9.603960f, 7.440784f}; // [4.879639^2, 4.329771^2, 1.849356^2, 1.727300^2, 1.733618^2, 2.216969^2, 3.099026^2, 2.727780^2]
         Tensor t1 = create_test_tensor(t_shape, d1, false);
         Tensor t2 = create_test_tensor(t_shape, d2, false);
         Tensor expected_res = create_test_tensor(t_shape, exp_d, false);
@@ -105,13 +103,13 @@ void test_pow_operator() {
     {
         const char* tc_name = "pow_broadcast_vector_scalar";
         TensorShape vec_shape = {3, 0, 0, 0}; 
-        float vec_data[] = {2.0f, 3.0f, 4.0f};
+        float vec_data[] = {2.164917f, 3.447412f, 1.557975f};
         TensorShape scalar_shape = {1, 0, 0, 0}; 
-        float scalar_data[] = {2.0f}; // power of 2
+        float scalar_data[] = {2.000000f}; // power of 2
         
-        // Expected: broadcast scalar {2} to {2, 2, 2} then apply power
+        // Expected: broadcast scalar {2} to the vector then apply power
         TensorShape expected_shape = {3, 0, 0, 0}; 
-        float exp_data[] = {4.0f, 9.0f, 16.0f}; // [2^2, 3^2, 4^2]
+        float exp_data[] = {4.686864f, 11.884647f, 2.427287f}; // [2.164917^2, 3.447412^2, 1.557975^2]
 
         Tensor t_vec = create_test_tensor(vec_shape, vec_data, false);
         Tensor t_scalar = create_test_tensor(scalar_shape, scalar_data, false);
@@ -126,9 +124,9 @@ void test_pow_operator() {
     {
         const char* tc_name = "pow_negative_base";
         TensorShape s_shape = {1, 0, 0, 0};
-        float d1[] = {-2.0f};
-        float d2[] = {3.0f};
-        float exp_d[] = {-8.0f}; // (-2)^3 = -8
+        float d1[] = {-2.000000f};
+        float d2[] = {3.000000f};
+        float exp_d[] = {-8.000000f}; // (-2)^3 = -8
         Tensor t1 = create_test_tensor(s_shape, d1, false);
         Tensor t2 = create_test_tensor(s_shape, d2, false);
         Tensor expected_res = create_test_tensor(s_shape, exp_d, false);

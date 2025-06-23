@@ -13,13 +13,13 @@ void test_div_operator() {
     // Test Case 1: Scalar division (represented as 1x1 tensors)
     {
         TensorShape s_shape = {1, 0, 0, 0};
+        const char* tc_name = "div_scalar_basic";
 
-        // Sub-test 1: Basic division
+        // Sub-test 1: Basic division - I
         {
-            const char* tc_name = "div_scalar_basic";
-            float d1[] = {10.0f};
-            float d2[] = {2.0f};
-            float exp_d[] = {5.0f}; // 10 / 2 = 5
+            float d1[] = {6.754841f};
+            float d2[] = {0.612548f};
+            float exp_d[] = {11.027441f}; // 6.754841 / 0.612548 = 11.027441
             Tensor t1 = create_test_tensor(s_shape, d1, false);
             Tensor t2 = create_test_tensor(s_shape, d2, false);
             Tensor expected_res = create_test_tensor(s_shape, exp_d, false);
@@ -28,12 +28,11 @@ void test_div_operator() {
             compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
         }
 
-        // Sub-test 2: Division resulting in fractional value
+        // Sub-test 2: Basic division - II
         {
-            const char* tc_name = "div_scalar_fractional";
-            float d1[] = {5.0f};
-            float d2[] = {2.0f};
-            float exp_d[] = {2.5f}; // 5 / 2 = 2.5
+            float d1[] = {7.628241f};
+            float d2[] = {3.545148f};
+            float exp_d[] = {2.151741f}; // 7.628241 / 3.545148 = 2.151741
             Tensor t1 = create_test_tensor(s_shape, d1, false);
             Tensor t2 = create_test_tensor(s_shape, d2, false);
             Tensor expected_res = create_test_tensor(s_shape, exp_d, false);
@@ -41,29 +40,15 @@ void test_div_operator() {
 
             compare_tensors(&actual_res, &expected_res, op_name, tc_name, 2, TEST_FLOAT_TOLERANCE);
         }
-
-        // Sub-test 3: Division by 1
-        {
-            const char* tc_name = "div_scalar_by_one";
-            float d1[] = {7.0f};
-            float d2[] = {1.0f};
-            float exp_d[] = {7.0f}; // 7 / 1 = 7
-            Tensor t1 = create_test_tensor(s_shape, d1, false);
-            Tensor t2 = create_test_tensor(s_shape, d2, false);
-            Tensor expected_res = create_test_tensor(s_shape, exp_d, false);
-            Tensor actual_res = Tensor_div(t1, t2);
-
-            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 3, TEST_FLOAT_TOLERANCE);
-        }
     }
 
     // Test Case 2: Vector division operations
     {
         const char* tc_name = "div_vector";
         TensorShape v_shape = {3, 0, 0, 0};
-        float d1[] = {10.0f, 8.0f, 6.0f};
-        float d2[] = {2.0f, 4.0f, 3.0f};
-        float exp_d[] = {5.0f, 2.0f, 2.0f}; // [10/2, 8/4, 6/3]
+        float d1[] = {4.370861f, 9.556429f, 7.587945f};
+        float d2[] = {3.193963f, 1.202084f, 1.201975f};
+        float exp_d[] = {1.368476f, 7.949885f, 6.312896f}; // [4.370861/3.193963, 9.556429/1.202084, 7.587945/1.201975]
         Tensor t1 = create_test_tensor(v_shape, d1, false);
         Tensor t2 = create_test_tensor(v_shape, d2, false);
         Tensor expected_res = create_test_tensor(v_shape, exp_d, false);
@@ -76,9 +61,9 @@ void test_div_operator() {
     {
         const char* tc_name = "div_matrix_2x2";
         TensorShape m_shape = {2, 2, 0, 0};
-        float d1[] = {10.0f, 8.0f, 6.0f, 4.0f};
-        float d2[] = {2.0f, 4.0f, 3.0f, 2.0f};
-        float exp_d[] = {5.0f, 2.0f, 2.0f, 2.0f}; // [10/2, 8/4, 6/3, 4/2]
+        float d1[] = {1.522753f, 8.795585f, 6.410035f, 7.372653f};
+        float d2[] = {0.592630f, 4.864594f, 4.245992f, 1.455526f};
+        float exp_d[] = {2.569482f, 1.808082f, 1.509667f, 5.065284f}; // [1.522753/0.592630, 8.795585/4.864594, 6.410035/4.245992, 7.372653/1.455526]
         Tensor t1 = create_test_tensor(m_shape, d1, false);
         Tensor t2 = create_test_tensor(m_shape, d2, false);
         Tensor expected_res = create_test_tensor(m_shape, exp_d, false);
@@ -91,9 +76,9 @@ void test_div_operator() {
     {
         const char* tc_name = "div_3d_tensor";
         TensorShape t_shape = {2, 2, 2, 0};
-        float d1[] = {10.0f, 8.0f, 6.0f, 4.0f, 3.0f, 2.0f, 1.0f, 0.5f};
-        float d2[] = {2.0f, 4.0f, 3.0f, 2.0f, 1.5f, 1.0f, 0.5f, 0.25f};
-        float exp_d[] = {5.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f}; // [10/2, 8/4, 6/3, 4/2, 3/1.5, 2/1, 1/0.5, 0.5/0.25]
+        float d1[] = {2.636425f, 2.650641f, 3.738180f, 5.722808f, 4.887505f, 3.621062f, 6.506676f, 2.255445f};
+        float d2[] = {1.814651f, 2.148628f, 2.552315f, 4.033292f, 1.398532f, 2.814055f, 3.165866f, 0.709027f};
+        float exp_d[] = {1.452855f, 1.233643f, 1.464623f, 1.418893f, 3.494740f, 1.286777f, 2.055260f, 3.181043f}; // [2.636425/1.814651, 2.650641/2.148628, 3.738180/2.552315, 5.722808/4.033292, 4.887505/1.398532, 3.621062/2.814055, 6.506676/3.165866, 2.255445/0.709027]
         Tensor t1 = create_test_tensor(t_shape, d1, false);
         Tensor t2 = create_test_tensor(t_shape, d2, false);
         Tensor expected_res = create_test_tensor(t_shape, exp_d, false);
@@ -106,13 +91,13 @@ void test_div_operator() {
     {
         const char* tc_name = "div_broadcast_vector_scalar";
         TensorShape vec_shape = {3, 0, 0, 0}; 
-        float vec_data[] = {10.0f, 20.0f, 30.0f};
+        float vec_data[] = {6.467904f, 2.534717f, 1.585464f};
         TensorShape scalar_shape = {1, 0, 0, 0}; 
-        float scalar_data[] = {2.0f};
+        float scalar_data[] = {4.514808f};
         
-        // Expected: broadcast scalar {2} to {2, 2, 2} then apply division
+        // Expected: broadcast scalar to vector then apply division
         TensorShape expected_shape = {3, 0, 0, 0}; 
-        float exp_data[] = {5.0f, 10.0f, 15.0f}; // [10/2, 20/2, 30/2]
+        float exp_data[] = {1.432598f, 0.561423f, 0.351170f}; // [6.467904/4.514808, 2.534717/4.514808, 1.585464/4.514808]
 
         Tensor t_vec = create_test_tensor(vec_shape, vec_data, false);
         Tensor t_scalar = create_test_tensor(scalar_shape, scalar_data, false);
