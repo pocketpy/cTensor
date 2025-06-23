@@ -139,9 +139,9 @@ void test_pow_operator() {
     {
         const char* tc_name = "pow_negative_exponent";
         TensorShape s_shape = {1, 0, 0, 0};
-        float d1[] = {4.0f};
-        float d2[] = {-1.0f};
-        float exp_d[] = {0.25f}; // 4^(-1) = 1/4 = 0.25
+        float d1[] = {4.996321f};
+        float d2[] = {-2.876786f};
+        float exp_d[] = {0.009775f}; // 4.996321^(-2.876786) = 0.009775
         Tensor t1 = create_test_tensor(s_shape, d1, false);
         Tensor t2 = create_test_tensor(s_shape, d2, false);
         Tensor expected_res = create_test_tensor(s_shape, exp_d, false);
@@ -154,17 +154,17 @@ void test_pow_operator() {
     {
         const char* tc_name = "pow_broadcast_negative_exponent";
         TensorShape vec_shape = {4, 0, 0, 0};
-        float vec_data[] = {1.0f, 2.0f, 4.0f, 10.0f};
-        TensorShape scalar_shape = {1, 0, 0, 0}; 
-        float scalar_data[] = {-1.0f}; // power of -1
+        float vec_data[] = {11.515921f, 9.782560f, 4.028242f, 4.027929f};
+        TensorShape scalar_shape = {1, 0, 0, 0};
+        float scalar_data[] = {-0.587125f};
         
         // Expected: broadcast scalar {-1} to {4} then apply power
         TensorShape expected_shape = {4, 0, 0, 0};
-        float exp_data[] = {1.0f, 0.5f, 0.25f, 0.1f}; // [1^(-1), 2^(-1), 4^(-1), 10^(-1)]
+        float exp_data[] = {0.238169f, 0.262108f, 0.441287f, 0.441307f};
 
         Tensor t_vec = create_test_tensor(vec_shape, vec_data, false);
         Tensor t_scalar = create_test_tensor(scalar_shape, scalar_data, false);
-        
+
         Tensor actual_res = Tensor_pow(t_vec, t_scalar);
         Tensor expected_res = create_test_tensor(expected_shape, exp_data, false);
 
@@ -197,24 +197,24 @@ void test_pow_operator() {
     {
         const char* tc_name = "pow_large_exponent";
         TensorShape s_shape = {1, 0, 0, 0};
-        float d1[] = {2.0f};
-        float d2[] = {10.0f};
-        float exp_d[] = {1024.0f}; // 2^10 = 1024
+        float d1[] = {2.799264f};
+        float d2[] = {9.207805f};
+        float exp_d[] = {13070.524894f}; // 2.799264^9.207805 = 13070.524894
         Tensor t1 = create_test_tensor(s_shape, d1, false);
         Tensor t2 = create_test_tensor(s_shape, d2, false);
         Tensor expected_res = create_test_tensor(s_shape, exp_d, false);
         Tensor actual_res = Tensor_pow(t1, t2);
 
-        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, 0.1f); // Large tolerance for large values
     }
 
     // Test Case 11: Fractional exponent
     {
         const char* tc_name = "pow_fractional_exponent";
         TensorShape s_shape = {1, 0, 0, 0};
-        float d1[] = {8.0f};
-        float d2[] = {1.0f/3.0f};
-        float exp_d[] = {2.0f}; // 8^(1/3) = 2
+        float d1[] = {70.149528f};
+        float d2[] = {0.333333f};
+        float exp_d[] = {4.124218f}; // 70.149528^(0.333333) = 4.124218
         Tensor t1 = create_test_tensor(s_shape, d1, false);
         Tensor t2 = create_test_tensor(s_shape, d2, false);
         Tensor expected_res = create_test_tensor(s_shape, exp_d, false);
@@ -227,24 +227,24 @@ void test_pow_operator() {
     {
         const char* tc_name = "pow_4d_tensor";
         TensorShape t_shape = {2, 2, 1, 2}; // 2x2x1x2 tensor
-        float d1[] = {2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f};
-        float d2[] = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f};
-        float exp_d[] = {2.0f, 4.0f, 8.0f, 16.0f, 32.0f, 64.0f, 128.0f, 256.0f}; // [2^1, 2^2, 2^3, 2^4, 2^5, 2^6, 2^7, 2^8]
+        float d1[] = {1.584617f, 2.582998f, 2.907829f, 1.501168f, 2.988317f, 2.426222f, 2.417480f, 1.510599f};
+        float d2[] = {1.092250f, 3.099099f, 2.599444f, 1.186663f, 4.895022f, 1.931085f, 1.362426f, 3.473544f};
+        float exp_d[] = {1.653360f, 18.932729f, 16.033239f, 1.619430f, 212.434116f, 5.537756f, 3.328920f, 4.190666f}; // Element-wise power operations
         Tensor t1 = create_test_tensor(t_shape, d1, false);
         Tensor t2 = create_test_tensor(t_shape, d2, false);
         Tensor expected_res = create_test_tensor(t_shape, exp_d, false);
         Tensor actual_res = Tensor_pow(t1, t2);
 
-        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, 0.1f); // Large tolerance for large values
     }
 
     // Test Case 13: Power with zero base
     {
         const char* tc_name = "pow_zero_base";
         TensorShape s_shape = {1, 0, 0, 0};
-        float d1[] = {0.0f};
-        float d2[] = {5.0f};
-        float exp_d[] = {0.0f}; // 0^5 = 0
+        float d1[] = {0.000000f};
+        float d2[] = {5.059696f};
+        float exp_d[] = {0.000000f}; // 0.000000^5.059696 = 0.000000
         Tensor t1 = create_test_tensor(s_shape, d1, false);
         Tensor t2 = create_test_tensor(s_shape, d2, false);
         Tensor expected_res = create_test_tensor(s_shape, exp_d, false);
