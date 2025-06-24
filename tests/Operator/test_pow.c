@@ -171,27 +171,25 @@ void test_pow_operator() {
         compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
 
-    // TODO: Complex Broadcasting will handle later
     // Test Case 9: Broadcasting with different dimensional tensors
-    // {
-    //     const char* tc_name = "pow_broadcast_matrix_vector";
-    //     TensorShape matrix_shape = {2, 3, 0, 0}; // 2x3 matrix
-    //     float matrix_data[] = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f};
-    //     TensorShape vector_shape = {3, 0, 0, 0}; // vector with 3 elements
-    //     float vector_data[] = {2.0f, 1.0f, 3.0f};
+    {
+        const char* tc_name = "pow_broadcast_matrix_vector";
+        TensorShape matrix_shape = {2, 3, 0, 0}; // 2x3 matrix
+        float matrix_data[] ={2.1854f, 4.7782f, 3.7940f, 3.1940f, 1.2021f,1.2020f};
+        TensorShape vector_shape = {1, 3, 0, 0}; // row vector with 3 elements
+        float vector_data[] = {0.6162f, 2.2324f, 1.7022f};
         
-    //     // Expected: broadcast vector to shape [2,3] then apply power
-    //     TensorShape expected_shape = {2, 3, 0, 0};
-    //     float exp_data[] = {1.0f, 2.0f, 27.0f, 16.0f, 5.0f, 216.0f}; // [1^2, 2^1, 3^3, 4^2, 5^1, 6^3]
-
-    //     Tensor t_matrix = create_test_tensor(matrix_shape, matrix_data, false);
-    //     Tensor t_vector = create_test_tensor(vector_shape, vector_data, false);
+        // Expected: broadcast vector to shape [2,3] then apply power
+        TensorShape expected_shape = {2, 3, 0, 0};
+        float exp_data[] = {1.618896f, 32.838981f, 9.676972f, 2.045367f, 1.508202f, 1.367771f};
+        Tensor t_matrix = create_test_tensor(matrix_shape, matrix_data, false);
+        Tensor t_vector = create_test_tensor(vector_shape, vector_data, false);
         
-    //     Tensor actual_res = Tensor_pow(t_matrix, t_vector);
-    //     Tensor expected_res = create_test_tensor(expected_shape, exp_data, false);
+        Tensor actual_res = Tensor_pow(t_matrix, t_vector);
+        Tensor expected_res = create_test_tensor(expected_shape, exp_data, false);
 
-    //     compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
-    // }
+        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+    }
 
     // Test Case 10: Power with very large exponent
     {

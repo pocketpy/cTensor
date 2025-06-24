@@ -73,36 +73,18 @@ void test_add_operator() {
     }
     
     // Test Case 4: Broadcasting (vector + scalar-like tensor)
-    // cTensor's Tensor_add handles broadcasting if cten_elemwise_broadcast modifies inputs.
-    // Let's assume for now Tensor_add expects compatible shapes after potential broadcast by cten_elemwise_broadcast.
-    // We will test a simple case where one tensor is {1,1} and other is {2,1} (or similar that cten_elemwise_broadcast handles)
-    // For this example, let's test adding a {1,0,0,0} tensor to a {2,0,0,0} tensor, expecting failure if not broadcastable or specific error.
-    // Given the current structure of Tensor_add, it calls cten_elemwise_broadcast. If that fails, it asserts.
-    // A proper test would mock or control cten_elemwise_broadcast, or test shapes it's known to handle.
-    // For now, we'll test addition of compatible shapes that might arise from broadcasting.
-    // Example: Add [10] (shape {1}) to [[1,2],[3,4]] (shape {2,2}). PyTorch result: [[11,12],[13,14]]
-    // cten_elemwise_broadcast might expand [10] to [[10,10],[10,10]] internally before element-wise add.
-    // Let's test a compatible case first, then consider how to test broadcast failure or specific broadcast scenarios.
     {
         const char* tc_name = "add_broadcast_vector_plus_scalar_tensor";
         TensorShape vec_shape = {2, 0, 0, 0}; float vec_data[] = {1.0f, 2.0f};
         TensorShape scalar_shape = {1, 0, 0, 0}; float scalar_data[] = {10.0f};
-        // Expected: PyTorch would broadcast scalar {10} to {10, 10} then add to get {11, 12}
-        // We need to know how cten_elemwise_broadcast modifies shapes to set the correct expected_res_shape.
-        // Assuming cten_elemwise_broadcast makes 'scalar' compatible with 'vec' for Tensor_add.
-        // If cten_elemwise_broadcast makes them both {2}, then expected shape is {2}.
         TensorShape expected_shape = {2, 0, 0, 0}; float exp_data[] = {11.0f, 12.0f};
 
         Tensor t_vec = create_test_tensor(vec_shape, vec_data, false);
         Tensor t_scalar_original = create_test_tensor(scalar_shape, scalar_data, false);
         
-        // Tensor_add internally calls cten_elemwise_broadcast(&t_vec, &t_scalar_original)
-        // This might modify t_vec.shape or t_scalar_original.shape if they are broadcastable.
-        // The result tensor 'actual_res' will have the broadcasted shape.
         Tensor actual_res = Tensor_add(t_vec, t_scalar_original); 
         Tensor expected_res = create_test_tensor(expected_shape, exp_data, false);
 
-        // We compare actual_res against an expected_res that has the final broadcasted shape and values.
         compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
 
