@@ -13,7 +13,7 @@ void test_mul_operator() {
     // Test Case 1: Scalar multiplication (1x1 tensors)
     {
         const char* tc_name = "mul_scalar";
-        TensorShape s_shape = {1, 0, 0, 0};
+        TensorShape s_shape = {1};
         float d1[] = {2.0f}; 
         float d2[] = {3.0f};
         float exp_d[] = {6.0f};
@@ -28,7 +28,7 @@ void test_mul_operator() {
     // Test Case 2: Vector element-wise multiplication
     {
         const char* tc_name = "mul_vector_1D";
-        TensorShape v_shape = {3, 0, 0, 0};
+        TensorShape v_shape = {3};
         float d1[] = {1.0f, 2.0f, 3.0f};
         float d2[] = {4.0f, 5.0f, 0.5f};
         float exp_d[] = {4.0f, 10.0f, 1.5f};
@@ -43,7 +43,7 @@ void test_mul_operator() {
     // Test Case 3: Matrix element-wise multiplication
     {
         const char* tc_name = "mul_matrix_2x2";
-        TensorShape m_shape = {2, 2, 0, 0};
+        TensorShape m_shape = {2, 2};
         float d1[] = {1.0f, 2.0f, 3.0f, 4.0f};
         float d2[] = {0.5f, 2.0f, -1.0f, 0.25f};
         float exp_d[] = {0.5f, 4.0f, -3.0f, 1.0f};
@@ -59,10 +59,10 @@ void test_mul_operator() {
     // Example: [[1,2],[3,4]] * [2] (shape {1}) -> PyTorch result: [[2,4],[6,8]]
     {
         const char* tc_name = "mul_broadcast_matrix_by_scalar_tensor";
-        TensorShape mat_shape = {2, 2, 0, 0}; float mat_data[] = {1.0f, 2.0f, 3.0f, 4.0f};
-        TensorShape scalar_shape = {1, 0, 0, 0}; float scalar_data[] = {2.0f};
+        TensorShape mat_shape = {2, 2}; float mat_data[] = {1.0f, 2.0f, 3.0f, 4.0f};
+        TensorShape scalar_shape = {1}; float scalar_data[] = {2.0f};
         
-        TensorShape expected_shape = {2, 2, 0, 0}; float exp_data[] = {2.0f, 4.0f, 6.0f, 8.0f};
+        TensorShape expected_shape = {2, 2}; float exp_data[] = {2.0f, 4.0f, 6.0f, 8.0f};
 
         Tensor t_mat = create_test_tensor(mat_shape, mat_data, false);
         Tensor t_scalar_original = create_test_tensor(scalar_shape, scalar_data, false);
@@ -79,9 +79,9 @@ void test_mul_operator() {
         
         // Sub-test 1: Multi-dimensional broadcasting {3,1} * {1,4} -> {3,4}
         {
-            TensorShape s1_shape = {3, 1, 0, 0}; float d1[] = {2.0f, 3.0f, 4.0f};
-            TensorShape s2_shape = {1, 4, 0, 0}; float d2[] = {1.0f, 2.0f, 3.0f, 4.0f};
-            TensorShape exp_shape = {3, 4, 0, 0}; 
+            TensorShape s1_shape = {3, 1}; float d1[] = {2.0f, 3.0f, 4.0f};
+            TensorShape s2_shape = {1, 4}; float d2[] = {1.0f, 2.0f, 3.0f, 4.0f};
+            TensorShape exp_shape = {3, 4}; 
             float exp_d[] = {2.0f, 4.0f, 6.0f, 8.0f,    // 2*[1,2,3,4]
                              3.0f, 6.0f, 9.0f, 12.0f,   // 3*[1,2,3,4]
                              4.0f, 8.0f, 12.0f, 16.0f}; // 4*[1,2,3,4]
@@ -164,7 +164,7 @@ void test_mul_operator() {
         
         // Sub-test 1: Negative number multiplication
         {
-            TensorShape v_shape = {2, 0, 0, 0};
+            TensorShape v_shape = {2};
             float d1[] = {-1.0f, 1.0f};
             float d2[] = {-2.0f, -3.0f};
             float exp_d[] = {2.0f, -3.0f}; // (-1)*(-2)=2, (1)*(-3)=-3
@@ -184,7 +184,7 @@ void test_mul_operator() {
         
         // Sub-test 1: 3D tensor multiplication (same shape)
         {
-            TensorShape shape_3d = {2, 3, 4, 0};
+            TensorShape shape_3d = {2, 3, 4};
             float d1[] = {0.1471f, 0.9266f, 0.4921f, 0.2582f, 0.4591f, 0.9800f, 0.4926f, 0.3288f, 0.6334f, 0.2401f, 0.0759f, 0.1289f, 0.1280f, 0.1519f, 0.1388f, 0.6409f, 0.1819f, 0.3457f, 0.8968f, 0.4740f, 0.6676f, 0.1723f, 0.1923f, 0.0409f};
             float d2[] = {0.1689f, 0.2786f, 0.1770f, 0.0887f, 0.1206f, 0.4608f, 0.2063f, 0.3643f, 0.5034f, 0.6904f, 0.0393f, 0.7994f, 0.6279f, 0.0818f, 0.8736f, 0.9209f, 0.0611f, 0.2769f, 0.8062f, 0.7483f, 0.1845f, 0.2093f, 0.3705f, 0.4845f};
             float exp_d[] = {0.0248f, 0.2582f, 0.0871f, 0.0229f, 0.0554f, 0.4516f, 0.1016f, 0.1198f, 0.3189f,

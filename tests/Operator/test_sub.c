@@ -13,7 +13,7 @@ void test_sub_operator() {
     // Test Case 1: Scalar subtraction (1x1 tensors)
     {
         const char* tc_name = "sub_scalar";
-        TensorShape s_shape = {1, 0, 0, 0};
+        TensorShape s_shape = {1};
         float d1[] = {5.0f}; 
         float d2[] = {3.0f};
         float exp_d[] = {2.0f};
@@ -28,7 +28,7 @@ void test_sub_operator() {
     // Test Case 2: Vector element-wise subtraction
     {
         const char* tc_name = "sub_vector_1D";
-        TensorShape v_shape = {3, 0, 0, 0};
+        TensorShape v_shape = {3};
         float d1[] = {10.0f, 20.0f, 30.0f};
         float d2[] = {1.0f, 5.0f, 2.5f};
         float exp_d[] = {9.0f, 15.0f, 27.5f};
@@ -43,7 +43,7 @@ void test_sub_operator() {
     // Test Case 3: Matrix element-wise subtraction
     {
         const char* tc_name = "sub_matrix_2x2";
-        TensorShape m_shape = {2, 2, 0, 0};
+        TensorShape m_shape = {2, 2};
         float d1[] = {1.0f, 2.0f, 3.0f, 4.0f};
         float d2[] = {0.5f, 2.0f, -1.0f, 5.0f};
         float exp_d[] = {0.5f, 0.0f, 4.0f, -1.0f};
@@ -59,10 +59,10 @@ void test_sub_operator() {
     // Example: [[1,2],[3,4]] - [1] (shape {1}) -> PyTorch result: [[0,1],[2,3]]
     {
         const char* tc_name = "sub_broadcast_matrix_minus_scalar_tensor";
-        TensorShape mat_shape = {2, 2, 0, 0}; float mat_data[] = {1.0f, 2.0f, 3.0f, 4.0f};
-        TensorShape scalar_shape = {1, 0, 0, 0}; float scalar_data[] = {1.0f};
+        TensorShape mat_shape = {2, 2}; float mat_data[] = {1.0f, 2.0f, 3.0f, 4.0f};
+        TensorShape scalar_shape = {1}; float scalar_data[] = {1.0f};
         
-        TensorShape expected_shape = {2, 2, 0, 0}; float exp_data[] = {0.0f, 1.0f, 2.0f, 3.0f};
+        TensorShape expected_shape = {2, 2}; float exp_data[] = {0.0f, 1.0f, 2.0f, 3.0f};
 
         Tensor t_mat = create_test_tensor(mat_shape, mat_data, false);
         Tensor t_scalar_original = create_test_tensor(scalar_shape, scalar_data, false);
@@ -79,11 +79,11 @@ void test_sub_operator() {
         
         // Sub-test 1: Multi-dimensional broadcasting {3,1} - {1,4} -> {3,4}
         {
-            TensorShape s1_shape = {3, 1, 0, 0};
+            TensorShape s1_shape = {3, 1};
             float d1[] = {10.0f, 20.0f, 30.0f};
-            TensorShape s2_shape = {1, 4, 0, 0};
+            TensorShape s2_shape = {1, 4};
             float d2[] = {1.0f, 2.0f, 3.0f, 4.0f};
-            TensorShape exp_shape = {3, 4, 0, 0}; 
+            TensorShape exp_shape = {3, 4}; 
             float exp_d[] = {9.0f, 8.0f, 7.0f, 6.0f,    // 10-[1,2,3,4]
                              19.0f, 18.0f, 17.0f, 16.0f, // 20-[1,2,3,4]
                              29.0f, 28.0f, 27.0f, 26.0f}; // 30-[1,2,3,4]
@@ -98,11 +98,11 @@ void test_sub_operator() {
 
         // Sub-test 2: 3D broadcasting {2,3,1} - {1,1,4} -> {2,3,4}
         {
-            TensorShape s1_shape = {2, 3, 1, 0};
+            TensorShape s1_shape = {2, 3, 1};
             float d1[] = {10.0f, 20.0f, 30.0f, 40.0f, 50.0f, 60.0f};
-            TensorShape s2_shape = {1, 1, 4, 0};
+            TensorShape s2_shape = {1, 1, 4};
             float d2[] = {1.0f, 2.0f, 3.0f, 4.0f};
-            TensorShape exp_shape = {2, 3, 4, 0};
+            TensorShape exp_shape = {2, 3, 4};
             float exp_d[] = {
                 // First 2x3 slice
                 9.0f, 8.0f, 7.0f, 6.0f,    // 10-[1,2,3,4]
@@ -180,7 +180,7 @@ void test_sub_operator() {
         
         // Sub-test 1: a - b ≠ b - a verification
         {
-            TensorShape v_shape = {2, 0, 0, 0};
+            TensorShape v_shape = {2};
             
             // First: [5.0, 3.0] - [2.0, 1.0] = [3.0, 2.0]
             float d1[] = {5.0f, 3.0f};
@@ -209,7 +209,7 @@ void test_sub_operator() {
         
         // Sub-test 1: 3D tensor subtraction (same shape)
         {
-            TensorShape shape_3d = {2, 3, 4, 0};
+            TensorShape shape_3d = {2, 3, 4};
             float d1[] = {0.2865f, 0.5908f, 0.0305f, 0.0373f, 0.8226f, 0.3602f, 0.1271f, 0.5222f, 0.7700f, 0.2158f, 0.6229f, 0.0853f, 0.0517f, 0.5314f, 0.5406f, 0.6374f, 0.7261f, 0.9759f, 0.5163f, 0.3230f, 0.7952f, 0.2708f, 0.4390f, 0.0785f};
             float d2[] = {0.0254f, 0.9626f, 0.8360f, 0.6960f, 0.4090f, 0.1733f, 0.1564f, 0.2502f, 0.5492f, 0.7146f, 0.6602f, 0.2799f, 0.9549f, 0.7379f, 0.5544f, 0.6117f, 0.4196f, 0.2477f, 0.3560f, 0.7578f, 0.0144f, 0.1161f, 0.0460f, 0.0407f};
             float exp_d[] = {0.2611f, -0.3718f, -0.8055f, -0.6587f,  0.4136f,  0.1869f, -0.0293f,  0.2720f,

@@ -13,7 +13,7 @@ void test_mulf_operator() {
     // Test Case 1: Scalar tensor multiplied by float
     {
         const char* tc_name = "mulf_scalar_x_float";
-        TensorShape s_shape = {1, 0, 0, 0};
+        TensorShape s_shape = {1};
         float d1[] = {2.0f};
         float scalar_val = 3.0f;
         float exp_d[] = {6.0f};
@@ -27,7 +27,7 @@ void test_mulf_operator() {
     // Test Case 2: Vector tensor multiplied by float
     {
         const char* tc_name = "mulf_vector_x_float";
-        TensorShape v_shape = {3, 0, 0, 0};
+        TensorShape v_shape = {3};
         float d1[] = {1.0f, 2.0f, 3.0f};
         float scalar_val = 0.5f;
         float exp_d[] = {0.5f, 1.0f, 1.5f};
@@ -41,7 +41,7 @@ void test_mulf_operator() {
     // Test Case 3: Matrix tensor multiplied by float
     {
         const char* tc_name = "mulf_matrix_x_float";
-        TensorShape m_shape = {2, 2, 0, 0};
+        TensorShape m_shape = {2, 2};
         float d1[] = {1.0f, 2.0f, 3.0f, 4.0f};
         float scalar_val = -2.0f;
         float exp_d[] = {-2.0f, -4.0f, -6.0f, -8.0f};
@@ -55,7 +55,7 @@ void test_mulf_operator() {
     // Test Case 4: Tensor multiplied by zero
     {
         const char* tc_name = "mulf_matrix_x_zero";
-        TensorShape m_shape = {2, 2, 0, 0};
+        TensorShape m_shape = {2, 2};
         float d1[] = {1.0f, 2.0f, 3.0f, 4.0f};
         float scalar_val = 0.0f;
         float exp_d[] = {0.0f, 0.0f, 0.0f, 0.0f};
@@ -72,7 +72,7 @@ void test_mulf_operator() {
         
         // Sub-test 1: Multiplication by zero
         {
-            TensorShape m_shape = {2, 3, 0, 0};
+            TensorShape m_shape = {2, 3};
             float d1[] = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f};
             float scalar_val = 0.0f;
             float exp_d[] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
@@ -86,7 +86,7 @@ void test_mulf_operator() {
 
         // Sub-test 2: Very small scalar multiplication
         {
-            TensorShape v_shape = {4, 0, 0, 0};
+            TensorShape v_shape = {4};
             float d1[] = {1000.0f, 2000.0f, 3000.0f, 4000.0f};
             float scalar_val = 1e-6f;
             float exp_d[] = {1e-3f, 2e-3f, 3e-3f, 4e-3f};
@@ -105,7 +105,7 @@ void test_mulf_operator() {
         
         // Sub-test 1: 3D tensor scalar multiplication (2x3x4)
         {
-            TensorShape shape_3d = {2, 3, 4, 0};
+            TensorShape shape_3d = {2, 3, 4};
             float d1[] = {0.6436f, 0.5264f, 0.7316f, 0.0816f, 0.0604f, 0.2471f, 0.1595f, 0.8718f, 0.2192f, 0.9759f, 0.3369f, 0.1821f, 0.7897f, 0.6587f, 0.4982f, 0.5554f, 0.7192f, 0.2285f, 0.9963f, 0.9748f, 0.6503f, 0.1995f, 0.6802f, 0.0722f};
             float scalar = 2.5f;
             float exp_d[] = {1.609000f, 1.316000f, 1.829000f, 0.204000f, 0.151000f, 0.617750f,

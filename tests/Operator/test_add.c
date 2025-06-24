@@ -11,7 +11,7 @@ void test_add_operator() {
 
     // Test Case 1: Scalar addition (represented as 1x1 tensors)
     {
-        TensorShape s_shape = {1, 0, 0, 0};
+        TensorShape s_shape = {1};
 
         // Sub-test 1
         {
@@ -45,7 +45,7 @@ void test_add_operator() {
     // Test Case 2: Vector addition (1D tensors)
     {
         const char* tc_name = "add_vector_1D";
-        TensorShape v_shape = {3, 0, 0, 0};
+        TensorShape v_shape = {3};
         float d1[] = {1.0f, 2.0f, 3.0f};
         float d2[] = {4.0f, 5.0f, 6.0f};
         float exp_d[] = {5.0f, 7.0f, 9.0f};
@@ -60,7 +60,7 @@ void test_add_operator() {
     // Test Case 3: Matrix addition (2D tensors)
     {
         const char* tc_name = "add_matrix_2x2";
-        TensorShape m_shape = {2, 2, 0, 0};
+        TensorShape m_shape = {2, 2};
         float d1[] = {1.0f, 2.0f, 3.0f, 4.0f};
         float d2[] = {5.0f, 6.0f, 7.0f, 8.0f};
         float exp_d[] = {6.0f, 8.0f, 10.0f, 12.0f};
@@ -75,9 +75,9 @@ void test_add_operator() {
     // Test Case 4: Broadcasting (vector + scalar-like tensor)
     {
         const char* tc_name = "add_broadcast_vector_plus_scalar_tensor";
-        TensorShape vec_shape = {2, 0, 0, 0}; float vec_data[] = {1.0f, 2.0f};
-        TensorShape scalar_shape = {1, 0, 0, 0}; float scalar_data[] = {10.0f};
-        TensorShape expected_shape = {2, 0, 0, 0}; float exp_data[] = {11.0f, 12.0f};
+        TensorShape vec_shape = {2}; float vec_data[] = {1.0f, 2.0f};
+        TensorShape scalar_shape = {1}; float scalar_data[] = {10.0f};
+        TensorShape expected_shape = {2}; float exp_data[] = {11.0f, 12.0f};
 
         Tensor t_vec = create_test_tensor(vec_shape, vec_data, false);
         Tensor t_scalar_original = create_test_tensor(scalar_shape, scalar_data, false);
@@ -94,9 +94,9 @@ void test_add_operator() {
         
         // Sub-test 1: Multi-dimensional broadcasting {3,1} + {1,4} -> {3,4}
         {
-            TensorShape s1_shape = {3, 1, 0, 0}; float d1[] = {1.0f, 2.0f, 3.0f};
-            TensorShape s2_shape = {1, 4, 0, 0}; float d2[] = {10.0f, 20.0f, 30.0f, 40.0f};
-            TensorShape exp_shape = {3, 4, 0, 0}; 
+            TensorShape s1_shape = {3, 1}; float d1[] = {1.0f, 2.0f, 3.0f};
+            TensorShape s2_shape = {1, 4}; float d2[] = {10.0f, 20.0f, 30.0f, 40.0f};
+            TensorShape exp_shape = {3, 4}; 
             float exp_d[] = {11.0f, 21.0f, 31.0f, 41.0f,  // 1+[10,20,30,40]
                              12.0f, 22.0f, 32.0f, 42.0f,  // 2+[10,20,30,40]
                              13.0f, 23.0f, 33.0f, 43.0f}; // 3+[10,20,30,40]
@@ -111,11 +111,11 @@ void test_add_operator() {
 
         // Sub-test 2: 3D broadcasting {2,3,1} + {1,1,4} -> {2,3,4}
         {
-            TensorShape s1_shape = {2, 3, 1, 0}; 
+            TensorShape s1_shape = {2, 3, 1}; 
             float d1[] = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f};
-            TensorShape s2_shape = {1, 1, 4, 0}; 
+            TensorShape s2_shape = {1, 1, 4}; 
             float d2[] = {10.0f, 20.0f, 30.0f, 40.0f};
-            TensorShape exp_shape = {2, 3, 4, 0};
+            TensorShape exp_shape = {2, 3, 4};
             float exp_d[] = {
                 // First 2x3 slice
                 11.0f, 21.0f, 31.0f, 41.0f,  // 1+[10,20,30,40]
@@ -226,7 +226,7 @@ void test_add_operator() {
         
         // Sub-test 1: 3D tensor addition (same shape)
         {
-            TensorShape shape_3d = {2, 3, 4, 0};
+            TensorShape shape_3d = {2, 3, 4};
             float d1[] = {0.3745f, 0.9507f, 0.7320f, 0.5987f, 0.1560f, 0.1560f, 0.0581f, 0.8662f, 0.6011f, 0.7081f, 0.0206f, 0.9699f, 0.8324f, 0.2123f, 0.1818f, 0.1834f, 0.3042f, 0.5248f, 0.4319f, 0.2912f, 0.6119f, 0.1395f, 0.2921f, 0.3664f};
             float d2[] = {0.4561f, 0.7852f, 0.1997f, 0.5142f, 0.5924f, 0.0465f, 0.6075f, 0.1705f, 0.0651f, 0.9489f, 0.9656f, 0.8084f, 0.3046f, 0.0977f, 0.6842f, 0.4402f, 0.1220f, 0.4952f, 0.0344f, 0.9093f, 0.2588f, 0.6625f, 0.3117f, 0.5201f};
             float exp_d[] = {0.8306f, 1.7359f, 0.9317f, 1.1129f, 0.7484f, 0.2025f, 0.6656f, 1.0367f, 0.6662f, 1.6570f, 0.9862f, 1.7783f, 1.1370f, 0.3100f, 0.8660f, 0.6236f, 0.4262f, 1.0200f, 0.4663f, 1.2005f, 0.8707f, 0.8020f, 0.6038f, 0.8865f};
@@ -274,7 +274,7 @@ void test_add_operator() {
         
         // Sub-test 1: requires_grad flag propagation
         {
-            TensorShape shape = {2, 2, 0, 0};
+            TensorShape shape = {2, 2};
             float d1[] = {1.0f, 2.0f, 3.0f, 4.0f};
             float d2[] = {5.0f, 6.0f, 7.0f, 8.0f};
             float exp_d[] = {6.0f, 8.0f, 10.0f, 12.0f};

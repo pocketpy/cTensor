@@ -14,7 +14,7 @@ void test_add_backward() {
         const char* tc_name = "Simple_backward";
         // Sub-test 1: Scalar backward
         {
-            TensorShape s_shape = {1, 0, 0, 0};
+            TensorShape s_shape = {1};
             float d1[] = {2.0f};
             float d2[] = {3.0f};
             float exp_grad1[] = {1.0f};  // dz/dx = 1
@@ -35,7 +35,7 @@ void test_add_backward() {
 
         // Sub-test 2: Vector sum backward
         {
-            TensorShape v_shape = {3, 0, 0, 0};
+            TensorShape v_shape = {3};
             float d1[] = {1.0f, 2.0f, 3.0f};
             float d2[] = {4.0f, 5.0f, 6.0f};
             float exp_grad[] = {1.0f, 1.0f, 1.0f};
@@ -55,7 +55,7 @@ void test_add_backward() {
 
         // Sub-test 3: Matrix sum backward
         {
-            TensorShape m_shape = {2, 2, 0, 0};
+            TensorShape m_shape = {2, 2};
             float d1[] = {1.0f, 2.0f, 3.0f, 4.0f};
             float d2[] = {5.0f, 6.0f, 7.0f, 8.0f};
             float exp_grad[] = {1.0f, 1.0f, 1.0f, 1.0f};
@@ -79,8 +79,8 @@ void test_add_backward() {
         const char* tc_name = "Broadcasting_backward";
         // Sub-test 1: Vector + Scalar
         {
-            TensorShape vec_shape = {2, 0, 0, 0};
-            TensorShape scalar_shape = {1, 0, 0, 0};
+            TensorShape vec_shape = {2};
+            TensorShape scalar_shape = {1};
             float vec_data[] = {1.0f, 2.0f};
             float scalar_data[] = {3.0f};
             float exp_grad_vec[] = {1.0f, 1.0f};
@@ -102,8 +102,8 @@ void test_add_backward() {
 
         // Sub-test 2: Matrix + Row Vector
         {
-            TensorShape mat_shape = {2, 3, 0, 0};
-            TensorShape row_shape = {1, 3, 0, 0};
+            TensorShape mat_shape = {2, 3};
+            TensorShape row_shape = {1, 3};
             float mat_data[] = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f};
             float row_data[] = {0.1f, 0.2f, 0.3f};
             float exp_grad_mat[] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
@@ -125,8 +125,8 @@ void test_add_backward() {
 
         // Sub-test 3: Matrix + Column Vector
         {
-            TensorShape mat_shape = {2, 3, 0, 0};
-            TensorShape col_shape = {2, 1, 0, 0};
+            TensorShape mat_shape = {2, 3};
+            TensorShape col_shape = {2, 1};
             float mat_data[] = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f};
             float col_data[] = {10.0f, 20.0f};
             float exp_grad_mat[] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
@@ -148,8 +148,8 @@ void test_add_backward() {
 
         // Sub-test 4: 3D + 2D Tensor
         {
-            TensorShape tensor3d_shape = {2, 2, 2, 0};
-            TensorShape tensor2d_shape = {1, 2, 2, 0};
+            TensorShape tensor3d_shape = {2, 2, 2};
+            TensorShape tensor2d_shape = {1, 2, 2};
             float data3d[] = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f};
             float data2d[] = {0.1f, 0.2f, 0.3f, 0.4f};
             float exp_grad_3d[] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
@@ -171,8 +171,8 @@ void test_add_backward() {
 
         // Sub-test 5: Multi-dim broadcast
         {
-            TensorShape large_shape = {2, 3, 4, 0};
-            TensorShape small_shape = {1, 1, 4, 0};
+            TensorShape large_shape = {2, 3, 4};
+            TensorShape small_shape = {1, 1, 4};
             float large_data[24];
             for(int i = 0; i < 24; i++) large_data[i] = (float)(i + 1);
             float small_data[] = {0.1f, 0.2f, 0.3f, 0.4f};
@@ -200,8 +200,8 @@ void test_add_backward() {
         const char* tc_name = "Chained_and_Complex_Graphs_backward";
         // Sub-test 1: Complex computation graph (x+y)*w
         {
-            TensorShape v_shape = {2, 0, 0, 0};
-            TensorShape s_shape = {1, 0, 0, 0};
+            TensorShape v_shape = {2};
+            TensorShape s_shape = {1};
             float x_data[] = {1.0f, 2.0f};
             float y_data[] = {3.0f};
             float w_data[] = {2.0f, 3.0f};
@@ -230,9 +230,9 @@ void test_add_backward() {
 
         // Sub-test 2: Chain of broadcasting operations (mat + row) + col
         {
-            TensorShape mat_shape = {2, 3, 0, 0};
-            TensorShape row_shape = {1, 3, 0, 0};
-            TensorShape col_shape = {2, 1, 0, 0};
+            TensorShape mat_shape = {2, 3};
+            TensorShape row_shape = {1, 3};
+            TensorShape col_shape = {2, 1};
             float mat_data[] = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f};
             float row_data[] = {0.1f, 0.2f, 0.3f};
             float col_data[] = {10.0f, 20.0f};
@@ -263,8 +263,8 @@ void test_add_backward() {
     // Test Case 4: Broadcasting with other ops
     {
         const char* tc_name = "mul_broadcast_scalar_backward";
-        TensorShape mat_shape = {2, 2, 0, 0};
-        TensorShape scalar_shape = {1, 0, 0, 0};
+        TensorShape mat_shape = {2, 2};
+        TensorShape scalar_shape = {1};
         float mat_data[] = {2.0f, 3.0f, 4.0f, 5.0f};
         float scalar_data[] = {2.0f};
         float exp_grad_mat[] = {2.0f, 2.0f, 2.0f, 2.0f};
