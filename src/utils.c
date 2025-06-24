@@ -161,6 +161,59 @@ bool cten_elemwise_broadcast(Tensor* a, Tensor* b) {
     return true;
 }
 
+Tensor reduce_gradient_for_broadcasting(Tensor grad, TensorShape original_shape, TensorShape broadcasted_shape) {
+    Tensor result = grad;
+    
+    for (int dim = 3; dim >= 0; dim--) {
+        int orig_size = original_shape[dim];
+        int broad_size = broadcasted_shape[dim];
+        int grad_size = result.shape[dim];
+        
+        // Case 1: dim was broadcasted from size 1 to size N
+        if (orig_size == 1 && broad_size > 1 && grad_size == broad_size) {
+            Tensor summed = Tensor_sum(result, dim);  
+            TensorShape new_shape = {result.shape[0], result.shape[1], result.shape[2], result.shape[3]};
+            new_shape[dim] = 1;  
+            result = Tensor_new(new_shape, false);
+            
+            if (summed.data->numel == 1) {
+                for (int i = 0; i < result.data->numel; i++) {
+                    result.data->flex[i] = summed.data->flex[0];
+                }
+            } else {
+                for (int i = 0; i < result.data->numel && i < summed.data->numel; i++) {
+                    result.data->flex[i] = summed.data->flex[i];
+                }
+            }
+        }
+        // Case 2: dim was added (original was 0, broadcasted > 0) 
+        else if (orig_size == 0 && broad_size > 0 && grad_size == broad_size) {
+            Tensor summed = Tensor_sum(result, dim);
+            TensorShape new_shape = {result.shape[0], result.shape[1], result.shape[2], result.shape[3]};
+            new_shape[dim] = 0;
+            for (int d = dim; d < 3; d++) {
+                if (d + 1 < 4) {
+                    new_shape[d] = new_shape[d + 1];
+                }
+            }
+            new_shape[3] = 0; //clearing last dim
+            result = Tensor_new(new_shape, false);
+            for (int i = 0; i < result.data->numel && i < summed.data->numel; i++) {
+                result.data->flex[i] = summed.data->flex[i];
+            }
+        }
+        // Case 3: no broadcasting on this dim  
+        else if (orig_size == broad_size && grad_size == broad_size) {
+            //do nothing
+        }
+        else {
+            //have to think about this
+            cten_assert(false, "reduce_gradient_for_broadcasting: unexpected broadcasting pattern");
+        }
+    }
+    return result;
+}
+
 void Tensor_normalize_dataset(const float (*X)[4], float (*X_norm)[4], int n_samples, int n_train_samples, int n_features) {
     float mean[4] = {0}, std[4] = {0};
     

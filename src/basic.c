@@ -70,6 +70,7 @@ Tensor Tensor_ones(TensorShape shape, bool requires_grad) {
     }
     return self;
 }
+
 Tensor Tensor_transpose(Tensor self) {
     int dim = TensorShape_dim(self.shape);
     if(dim < 2){
@@ -117,13 +118,18 @@ Tensor Tensor_detach(Tensor self) {
 }
 
 void Tensor_backward(Tensor self, Tensor grad) {
-    if(self.node == NULL) return;
+    if(self.node == NULL) {
+        return;
+    }
+    
     if(grad.data == NULL) {
         assert(self.data->numel == 1);
-        grad = Tensor_ones((TensorShape){1}, false);
+        grad = Tensor_ones((TensorShape){1, 0, 0, 0}, false);
     }
     
     assert(grad.node == NULL);
+    
+    // Accumulate gradient
     if(self.node->grad.data == NULL) {
         self.node->grad = grad;
     } else {
@@ -131,21 +137,40 @@ void Tensor_backward(Tensor self, Tensor grad) {
     }
 
     for(int i = 0; i < self.node->n_inputs; i++) {
-        if (self.node->inputs[i].data == NULL) continue;
-        Tensor combined_grad;  
-        Tensor input_grad = self.node->grad_fn(self, i); 
-        if(strcmp(self.node->name, "Matmul") == 0){
-            if (i == 0){
+        if (self.node->inputs[i].data == NULL) {
+            continue;
+        }
+        
+        Tensor input_tensor = self.node->inputs[i];
+        
+        // Step 1: Get the local gradient (the partial derivative). --> For z = f(x, y), this would be dz/dx or dz/dy.
+        Tensor input_grad = self.node->grad_fn(self, i);
+        
+        // Step 2: Apply the chain rule. --> The gradient flowing to the input is upstream_grad * local_grad.
+        Tensor combined_grad;
+        if(strcmp(self.node->name, "Matmul") == 0) {
+            if (i == 0) {
                 combined_grad = Tensor_matmul(grad, input_grad);
-            }
-            else{
+            } else {
                 combined_grad = Tensor_matmul(input_grad, grad);
             }
-        }
-        else{
+        } else {
             combined_grad = Tensor_mul(grad, input_grad);
-        }       
-        Tensor_backward(self.node->inputs[i], combined_grad);
+        }
+        
+        // Step 3: Handle broadcasting. --> If the original input was broadcasted, the resulting gradient will have the broadcasted shape, it must be reduced back down to the original input's shape.
+        bool needs_reduction = false;
+        for (int dim = 0; dim < 4; dim++) {
+            if (combined_grad.shape[dim] != input_tensor.shape[dim]) {
+                needs_reduction = true;
+                break;
+            }
+        }
+        
+        if (needs_reduction) {
+            combined_grad = reduce_gradient_for_broadcasting(combined_grad, input_tensor.shape, self.shape);
+        }
+        Tensor_backward(input_tensor, combined_grad);
     }
 }
 

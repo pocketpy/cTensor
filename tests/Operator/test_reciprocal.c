@@ -90,70 +90,71 @@ void test_reciprocal_operator() {
         compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, 1e-1f); // Using a larger tolerance due to floating point imprecision
     }
 
-    // Test Case 6: Reciprocal of negative numbers
-    {
-        const char* tc_name = "reciprocal_negative";
-        TensorShape s_shape = {1, 0, 0, 0};
-        float d1[] = {-2.0f};
-        float exp_d[] = {-0.5f}; // 1 / (-2) = -0.5
-        Tensor t1 = create_test_tensor(s_shape, d1, false);
-        Tensor expected_res = create_test_tensor(s_shape, exp_d, false);
-        Tensor actual_res = Tensor_reciprocal(t1);
+   // Test Case 6: Reciprocal of negative numbers
+   {
+    const char* tc_name = "reciprocal_negative";
+    TensorShape s_shape = {1, 0, 0, 0};
+    float d1[] = {-19.352466f};
+    float exp_d[] = {-0.051673f}; // 1 / (-19.3525) = -0.0517
+    Tensor t1 = create_test_tensor(s_shape, d1, false);
+    Tensor expected_res = create_test_tensor(s_shape, exp_d, false);
+    Tensor actual_res = Tensor_reciprocal(t1);
 
-        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+    compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
 
-    // Test Case 7: 4D tensor reciprocal operations
-    {
-        const char* tc_name = "reciprocal_4d_tensor";
-        TensorShape t_shape = {2, 1, 2, 1}; // 2x1x2x1 tensor
-        float d1[] = {2.0f, 4.0f, 5.0f, 10.0f};
-        float exp_d[] = {0.5f, 0.25f, 0.2f, 0.1f}; // [1/2, 1/4, 1/5, 1/10]
-        Tensor t1 = create_test_tensor(t_shape, d1, false);
-        Tensor expected_res = create_test_tensor(t_shape, exp_d, false);
-        Tensor actual_res = Tensor_reciprocal(t1);
+// Test Case 7: 4D tensor reciprocal operations
+{
+    const char* tc_name = "reciprocal_4d_tensor";
+    TensorShape t_shape = {2, 1, 2, 1}; // 2x1x2x1 tensor
+    float d1[] = {19.063572f, 14.907885f, 12.374511f, 3.964354f};
+    float exp_d[] = {0.052456f, 0.067079f, 0.080811f, 0.252248f};// Expected: [1/d1[0], 1/d1[1], ...]
+    Tensor t1 = create_test_tensor(t_shape, d1, false);
+    Tensor expected_res = create_test_tensor(t_shape, exp_d, false);
+    Tensor actual_res = Tensor_reciprocal(t1);
 
-        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
-    }
+    compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+}
 
-    // Test Case 8: Mixed positive and negative values
-    {
-        const char* tc_name = "reciprocal_mixed_signs";
-        TensorShape v_shape = {4, 0, 0, 0};
-        float d1[] = {2.0f, -4.0f, 10.0f, -20.0f};
-        float exp_d[] = {0.5f, -0.25f, 0.1f, -0.05f}; // [1/2, 1/(-4), 1/10, 1/(-20)]
-        Tensor t1 = create_test_tensor(v_shape, d1, false);
-        Tensor expected_res = create_test_tensor(v_shape, exp_d, false);
-        Tensor actual_res = Tensor_reciprocal(t1);
 
-        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
-    }
+// Test Case 8: Mixed positive and negative values
+{
+    const char* tc_name = "reciprocal_mixed_signs";
+    TensorShape v_shape = {4, 0, 0, 0};
+    float d1[] = {-17.200274f, -22.095819f, 18.308807f, 5.055750f};
+    float exp_d[] = {-0.058139f, -0.045257f, 0.054619f, 0.197795f};
+    Tensor t1 = create_test_tensor(v_shape, d1, false);
+    Tensor expected_res = create_test_tensor(v_shape, exp_d, false);
+    Tensor actual_res = Tensor_reciprocal(t1);
 
-    // Test Case 9: Reciprocal of fractional numbers
-    {
-        const char* tc_name = "reciprocal_fractional";
-        TensorShape v_shape = {3, 0, 0, 0};
-        float d1[] = {0.5f, 0.25f, 0.125f};
-        float exp_d[] = {2.0f, 4.0f, 8.0f}; // [1/0.5, 1/0.25, 1/0.125]
-        Tensor t1 = create_test_tensor(v_shape, d1, false);
-        Tensor expected_res = create_test_tensor(v_shape, exp_d, false);
-        Tensor actual_res = Tensor_reciprocal(t1);
+    compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+}
 
-        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
-    }
+// Test Case 9: Reciprocal of fractional numbers
+{
+    const char* tc_name = "reciprocal_fractional";
+    TensorShape v_shape = {3, 0, 0, 0};
+    float d1[] = {0.737265f, 0.118526f, 0.972919f};
+    float exp_d[] = {1.356364f, 8.436964f, 1.027835f}; // Reciprocal of fractional numbers results in values > 1.0
+    Tensor t1 = create_test_tensor(v_shape, d1, false);
+    Tensor expected_res = create_test_tensor(v_shape, exp_d, false);
+    Tensor actual_res = Tensor_reciprocal(t1);
 
-    // Test Case 10: Reciprocal of very large numbers (testing for underflow)
-    {
-        const char* tc_name = "reciprocal_large_numbers";
-        TensorShape s_shape = {1, 0, 0, 0};
-        float d1[] = {1e6f}; // Large number
-        float exp_d[] = {1e-6f}; // 1 / (1e6) = 1e-6
-        Tensor t1 = create_test_tensor(s_shape, d1, false);
-        Tensor expected_res = create_test_tensor(s_shape, exp_d, false);
-        Tensor actual_res = Tensor_reciprocal(t1);
+    compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+}
 
-        compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
-    }
+// Test Case 10: Reciprocal of very large numbers (testing for underflow)
+{
+    const char* tc_name = "reciprocal_large_numbers";
+    TensorShape s_shape = {1, 0, 0, 0};
+    float d1[] = {8.341182e+06f};
+    float exp_d[] = {1.198871e-07f}; // 1 / (8.34e+06) = 1.20e-07
+    Tensor t1 = create_test_tensor(s_shape, d1, false);
+    Tensor expected_res = create_test_tensor(s_shape, exp_d, false);
+    Tensor actual_res = Tensor_reciprocal(t1);
+
+    compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+}
 
     cten_free(pool_id);
 }

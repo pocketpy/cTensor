@@ -129,9 +129,9 @@ void test_div_operator() {
     {
         const char* tc_name = "div_negative_numbers";
         TensorShape s_shape = {1, 0, 0, 0};
-        float d1[] = {-10.0f};
-        float d2[] = {2.0f};
-        float exp_d[] = {-5.0f}; // -10 / 2 = -5
+        float d1[] = {-21.854305f};
+        float d2[] = {9.556429f};
+        float exp_d[] = {-2.286869f}; // -21.854305 / 9.556429 = -2.286869
         Tensor t1 = create_test_tensor(s_shape, d1, false);
         Tensor t2 = create_test_tensor(s_shape, d2, false);
         Tensor expected_res = create_test_tensor(s_shape, exp_d, false);
@@ -144,9 +144,9 @@ void test_div_operator() {
     {
         const char* tc_name = "div_both_negative";
         TensorShape s_shape = {1, 0, 0, 0};
-        float d1[] = {-10.0f};
-        float d2[] = {-2.0f};
-        float exp_d[] = {5.0f}; // -10 / -2 = 5
+        float d1[] = {-37.939727f};
+        float d2[] = {-6.387926f};
+        float exp_d[] = {5.939287f}; // -37.939727 / -6.387926 = 5.939287
         Tensor t1 = create_test_tensor(s_shape, d1, false);
         Tensor t2 = create_test_tensor(s_shape, d2, false);
         Tensor expected_res = create_test_tensor(s_shape, exp_d, false);
@@ -181,8 +181,8 @@ void test_div_operator() {
     {
         const char* tc_name = "div_identity";
         TensorShape v_shape = {3, 0, 0, 0};
-        float d[] = {10.0f, -5.0f, 2.5f};
-        float exp_d[] = {1.0f, 1.0f, 1.0f}; // [10/10, -5/-5, 2.5/2.5] = [1, 1, 1]
+        float d[] = {7.340280f, -4.027929f, 1.906585f};
+        float exp_d[] = {1.000000f, 1.000000f, 1.000000f}; // [7.340280/7.340280, -4.027929/-4.027929, 1.906585/1.906585] = [1, 1, 1]
         Tensor t = create_test_tensor(v_shape, d, false);
         Tensor expected_res = create_test_tensor(v_shape, exp_d, false);
         Tensor actual_res = Tensor_div(t, t);
@@ -194,9 +194,9 @@ void test_div_operator() {
     {
         const char* tc_name = "div_extreme_values";
         TensorShape s_shape = {1, 0, 0, 0};
-        float d1[] = {1e6f}; // large number
-        float d2[] = {1e-6f}; // small number
-        float exp_d[] = {1e12f}; // 1e6 / 1e-6 = 1e12
+        float d1[] = {1.000000e+07f};
+        float d2[] = {1.000000e-07f};
+        float exp_d[] = {1.000000e+14f}; // 1.000000e+07f / 1.000000e-07f = 1.000000e+14f
         Tensor t1 = create_test_tensor(s_shape, d1, false);
         Tensor t2 = create_test_tensor(s_shape, d2, false);
         Tensor expected_res = create_test_tensor(s_shape, exp_d, false);
@@ -209,9 +209,9 @@ void test_div_operator() {
     {
         const char* tc_name = "div_4d_tensor";
         TensorShape t_shape = {2, 2, 2, 1};
-        float d1[] = {10.0f, 20.0f, 30.0f, 40.0f, 50.0f, 60.0f, 70.0f, 80.0f};
-        float d2[] = {2.0f, 4.0f, 6.0f, 8.0f, 10.0f, 12.0f, 14.0f, 16.0f};
-        float exp_d[] = {5.0f, 5.0f, 5.0f, 5.0f, 5.0f, 5.0f, 5.0f, 5.0f}; // Element-wise division
+        float d1[] = {64.100351f, 73.726532f, 11.852604f, 97.291887f, 84.919838f, 29.110520f, 26.364247f, 26.506406f};
+        float d2[] = {7.476360f, 11.445616f, 9.775010f, 7.242125f, 13.013352f, 4.510889f, 7.258604f, 8.594513f};
+        float exp_d[] = {8.573737f, 6.441465f, 1.212541f, 13.434164f, 6.525593f, 6.453388f, 3.632138f, 3.084108f}; // Element-wise division
         Tensor t1 = create_test_tensor(t_shape, d1, false);
         Tensor t2 = create_test_tensor(t_shape, d2, false);
         Tensor expected_res = create_test_tensor(t_shape, exp_d, false);

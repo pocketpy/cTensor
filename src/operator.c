@@ -27,18 +27,24 @@ static Tensor GradFn_mul(Tensor self, int i) {
 }
 
 Tensor Tensor_add(Tensor self, Tensor other) {
+    Tensor orig_self = self;
+    Tensor orig_other = other;
+    
     if(!cten_elemwise_broadcast(&self, &other)) {
-        cten_assert_shape("Tensor_add() cannot broadcast", self.shape, other.shape);
+        cten_assert_shape("Tensor_add() cannot broadcast", orig_self.shape, orig_other.shape);
     }
-    bool requires_grad = !cten_is_eval() && (self.node != NULL || other.node != NULL);
+    
+    bool requires_grad = !cten_is_eval() && (orig_self.node != NULL || orig_other.node != NULL);
     Tensor res = Tensor_new(self.shape, requires_grad);
+    
     for(int i = 0; i < self.data->numel; i++) {
         res.data->flex[i] = self.data->flex[i] + other.data->flex[i];
     }
+    
     if(requires_grad) {
         res.node->grad_fn = GradFn_add;
-        res.node->inputs[0] = self;
-        res.node->inputs[1] = other;
+        res.node->inputs[0] = orig_self;
+        res.node->inputs[1] = orig_other;
         res.node->n_inputs = 2;
         res.node->name = "Add";
     }
@@ -46,23 +52,79 @@ Tensor Tensor_add(Tensor self, Tensor other) {
 }
 
 Tensor Tensor_mul(Tensor self, Tensor other) {
-    if(!cten_elemwise_broadcast(&self, &other)) {
-        cten_assert_shape("Tensor_mul() cannot broadcast", self.shape, other.shape);
+    Tensor orig_self = self;
+    Tensor orig_other = other;
+    
+    TensorShape result_shape;
+    for (int i = 0; i < 4; i++) {
+        int self_dim = self.shape[i];
+        int other_dim = other.shape[i];
+        
+        if (self_dim == 0 && other_dim == 0) {
+            result_shape[i] = 0;
+        } else if (self_dim == 0) {
+            result_shape[i] = other_dim;
+        } else if (other_dim == 0) {
+            result_shape[i] = self_dim;
+        } else if (self_dim == 1) {
+            //self has dimension 1, so it can broadcast to other dimension
+            result_shape[i] = other_dim;
+        } else if (other_dim == 1) {
+            //other has dimension 1, so it can broadcast to self dimension
+            result_shape[i] = self_dim;
+        } else if (self_dim == other_dim) {
+            result_shape[i] = self_dim;
+        } else {
+            cten_assert_shape("Tensor_mul() cannot broadcast", orig_self.shape, orig_other.shape);
+            result_shape[i] = 0;
+        }
     }
-    bool requires_grad = !cten_is_eval() && (self.node != NULL || other.node != NULL);
-    Tensor res = Tensor_new(self.shape, requires_grad);
-    for(int i = 0; i < self.data->numel; i++) {
-        res.data->flex[i] = self.data->flex[i] * other.data->flex[i];
+    
+    bool requires_grad = !cten_is_eval() && (orig_self.node != NULL || orig_other.node != NULL);
+    Tensor res = Tensor_new(result_shape, requires_grad);
+
+    for(int i = 0; i < res.data->numel; i++) {
+        int rem = i;
+        int idx[4] = {0, 0, 0, 0};
+        
+        for(int dim = 3; dim >= 0; dim--) {
+            if(result_shape[dim] > 0) {
+                idx[dim] = rem % result_shape[dim];
+                rem /= result_shape[dim];
+            }
+        }
+        
+        // STANDARD WAY OF DOING INDEXING (refer for more guide : https://numpy.org/doc/stable/user/c-info.html)
+        int self_idx = 0;
+        int self_stride = 1;
+        int other_idx = 0;
+        int other_stride = 1;
+        for(int dim = 3; dim >= 0; dim--) {
+            if(orig_self.shape[dim] > 0) {
+                int dim_idx = (idx[dim] % orig_self.shape[dim]);
+                self_idx += dim_idx * self_stride;
+                self_stride *= orig_self.shape[dim];
+            }
+            
+            if(orig_other.shape[dim] > 0) {
+                int dim_idx = (idx[dim] % orig_other.shape[dim]);
+                other_idx += dim_idx * other_stride;
+                other_stride *= orig_other.shape[dim];
+            }
+        }
+        res.data->flex[i] = orig_self.data->flex[self_idx] * orig_other.data->flex[other_idx];
     }
+    
     if(requires_grad) {
         res.node->grad_fn = GradFn_mul;
-        res.node->inputs[0] = self;
-        res.node->inputs[1] = other;
+        res.node->inputs[0] = orig_self;
+        res.node->inputs[1] = orig_other;
         res.node->n_inputs = 2;
         res.node->name = "Mul";
     }
     return res;
 }
+
 
 Tensor Tensor_mulf(Tensor self, float other) {
     Tensor tmp = Tensor_new(self.shape, false);
@@ -138,6 +200,7 @@ Tensor Tensor_mean(Tensor self, ...) {
         return res;
     }
 }
+
 Tensor GradFn_sum(Tensor self, int i) {
     // f(x) = sum(x); f'(x) = 1
     return Tensor_ones(self.node->inputs[i].shape, false);
