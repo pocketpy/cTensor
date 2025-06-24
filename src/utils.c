@@ -91,23 +91,37 @@ void cten_assert_dim(const char* title, int a, int b) {
     cten_assert(a == b, "%s: %d != %d", title, a, b);
 }
 
+int TensorShape_get_ndims(TensorShape shape) {
+    for (int i = 0; i < 4; i++) {
+        if (shape[i] <= 0) {
+            return i;
+        }
+    }
+    return 4;
+}
+
 bool cten_elemwise_broadcast(Tensor* a, Tensor* b) {
     Tensor orig_a = *a;
     Tensor orig_b = *b;
 
     // 1. Determine the result shape from the two input shapes
     TensorShape result_shape;
-    for (int i = 0; i < 4; i++) {
-        int a_dim = orig_a.shape[i];
-        int b_dim = orig_b.shape[i];
+    int a_ndims = TensorShape_get_ndims(orig_a.shape);
+    int b_ndims = TensorShape_get_ndims(orig_b.shape);
+    int max_ndims = (a_ndims > b_ndims) ? a_ndims : b_ndims;
 
-        if (a_dim == 0 && b_dim == 0) result_shape[i] = 0;
-        else if (a_dim == 0) result_shape[i] = b_dim;
-        else if (b_dim == 0) result_shape[i] = a_dim;
-        else if (a_dim == 1) result_shape[i] = b_dim;
-        else if (b_dim == 1) result_shape[i] = a_dim;
-        else if (a_dim == b_dim) result_shape[i] = a_dim;
-        else {
+    if (max_ndims > 4) return false;
+    memset(result_shape, 0, sizeof(TensorShape));
+
+    for (int i = 0; i < max_ndims; i++) {
+        int a_idx = a_ndims - 1 - i;
+        int b_idx = b_ndims - 1 - i;
+        int result_idx = max_ndims - 1 - i;
+        int a_dim = (a_idx >= 0) ? orig_a.shape[a_idx] : 1;
+        int b_dim = (b_idx >= 0) ? orig_b.shape[b_idx] : 1;
+        if (a_dim == b_dim || a_dim == 1 || b_dim == 1) {
+            result_shape[result_idx] = (a_dim > b_dim) ? a_dim : b_dim;
+        } else {
             return false;
         }
     }
@@ -117,21 +131,22 @@ bool cten_elemwise_broadcast(Tensor* a, Tensor* b) {
         Tensor new_a = Tensor_new(result_shape, orig_a.node != NULL);
         for (int i = 0; i < new_a.data->numel; i++) {
             int rem = i;
-            int idx[4] = {0, 0, 0, 0};
-            for (int dim = 3; dim >= 0; dim--) {
-                if (result_shape[dim] > 0) {
-                    idx[dim] = rem % result_shape[dim];
-                    rem /= result_shape[dim];
-                }
+            int idx[4] = {0};
+            for (int d = max_ndims - 1; d >= 0; d--) {
+                idx[d] = rem % result_shape[d];
+                rem /= result_shape[d];
             }
+
             int source_idx = 0;
             int stride = 1;
-            for (int dim = 3; dim >= 0; dim--) {
-                if (orig_a.shape[dim] > 0) {
-                    int dim_idx = (idx[dim] % orig_a.shape[dim]);
-                    source_idx += dim_idx * stride;
-                    stride *= orig_a.shape[dim];
-                }
+            //iterating backwards over the original tensor's dimensions
+            for (int d = a_ndims - 1; d >= 0; d--) {
+                int original_dim_size = orig_a.shape[d];
+                int result_dim_coord = idx[max_ndims - a_ndims + d];
+                //if original dimension was 1, it's broadcast; its index is 0.
+                int dim_idx = (original_dim_size == 1) ? 0 : result_dim_coord;
+                source_idx += dim_idx * stride;
+                stride *= original_dim_size;
             }
             new_a.data->flex[i] = orig_a.data->flex[source_idx];
         }
@@ -143,21 +158,20 @@ bool cten_elemwise_broadcast(Tensor* a, Tensor* b) {
         Tensor new_b = Tensor_new(result_shape, orig_b.node != NULL);
         for (int i = 0; i < new_b.data->numel; i++) {
             int rem = i;
-            int idx[4] = {0, 0, 0, 0};
-            for (int dim = 3; dim >= 0; dim--) {
-                if (result_shape[dim] > 0) {
-                    idx[dim] = rem % result_shape[dim];
-                    rem /= result_shape[dim];
-                }
+            int idx[4] = {0};
+            for (int d = max_ndims - 1; d >= 0; d--) {
+                idx[d] = rem % result_shape[d];
+                rem /= result_shape[d];
             }
+
             int source_idx = 0;
             int stride = 1;
-            for (int dim = 3; dim >= 0; dim--) {
-                if (orig_b.shape[dim] > 0) {
-                    int dim_idx = (idx[dim] % orig_b.shape[dim]);
-                    source_idx += dim_idx * stride;
-                    stride *= orig_b.shape[dim];
-                }
+            for (int d = b_ndims - 1; d >= 0; d--) {
+                int original_dim_size = orig_b.shape[d];
+                int result_dim_coord = idx[max_ndims - b_ndims + d];
+                int dim_idx = (original_dim_size == 1) ? 0 : result_dim_coord;
+                source_idx += dim_idx * stride;
+                stride *= original_dim_size;
             }
             new_b.data->flex[i] = orig_b.data->flex[source_idx];
         }

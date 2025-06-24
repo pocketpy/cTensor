@@ -237,6 +237,466 @@ void test_mul_operator() {
             compare_tensors(&actual_res, &expected_res, op_name, tc_name, 2, TEST_FLOAT_TOLERANCE);
         }
     }
-
+    
+    // Test Case 8: Extended Test Case
+    {
+        const char* tc_name = "Extended_test_case";    
+        float arange_data[] = { 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f, 11.0f, 12.0f, 13.0f, 14.0f, 15.0f, 16.0f, 17.0f,
+                                18.0f, 19.0f, 20.0f, 21.0f, 22.0f, 23.0f, 24.0f, 25.0f, 26.0f, 27.0f, 28.0f, 29.0f, 30.0f, 31.0f, 32.0f, 33.0f, 34.0f,
+                                35.0f, 36.0f, 37.0f, 38.0f, 39.0f, 40.0f, 41.0f, 42.0f, 43.0f, 44.0f, 45.0f, 46.0f, 47.0f, 48.0f, 49.0f, 50.0f, 51.0f,
+                                52.0f, 53.0f, 54.0f, 55.0f, 56.0f, 57.0f, 58.0f, 59.0f, 60.0f, 61.0f, 62.0f, 63.0f, 64.0f, 65.0f, 66.0f, 67.0f, 68.0f,
+                                69.0f, 70.0f, 71.0f, 72.0f, 73.0f, 74.0f, 75.0f, 76.0f, 77.0f, 78.0f, 79.0f, 80.0f, 81.0f, 82.0f, 83.0f, 84.0f, 85.0f,
+                                86.0f, 87.0f, 88.0f, 89.0f, 90.0f, 91.0f, 92.0f, 93.0f, 94.0f, 95.0f, 96.0f };
+    
+        // dim1 0*0
+        {
+            TensorShape shape_0d = {0};
+            Tensor t1 = create_test_tensor(shape_0d, arange_data, false);
+            Tensor t2 = create_test_tensor(shape_0d, arange_data, false);
+            float exp_d[] = { 1.0f };
+            Tensor expected_res = create_test_tensor(shape_0d, exp_d, false);
+            Tensor actual_res = Tensor_mul(t1, t2);
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+        }
+    
+        // dim1 0*x
+        {
+            TensorShape shape_1d_x = {4};
+            TensorShape shape_0d = {0};
+            Tensor t1 = create_test_tensor(shape_0d, arange_data, false);
+            Tensor t2 = create_test_tensor(shape_1d_x, arange_data, false);
+            float exp_d[] = { 1.0f, 2.0f, 3.0f, 4.0f };
+            Tensor expected_res = create_test_tensor(shape_1d_x, exp_d, false);
+            Tensor actual_res = Tensor_mul(t1, t2);
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 2, TEST_FLOAT_TOLERANCE);
+        }
+    
+        // dim1 x*x
+        {
+            TensorShape shape_1d_x = {4};
+            Tensor t1 = create_test_tensor(shape_1d_x, arange_data, false);
+            Tensor t2 = create_test_tensor(shape_1d_x, arange_data, false);
+            float exp_d[] = { 1.0f, 4.0f, 9.0f, 16.0f };
+            Tensor expected_res = create_test_tensor(shape_1d_x, exp_d, false);
+            Tensor actual_res = Tensor_mul(t1, t2);
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 3, TEST_FLOAT_TOLERANCE);
+        }
+    
+        // dim2 x*x
+        {
+            TensorShape shape_2d_xx = {2, 4};
+            Tensor t1 = create_test_tensor(shape_2d_xx, arange_data, false);
+            Tensor t2 = create_test_tensor(shape_2d_xx, arange_data, false);
+            float exp_d[] = { 1.0f, 4.0f, 9.0f, 16.0f, 25.0f, 36.0f, 49.0f, 64.0f };
+            Tensor expected_res = create_test_tensor(shape_2d_xx, exp_d, false);
+            Tensor actual_res = Tensor_mul(t1, t2);
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 4, TEST_FLOAT_TOLERANCE);
+        }
+    
+        // dim3 x*x
+        {
+            TensorShape shape_3d_xx = {2, 3, 4};
+            Tensor t1 = create_test_tensor(shape_3d_xx, arange_data, false);
+            Tensor t2 = create_test_tensor(shape_3d_xx, arange_data, false);
+            float exp_d[] = { 1.0f, 4.0f, 9.0f, 16.0f, 25.0f, 36.0f, 49.0f, 64.0f, 81.0f, 100.0f, 121.0f, 144.0f, 169.0f,
+                              196.0f, 225.0f, 256.0f, 289.0f, 324.0f, 361.0f, 400.0f, 441.0f, 484.0f, 529.0f, 576.0f };
+            Tensor expected_res = create_test_tensor(shape_3d_xx, exp_d, false);
+            Tensor actual_res = Tensor_mul(t1, t2);
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 5, TEST_FLOAT_TOLERANCE);
+        }
+    
+        // dim4 x*x
+        {
+            TensorShape shape_4d_xx = {2, 3, 4, 4};
+            Tensor t1 = create_test_tensor(shape_4d_xx, arange_data, false);
+            Tensor t2 = create_test_tensor(shape_4d_xx, arange_data, false);
+            float exp_d[] = { 1.0f, 4.0f, 9.0f, 16.0f, 25.0f, 36.0f, 49.0f, 64.0f, 81.0f, 100.0f, 121.0f,
+                              144.0f, 169.0f, 196.0f, 225.0f, 256.0f, 289.0f, 324.0f, 361.0f, 400.0f, 441.0f, 484.0f,
+                              529.0f, 576.0f, 625.0f, 676.0f, 729.0f, 784.0f, 841.0f, 900.0f, 961.0f, 1024.0f, 1089.0f,
+                              1156.0f, 1225.0f, 1296.0f, 1369.0f, 1444.0f, 1521.0f, 1600.0f, 1681.0f, 1764.0f, 1849.0f, 1936.0f,
+                              2025.0f, 2116.0f, 2209.0f, 2304.0f, 2401.0f, 2500.0f, 2601.0f, 2704.0f, 2809.0f, 2916.0f, 3025.0f,
+                              3136.0f, 3249.0f, 3364.0f, 3481.0f, 3600.0f, 3721.0f, 3844.0f, 3969.0f, 4096.0f, 4225.0f, 4356.0f,
+                              4489.0f, 4624.0f, 4761.0f, 4900.0f, 5041.0f, 5184.0f, 5329.0f, 5476.0f, 5625.0f, 5776.0f, 5929.0f,
+                              6084.0f, 6241.0f, 6400.0f, 6561.0f, 6724.0f, 6889.0f, 7056.0f, 7225.0f, 7396.0f, 7569.0f, 7744.0f,
+                              7921.0f, 8100.0f, 8281.0f, 8464.0f, 8649.0f, 8836.0f, 9025.0f, 9216.0f };
+            Tensor expected_res = create_test_tensor(shape_4d_xx, exp_d, false);
+            Tensor actual_res = Tensor_mul(t1, t2);
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 6, TEST_FLOAT_TOLERANCE);
+        }
+    
+        // dim0*dim2
+        {
+            TensorShape shape_0d = {0};
+            TensorShape shape_2d = {2, 4};
+            Tensor t1 = create_test_tensor(shape_0d, arange_data, false);
+            Tensor t2 = create_test_tensor(shape_2d, arange_data, false);
+            float exp_d[] = { 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f };
+            Tensor expected_res = create_test_tensor(shape_2d, exp_d, false);
+            Tensor actual_res = Tensor_mul(t1, t2);
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 7, TEST_FLOAT_TOLERANCE);
+        }
+    
+        // dim0*dim3
+        {
+            TensorShape shape_0d = {0};
+            TensorShape shape_3d = {2, 3, 4};
+            Tensor t1 = create_test_tensor(shape_0d, arange_data, false);
+            Tensor t2 = create_test_tensor(shape_3d, arange_data, false);
+            float exp_d[] = { 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f, 11.0f, 12.0f, 13.0f, 14.0f, 15.0f, 16.0f, 17.0f,
+                              18.0f, 19.0f, 20.0f, 21.0f, 22.0f, 23.0f, 24.0f };
+            Tensor expected_res = create_test_tensor(shape_3d, exp_d, false);
+            Tensor actual_res = Tensor_mul(t1, t2);
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 8, TEST_FLOAT_TOLERANCE);
+        }
+    
+        // dim0*dim4
+        {
+            TensorShape shape_0d = {0};
+            TensorShape shape_4d = {2, 3, 4, 4};
+            Tensor t1 = create_test_tensor(shape_0d, arange_data, false);
+            Tensor t2 = create_test_tensor(shape_4d, arange_data, false);
+            float exp_d[] = { 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f, 11.0f, 12.0f, 13.0f, 14.0f, 15.0f, 16.0f, 17.0f,
+                              18.0f, 19.0f, 20.0f, 21.0f, 22.0f, 23.0f, 24.0f, 25.0f, 26.0f, 27.0f, 28.0f, 29.0f, 30.0f, 31.0f, 32.0f, 33.0f, 34.0f,
+                              35.0f, 36.0f, 37.0f, 38.0f, 39.0f, 40.0f, 41.0f, 42.0f, 43.0f, 44.0f, 45.0f, 46.0f, 47.0f, 48.0f, 49.0f, 50.0f, 51.0f,
+                              52.0f, 53.0f, 54.0f, 55.0f, 56.0f, 57.0f, 58.0f, 59.0f, 60.0f, 61.0f, 62.0f, 63.0f, 64.0f, 65.0f, 66.0f, 67.0f, 68.0f,
+                              69.0f, 70.0f, 71.0f, 72.0f, 73.0f, 74.0f, 75.0f, 76.0f, 77.0f, 78.0f, 79.0f, 80.0f, 81.0f, 82.0f, 83.0f, 84.0f, 85.0f,
+                              86.0f, 87.0f, 88.0f, 89.0f, 90.0f, 91.0f, 92.0f, 93.0f, 94.0f, 95.0f, 96.0f };
+            Tensor expected_res = create_test_tensor(shape_4d, exp_d, false);
+            Tensor actual_res = Tensor_mul(t1, t2);
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 9, TEST_FLOAT_TOLERANCE);
+        }
+    
+        // dim1*dim2
+        {
+            TensorShape shape_1d = {4};
+            TensorShape shape_2d = {3, 4};
+            Tensor t1 = create_test_tensor(shape_1d, arange_data, false);
+            Tensor t2 = create_test_tensor(shape_2d, arange_data, false);
+            float exp_d[] = { 1.0f, 4.0f, 9.0f, 16.0f, 5.0f, 12.0f, 21.0f, 32.0f, 9.0f, 20.0f, 33.0f, 48.0f };
+            Tensor expected_res = create_test_tensor(shape_2d, exp_d, false);
+            Tensor actual_res = Tensor_mul(t1, t2);
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 10, TEST_FLOAT_TOLERANCE);
+        }
+    
+        {
+            TensorShape shape_1d = {4};
+            TensorShape shape_2d = {1, 4};
+            Tensor t1 = create_test_tensor(shape_1d, arange_data, false);
+            Tensor t2 = create_test_tensor(shape_2d, arange_data, false);
+            float exp_d[] = { 1.0f, 4.0f, 9.0f, 16.0f };
+            Tensor expected_res = create_test_tensor(shape_2d, exp_d, false);
+            Tensor actual_res = Tensor_mul(t1, t2);
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 11, TEST_FLOAT_TOLERANCE);
+        }
+    
+        // dim1*dim3
+        {
+            TensorShape shape_1d = {4};
+            TensorShape shape_3d = {2, 3, 4};
+            Tensor t1 = create_test_tensor(shape_1d, arange_data, false);
+            Tensor t2 = create_test_tensor(shape_3d, arange_data, false);
+            float exp_d[] = { 1.0f, 4.0f, 9.0f, 16.0f, 5.0f, 12.0f, 21.0f, 32.0f, 9.0f, 20.0f, 33.0f, 48.0f, 13.0f,
+                              28.0f, 45.0f, 64.0f, 17.0f, 36.0f, 57.0f, 80.0f, 21.0f, 44.0f, 69.0f, 96.0f };
+            Tensor expected_res = create_test_tensor(shape_3d, exp_d, false);
+            Tensor actual_res = Tensor_mul(t1, t2);
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 12, TEST_FLOAT_TOLERANCE);
+        }
+    
+        {
+            TensorShape shape_1d = {4};
+            TensorShape shape_3d = {1, 3, 4};
+            Tensor t1 = create_test_tensor(shape_1d, arange_data, false);
+            Tensor t2 = create_test_tensor(shape_3d, arange_data, false);
+            float exp_d[] = { 1.0f, 4.0f, 9.0f, 16.0f, 5.0f, 12.0f, 21.0f, 32.0f, 9.0f, 20.0f, 33.0f, 48.0f };
+            Tensor expected_res = create_test_tensor(shape_3d, exp_d, false);
+            Tensor actual_res = Tensor_mul(t1, t2);
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 13, TEST_FLOAT_TOLERANCE);
+        }
+    
+        {
+            TensorShape shape_1d = {4};
+            TensorShape shape_3d = {2, 1, 4};
+            Tensor t1 = create_test_tensor(shape_1d, arange_data, false);
+            Tensor t2 = create_test_tensor(shape_3d, arange_data, false);
+            float exp_d[] = { 1.0f, 4.0f, 9.0f, 16.0f, 5.0f, 12.0f, 21.0f, 32.0f };
+            Tensor expected_res = create_test_tensor(shape_3d, exp_d, false);
+            Tensor actual_res = Tensor_mul(t1, t2);
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 14, TEST_FLOAT_TOLERANCE);
+        }
+    
+        // dim1*dim4
+        {
+            TensorShape shape_1d = {4};
+            TensorShape shape_4d = {2, 3, 4, 4};
+            Tensor t1 = create_test_tensor(shape_1d, arange_data, false);
+            Tensor t2 = create_test_tensor(shape_4d, arange_data, false);
+            float exp_d[] = { 1.0f, 4.0f, 9.0f, 16.0f, 5.0f, 12.0f, 21.0f, 32.0f, 9.0f, 20.0f, 33.0f, 48.0f, 13.0f,
+                              28.0f, 45.0f, 64.0f, 17.0f, 36.0f, 57.0f, 80.0f, 21.0f, 44.0f, 69.0f, 96.0f, 25.0f, 52.0f,
+                              81.0f, 112.0f, 29.0f, 60.0f, 93.0f, 128.0f, 33.0f, 68.0f, 105.0f, 144.0f, 37.0f, 76.0f, 117.0f,
+                              160.0f, 41.0f, 84.0f, 129.0f, 176.0f, 45.0f, 92.0f, 141.0f, 192.0f, 49.0f, 100.0f, 153.0f, 208.0f,
+                              53.0f, 108.0f, 165.0f, 224.0f, 57.0f, 116.0f, 177.0f, 240.0f, 61.0f, 124.0f, 189.0f, 256.0f, 65.0f,
+                              132.0f, 201.0f, 272.0f, 69.0f, 140.0f, 213.0f, 288.0f, 73.0f, 148.0f, 225.0f, 304.0f, 77.0f, 156.0f,
+                              237.0f, 320.0f, 81.0f, 164.0f, 249.0f, 336.0f, 85.0f, 172.0f, 261.0f, 352.0f, 89.0f, 180.0f, 273.0f,
+                              368.0f, 93.0f, 188.0f, 285.0f, 384.0f };
+            Tensor expected_res = create_test_tensor(shape_4d, exp_d, false);
+            Tensor actual_res = Tensor_mul(t1, t2);
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 15, TEST_FLOAT_TOLERANCE);
+        }
+    
+        {
+            TensorShape shape_1d = {4};
+            TensorShape shape_4d = {1, 3, 4, 4};
+            Tensor t1 = create_test_tensor(shape_1d, arange_data, false);
+            Tensor t2 = create_test_tensor(shape_4d, arange_data, false);
+            float exp_d[] = { 1.0f, 4.0f, 9.0f, 16.0f, 5.0f, 12.0f, 21.0f, 32.0f, 9.0f, 20.0f, 33.0f, 48.0f, 13.0f,
+                              28.0f, 45.0f, 64.0f, 17.0f, 36.0f, 57.0f, 80.0f, 21.0f, 44.0f, 69.0f, 96.0f, 25.0f, 52.0f,
+                              81.0f, 112.0f, 29.0f, 60.0f, 93.0f, 128.0f, 33.0f, 68.0f, 105.0f, 144.0f, 37.0f, 76.0f, 117.0f,
+                              160.0f, 41.0f, 84.0f, 129.0f, 176.0f, 45.0f, 92.0f, 141.0f, 192.0f };
+            Tensor expected_res = create_test_tensor(shape_4d, exp_d, false);
+            Tensor actual_res = Tensor_mul(t1, t2);
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 16, TEST_FLOAT_TOLERANCE);
+        }
+    
+        {
+            TensorShape shape_1d = {4};
+            TensorShape shape_4d = {2, 1, 4, 4};
+            Tensor t1 = create_test_tensor(shape_1d, arange_data, false);
+            Tensor t2 = create_test_tensor(shape_4d, arange_data, false);
+            float exp_d[] = { 1.0f, 4.0f, 9.0f, 16.0f, 5.0f, 12.0f, 21.0f, 32.0f, 9.0f, 20.0f, 33.0f, 48.0f, 13.0f,
+                              28.0f, 45.0f, 64.0f, 17.0f, 36.0f, 57.0f, 80.0f, 21.0f, 44.0f, 69.0f, 96.0f, 25.0f, 52.0f,
+                              81.0f, 112.0f, 29.0f, 60.0f, 93.0f, 128.0f };
+            Tensor expected_res = create_test_tensor(shape_4d, exp_d, false);
+            Tensor actual_res = Tensor_mul(t1, t2);
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 17, TEST_FLOAT_TOLERANCE);
+        }
+    
+        {
+            TensorShape shape_1d = {4};
+            TensorShape shape_4d = {2, 3, 1, 4};
+            Tensor t1 = create_test_tensor(shape_1d, arange_data, false);
+            Tensor t2 = create_test_tensor(shape_4d, arange_data, false);
+            float exp_d[] = { 1.0f, 4.0f, 9.0f, 16.0f, 5.0f, 12.0f, 21.0f, 32.0f, 9.0f, 20.0f, 33.0f, 48.0f, 13.0f, 28.0f, 45.0f, 64.0f, 17.0f,
+                              36.0f, 57.0f, 80.0f, 21.0f, 44.0f, 69.0f, 96.0f };
+            Tensor expected_res = create_test_tensor(shape_4d, exp_d, false);
+            Tensor actual_res = Tensor_mul(t1, t2);
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 18, TEST_FLOAT_TOLERANCE);
+        }
+    
+        // dim2*dim3
+        {
+            TensorShape shape_2d = {3, 4};
+            TensorShape shape_3d = {2, 3, 4};
+            Tensor t1 = create_test_tensor(shape_2d, arange_data, false);
+            Tensor t2 = create_test_tensor(shape_3d, arange_data, false);
+            float exp_d[] = { 1.0f, 4.0f, 9.0f, 16.0f, 25.0f, 36.0f, 49.0f, 64.0f, 81.0f, 100.0f, 121.0f, 144.0f, 13.0f,
+                              28.0f, 45.0f, 64.0f, 85.0f, 108.0f, 133.0f, 160.0f, 189.0f, 220.0f, 253.0f, 288.0f };
+            Tensor expected_res = create_test_tensor(shape_3d, exp_d, false);
+            Tensor actual_res = Tensor_mul(t1, t2);
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 19, TEST_FLOAT_TOLERANCE);
+        }
+    
+        {
+            TensorShape shape_2d = {3, 4};
+            TensorShape shape_3d = {1, 3, 4};
+            Tensor t1 = create_test_tensor(shape_2d, arange_data, false);
+            Tensor t2 = create_test_tensor(shape_3d, arange_data, false);
+            float exp_d[] = { 1.0f, 4.0f, 9.0f, 16.0f, 25.0f, 36.0f, 49.0f, 64.0f, 81.0f, 100.0f, 121.0f, 144.0f };
+            Tensor expected_res = create_test_tensor(shape_3d, exp_d, false);
+            Tensor actual_res = Tensor_mul(t1, t2);
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 20, TEST_FLOAT_TOLERANCE);
+        }
+    
+        // dim2*dim4
+        {
+            TensorShape shape_2d = {4, 4};
+            TensorShape shape_4d = {2, 3, 4, 4};
+            Tensor t1 = create_test_tensor(shape_2d, arange_data, false);
+            Tensor t2 = create_test_tensor(shape_4d, arange_data, false);
+            float exp_d[] = { 1.0f, 4.0f, 9.0f, 16.0f, 25.0f, 36.0f, 49.0f, 64.0f, 81.0f, 100.0f, 121.0f,
+                              144.0f, 169.0f, 196.0f, 225.0f, 256.0f, 17.0f, 36.0f, 57.0f, 80.0f, 105.0f, 132.0f,
+                              161.0f, 192.0f, 225.0f, 260.0f, 297.0f, 336.0f, 377.0f, 420.0f, 465.0f, 512.0f, 33.0f,
+                              68.0f, 105.0f, 144.0f, 185.0f, 228.0f, 273.0f, 320.0f, 369.0f, 420.0f, 473.0f, 528.0f,
+                              585.0f, 644.0f, 705.0f, 768.0f, 49.0f, 100.0f, 153.0f, 208.0f, 265.0f, 324.0f, 385.0f,
+                              448.0f, 513.0f, 580.0f, 649.0f, 720.0f, 793.0f, 868.0f, 945.0f, 1024.0f, 65.0f, 132.0f,
+                              201.0f, 272.0f, 345.0f, 420.0f, 497.0f, 576.0f, 657.0f, 740.0f, 825.0f, 912.0f, 1001.0f,
+                              1092.0f, 1185.0f, 1280.0f, 81.0f, 164.0f, 249.0f, 336.0f, 425.0f, 516.0f, 609.0f, 704.0f,
+                              801.0f, 900.0f, 1001.0f, 1104.0f, 1209.0f, 1316.0f, 1425.0f, 1536.0f };
+            Tensor expected_res = create_test_tensor(shape_4d, exp_d, false);
+            Tensor actual_res = Tensor_mul(t1, t2);
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 21, TEST_FLOAT_TOLERANCE);
+        }
+    
+        {
+            TensorShape shape_2d = {4, 4};
+            TensorShape shape_4d = {1, 3, 4, 4};
+            Tensor t1 = create_test_tensor(shape_2d, arange_data, false);
+            Tensor t2 = create_test_tensor(shape_4d, arange_data, false);
+            float exp_d[] = { 1.0f, 4.0f, 9.0f, 16.0f, 25.0f, 36.0f, 49.0f, 64.0f, 81.0f, 100.0f, 121.0f, 144.0f, 169.0f,
+                              196.0f, 225.0f, 256.0f, 17.0f, 36.0f, 57.0f, 80.0f, 105.0f, 132.0f, 161.0f, 192.0f, 225.0f, 260.0f,
+                              297.0f, 336.0f, 377.0f, 420.0f, 465.0f, 512.0f, 33.0f, 68.0f, 105.0f, 144.0f, 185.0f, 228.0f, 273.0f,
+                              320.0f, 369.0f, 420.0f, 473.0f, 528.0f, 585.0f, 644.0f, 705.0f, 768.0f };
+            Tensor expected_res = create_test_tensor(shape_4d, exp_d, false);
+            Tensor actual_res = Tensor_mul(t1, t2);
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 22, TEST_FLOAT_TOLERANCE);
+        }
+    
+        {
+            TensorShape shape_2d = {4, 4};
+            TensorShape shape_4d = {2, 1, 4, 4};
+            Tensor t1 = create_test_tensor(shape_2d, arange_data, false);
+            Tensor t2 = create_test_tensor(shape_4d, arange_data, false);
+            float exp_d[] = { 1.0f, 4.0f, 9.0f, 16.0f, 25.0f, 36.0f, 49.0f, 64.0f, 81.0f, 100.0f, 121.0f, 144.0f, 169.0f,
+                              196.0f, 225.0f, 256.0f, 17.0f, 36.0f, 57.0f, 80.0f, 105.0f, 132.0f, 161.0f, 192.0f, 225.0f, 260.0f,
+                              297.0f, 336.0f, 377.0f, 420.0f, 465.0f, 512.0f };
+            Tensor expected_res = create_test_tensor(shape_4d, exp_d, false);
+            Tensor actual_res = Tensor_mul(t1, t2);
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 23, TEST_FLOAT_TOLERANCE);
+        }
+    
+        // dim3*dim4
+        {
+            TensorShape shape_3d = {3, 4, 4};
+            TensorShape shape_4d = {2, 3, 4, 4};
+            Tensor t1 = create_test_tensor(shape_3d, arange_data, false);
+            Tensor t2 = create_test_tensor(shape_4d, arange_data, false);
+            float exp_d[] = { 1.0f, 4.0f, 9.0f, 16.0f, 25.0f, 36.0f, 49.0f, 64.0f, 81.0f, 100.0f, 121.0f,
+                              144.0f, 169.0f, 196.0f, 225.0f, 256.0f, 289.0f, 324.0f, 361.0f, 400.0f, 441.0f, 484.0f,
+                              529.0f, 576.0f, 625.0f, 676.0f, 729.0f, 784.0f, 841.0f, 900.0f, 961.0f, 1024.0f, 1089.0f,
+                              1156.0f, 1225.0f, 1296.0f, 1369.0f, 1444.0f, 1521.0f, 1600.0f, 1681.0f, 1764.0f, 1849.0f, 1936.0f,
+                              2025.0f, 2116.0f, 2209.0f, 2304.0f, 49.0f, 100.0f, 153.0f, 208.0f, 265.0f, 324.0f, 385.0f,
+                              448.0f, 513.0f, 580.0f, 649.0f, 720.0f, 793.0f, 868.0f, 945.0f, 1024.0f, 1105.0f, 1188.0f,
+                              1273.0f, 1360.0f, 1449.0f, 1540.0f, 1633.0f, 1728.0f, 1825.0f, 1924.0f, 2025.0f, 2128.0f, 2233.0f,
+                              2340.0f, 2449.0f, 2560.0f, 2673.0f, 2788.0f, 2905.0f, 3024.0f, 3145.0f, 3268.0f, 3393.0f, 3520.0f,
+                              3649.0f, 3780.0f, 3913.0f, 4048.0f, 4185.0f, 4324.0f, 4465.0f, 4608.0f };
+            Tensor expected_res = create_test_tensor(shape_4d, exp_d, false);
+            Tensor actual_res = Tensor_mul(t1, t2);
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 24, TEST_FLOAT_TOLERANCE);
+        }
+    
+        {
+            TensorShape shape_3d = {3, 4, 4};
+            TensorShape shape_4d = {1, 3, 4, 4};
+            Tensor t1 = create_test_tensor(shape_3d, arange_data, false);
+            Tensor t2 = create_test_tensor(shape_4d, arange_data, false);
+            float exp_d[] = { 1.0f, 4.0f, 9.0f, 16.0f, 25.0f, 36.0f, 49.0f, 64.0f, 81.0f, 100.0f, 121.0f,
+                              144.0f, 169.0f, 196.0f, 225.0f, 256.0f, 289.0f, 324.0f, 361.0f, 400.0f, 441.0f, 484.0f,
+                              529.0f, 576.0f, 625.0f, 676.0f, 729.0f, 784.0f, 841.0f, 900.0f, 961.0f, 1024.0f, 1089.0f,
+                              1156.0f, 1225.0f, 1296.0f, 1369.0f, 1444.0f, 1521.0f, 1600.0f, 1681.0f, 1764.0f, 1849.0f, 1936.0f,
+                              2025.0f, 2116.0f, 2209.0f, 2304.0f };
+            Tensor expected_res = create_test_tensor(shape_4d, exp_d, false);
+            Tensor actual_res = Tensor_mul(t1, t2);
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 25, TEST_FLOAT_TOLERANCE);
+        }
+    
+        // special dim4*dim4
+        {
+            TensorShape shape_a = {2, 3, 4, 4};
+            TensorShape shape_b = {2, 1, 1, 1};
+            Tensor t1 = create_test_tensor(shape_a, arange_data, false);
+            Tensor t2 = create_test_tensor(shape_b, arange_data, false);
+            float exp_d[] = { 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f, 11.0f, 12.0f, 13.0f,
+                              14.0f, 15.0f, 16.0f, 17.0f, 18.0f, 19.0f, 20.0f, 21.0f, 22.0f, 23.0f, 24.0f, 25.0f, 26.0f,
+                              27.0f, 28.0f, 29.0f, 30.0f, 31.0f, 32.0f, 33.0f, 34.0f, 35.0f, 36.0f, 37.0f, 38.0f, 39.0f,
+                              40.0f, 41.0f, 42.0f, 43.0f, 44.0f, 45.0f, 46.0f, 47.0f, 48.0f, 98.0f, 100.0f, 102.0f, 104.0f,
+                              106.0f, 108.0f, 110.0f, 112.0f, 114.0f, 116.0f, 118.0f, 120.0f, 122.0f, 124.0f, 126.0f, 128.0f, 130.0f,
+                              132.0f, 134.0f, 136.0f, 138.0f, 140.0f, 142.0f, 144.0f, 146.0f, 148.0f, 150.0f, 152.0f, 154.0f, 156.0f,
+                              158.0f, 160.0f, 162.0f, 164.0f, 166.0f, 168.0f, 170.0f, 172.0f, 174.0f, 176.0f, 178.0f, 180.0f, 182.0f,
+                              184.0f, 186.0f, 188.0f, 190.0f, 192.0f };
+            Tensor expected_res = create_test_tensor(shape_a, exp_d, false);
+            Tensor actual_res = Tensor_mul(t1, t2);
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 26, TEST_FLOAT_TOLERANCE);
+        }
+    
+        {
+            TensorShape shape_a = {2, 3, 4, 4};
+            TensorShape shape_b = {1, 3, 1, 1};
+            Tensor t1 = create_test_tensor(shape_a, arange_data, false);
+            Tensor t2 = create_test_tensor(shape_b, arange_data, false);
+            float exp_d[] = { 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f, 11.0f, 12.0f, 13.0f,
+                              14.0f, 15.0f, 16.0f, 34.0f, 36.0f, 38.0f, 40.0f, 42.0f, 44.0f, 46.0f, 48.0f, 50.0f, 52.0f,
+                              54.0f, 56.0f, 58.0f, 60.0f, 62.0f, 64.0f, 99.0f, 102.0f, 105.0f, 108.0f, 111.0f, 114.0f, 117.0f,
+                              120.0f, 123.0f, 126.0f, 129.0f, 132.0f, 135.0f, 138.0f, 141.0f, 144.0f, 49.0f, 50.0f, 51.0f, 52.0f,
+                              53.0f, 54.0f, 55.0f, 56.0f, 57.0f, 58.0f, 59.0f, 60.0f, 61.0f, 62.0f, 63.0f, 64.0f, 130.0f,
+                              132.0f, 134.0f, 136.0f, 138.0f, 140.0f, 142.0f, 144.0f, 146.0f, 148.0f, 150.0f, 152.0f, 154.0f, 156.0f,
+                              158.0f, 160.0f, 243.0f, 246.0f, 249.0f, 252.0f, 255.0f, 258.0f, 261.0f, 264.0f, 267.0f, 270.0f, 273.0f,
+                              276.0f, 279.0f, 282.0f, 285.0f, 288.0f };
+            Tensor expected_res = create_test_tensor(shape_a, exp_d, false);
+            Tensor actual_res = Tensor_mul(t1, t2);
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 27, TEST_FLOAT_TOLERANCE);
+        }
+    
+        {
+            TensorShape shape_a = {2, 3, 4, 4};
+            TensorShape shape_b = {1, 1, 4, 1};
+            Tensor t1 = create_test_tensor(shape_a, arange_data, false);
+            Tensor t2 = create_test_tensor(shape_b, arange_data, false);
+            float exp_d[] = { 1.0f, 2.0f, 3.0f, 4.0f, 10.0f, 12.0f, 14.0f, 16.0f, 27.0f, 30.0f, 33.0f, 36.0f, 52.0f,
+                              56.0f, 60.0f, 64.0f, 17.0f, 18.0f, 19.0f, 20.0f, 42.0f, 44.0f, 46.0f, 48.0f, 75.0f, 78.0f,
+                              81.0f, 84.0f, 116.0f, 120.0f, 124.0f, 128.0f, 33.0f, 34.0f, 35.0f, 36.0f, 74.0f, 76.0f, 78.0f,
+                              80.0f, 123.0f, 126.0f, 129.0f, 132.0f, 180.0f, 184.0f, 188.0f, 192.0f, 49.0f, 50.0f, 51.0f, 52.0f,
+                              106.0f, 108.0f, 110.0f, 112.0f, 171.0f, 174.0f, 177.0f, 180.0f, 244.0f, 248.0f, 252.0f, 256.0f, 65.0f,
+                              66.0f, 67.0f, 68.0f, 138.0f, 140.0f, 142.0f, 144.0f, 219.0f, 222.0f, 225.0f, 228.0f, 308.0f, 312.0f,
+                              316.0f, 320.0f, 81.0f, 82.0f, 83.0f, 84.0f, 170.0f, 172.0f, 174.0f, 176.0f, 267.0f, 270.0f, 273.0f,
+                              276.0f, 372.0f, 376.0f, 380.0f, 384.0f };
+            Tensor expected_res = create_test_tensor(shape_a, exp_d, false);
+            Tensor actual_res = Tensor_mul(t1, t2);
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 28, TEST_FLOAT_TOLERANCE);
+        }
+    
+        {
+            TensorShape shape_a = {2, 3, 4, 4};
+            TensorShape shape_b = {2, 1, 4, 1};
+            Tensor t1 = create_test_tensor(shape_a, arange_data, false);
+            Tensor t2 = create_test_tensor(shape_b, arange_data, false);
+            float exp_d[] = { 1.0f, 2.0f, 3.0f, 4.0f, 10.0f, 12.0f, 14.0f, 16.0f, 27.0f, 30.0f, 33.0f, 36.0f, 52.0f,
+                              56.0f, 60.0f, 64.0f, 17.0f, 18.0f, 19.0f, 20.0f, 42.0f, 44.0f, 46.0f, 48.0f, 75.0f, 78.0f,
+                              81.0f, 84.0f, 116.0f, 120.0f, 124.0f, 128.0f, 33.0f, 34.0f, 35.0f, 36.0f, 74.0f, 76.0f, 78.0f,
+                              80.0f, 123.0f, 126.0f, 129.0f, 132.0f, 180.0f, 184.0f, 188.0f, 192.0f, 245.0f, 250.0f, 255.0f, 260.0f,
+                              318.0f, 324.0f, 330.0f, 336.0f, 399.0f, 406.0f, 413.0f, 420.0f, 488.0f, 496.0f, 504.0f, 512.0f, 325.0f,
+                              330.0f, 335.0f, 340.0f, 414.0f, 420.0f, 426.0f, 432.0f, 511.0f, 518.0f, 525.0f, 532.0f, 616.0f, 624.0f,
+                              632.0f, 640.0f, 405.0f, 410.0f, 415.0f, 420.0f, 510.0f, 516.0f, 522.0f, 528.0f, 623.0f, 630.0f, 637.0f,
+                              644.0f, 744.0f, 752.0f, 760.0f, 768.0f };
+            Tensor expected_res = create_test_tensor(shape_a, exp_d, false);
+            Tensor actual_res = Tensor_mul(t1, t2);
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 29, TEST_FLOAT_TOLERANCE);
+        }
+    
+        {
+            TensorShape shape_a = {2, 3, 4, 4};
+            TensorShape shape_b = {2, 1, 1, 4};
+            Tensor t1 = create_test_tensor(shape_a, arange_data, false);
+            Tensor t2 = create_test_tensor(shape_b, arange_data, false);
+            float exp_d[] = { 1.0f, 4.0f, 9.0f, 16.0f, 5.0f, 12.0f, 21.0f, 32.0f, 9.0f, 20.0f, 33.0f, 48.0f, 13.0f,
+                              28.0f, 45.0f, 64.0f, 17.0f, 36.0f, 57.0f, 80.0f, 21.0f, 44.0f, 69.0f, 96.0f, 25.0f, 52.0f,
+                              81.0f, 112.0f, 29.0f, 60.0f, 93.0f, 128.0f, 33.0f, 68.0f, 105.0f, 144.0f, 37.0f, 76.0f, 117.0f,
+                              160.0f, 41.0f, 84.0f, 129.0f, 176.0f, 45.0f, 92.0f, 141.0f, 192.0f, 245.0f, 300.0f, 357.0f, 416.0f,
+                              265.0f, 324.0f, 385.0f, 448.0f, 285.0f, 348.0f, 413.0f, 480.0f, 305.0f, 372.0f, 441.0f, 512.0f, 325.0f,
+                              396.0f, 469.0f, 544.0f, 345.0f, 420.0f, 497.0f, 576.0f, 365.0f, 444.0f, 525.0f, 608.0f, 385.0f, 468.0f,
+                              553.0f, 640.0f, 405.0f, 492.0f, 581.0f, 672.0f, 425.0f, 516.0f, 609.0f, 704.0f, 445.0f, 540.0f, 637.0f,
+                              736.0f, 465.0f, 564.0f, 665.0f, 768.0f };
+            Tensor expected_res = create_test_tensor(shape_a, exp_d, false);
+            Tensor actual_res = Tensor_mul(t1, t2);
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 29, TEST_FLOAT_TOLERANCE);
+        }
+    
+        {
+            TensorShape shape_a = {2, 3, 4, 4};
+            TensorShape shape_b = {1, 3, 4, 1};
+            Tensor t1 = create_test_tensor(shape_a, arange_data, false);
+            Tensor t2 = create_test_tensor(shape_b, arange_data, false);
+            float exp_d[] = { 1.0f, 2.0f, 3.0f, 4.0f, 10.0f, 12.0f, 14.0f, 16.0f, 27.0f, 30.0f, 33.0f,
+                              36.0f, 52.0f, 56.0f, 60.0f, 64.0f, 85.0f, 90.0f, 95.0f, 100.0f, 126.0f, 132.0f,
+                              138.0f, 144.0f, 175.0f, 182.0f, 189.0f, 196.0f, 232.0f, 240.0f, 248.0f, 256.0f, 297.0f,
+                              306.0f, 315.0f, 324.0f, 370.0f, 380.0f, 390.0f, 400.0f, 451.0f, 462.0f, 473.0f, 484.0f,
+                              540.0f, 552.0f, 564.0f, 576.0f, 49.0f, 50.0f, 51.0f, 52.0f, 106.0f, 108.0f, 110.0f,
+                              112.0f, 171.0f, 174.0f, 177.0f, 180.0f, 244.0f, 248.0f, 252.0f, 256.0f, 325.0f, 330.0f,
+                              335.0f, 340.0f, 414.0f, 420.0f, 426.0f, 432.0f, 511.0f, 518.0f, 525.0f, 532.0f, 616.0f,
+                              624.0f, 632.0f, 640.0f, 729.0f, 738.0f, 747.0f, 756.0f, 850.0f, 860.0f, 870.0f, 880.0f,
+                              979.0f, 990.0f, 1001.0f, 1012.0f, 1116.0f, 1128.0f, 1140.0f, 1152.0f };
+            Tensor expected_res = create_test_tensor(shape_a, exp_d, false);
+            Tensor actual_res = Tensor_mul(t1, t2);
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 30, TEST_FLOAT_TOLERANCE);
+        }
+    }
     cten_free(pool_id);
 }

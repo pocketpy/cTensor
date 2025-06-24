@@ -131,7 +131,7 @@ void Tensor_shuffle_dataset(const float (*X)[4], const int *y,float (*X_shuffled
 void cten_assert(bool cond, const char* fmt, ...);
 void cten_assert_shape(const char* title, TensorShape a, TensorShape b);
 void cten_assert_dim(const char* title, int a, int b);
-
+int TensorShape_get_ndims(TensorShape shape);
 bool cten_elemwise_broadcast(Tensor* a, Tensor* b);
 int load_iris_dataset(const float (**X)[4], const int** y);
 Tensor Tensor_reduce_dim(Tensor self, int dim, const char* operation);

@@ -37,8 +37,11 @@ int TensorShape_tostring(TensorShape shape, char* buf, int size) {
 
 Tensor Tensor_new(TensorShape shape, bool requires_grad) {
     Tensor self;
-    memcpy(self.shape, shape, sizeof(TensorShape));
-    int numel = TensorShape_numel(shape);
+    memset(self.shape, 0, sizeof(TensorShape));
+    int ndims = TensorShape_dim(shape); 
+    memcpy(self.shape, shape, ndims * sizeof(int));
+
+    int numel = TensorShape_numel(self.shape);
     self.data = _cten_malloc(sizeof(FloatBuffer) + sizeof(float) * numel);
     self.data->numel = numel;
     
