@@ -91,14 +91,6 @@ void cten_assert_dim(const char* title, int a, int b) {
     cten_assert(a == b, "%s: %d != %d", title, a, b);
 }
 
-int TensorShape_get_ndims(TensorShape shape) {
-    for (int i = 0; i < 4; i++) {
-        if (shape[i] <= 0) {
-            return i;
-        }
-    }
-    return 4;
-}
 
 bool cten_elemwise_broadcast(Tensor* a, Tensor* b) {
     Tensor orig_a = *a;
@@ -106,8 +98,8 @@ bool cten_elemwise_broadcast(Tensor* a, Tensor* b) {
 
     // 1. Determine the result shape from the two input shapes
     TensorShape result_shape;
-    int a_ndims = TensorShape_get_ndims(orig_a.shape);
-    int b_ndims = TensorShape_get_ndims(orig_b.shape);
+    int a_ndims = TensorShape_dim(orig_a.shape);
+    int b_ndims = TensorShape_dim(orig_b.shape);
     int max_ndims = (a_ndims > b_ndims) ? a_ndims : b_ndims;
 
     if (max_ndims > 4) return false;
