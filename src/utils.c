@@ -91,72 +91,83 @@ void cten_assert_dim(const char* title, int a, int b) {
     cten_assert(a == b, "%s: %d != %d", title, a, b);
 }
 
+
 bool cten_elemwise_broadcast(Tensor* a, Tensor* b) {
-    int a_dim = TensorShape_dim(a->shape);
-    int b_dim = TensorShape_dim(b->shape);
-    
-    if (a_dim == 1 && a->shape[0] == 1 && b_dim > 0) {
-        Tensor a_ = Tensor_new(b->shape, a->node != NULL);
-        float scalar_value = a->data->flex[0];
-        int total_elements = TensorShape_numel(b->shape);
-        for (int i = 0; i < total_elements; i++) {
-            a_.data->flex[i] = scalar_value;
-        }
-        *a = a_;
-        return true;
-    }
-    
-    if (b_dim == 1 && b->shape[0] == 1 && a_dim > 0) {
-        Tensor b_ = Tensor_new(a->shape, b->node != NULL);
-        float scalar_value = b->data->flex[0];
-        int total_elements = TensorShape_numel(a->shape);
-        for (int i = 0; i < total_elements; i++) {
-            b_.data->flex[i] = scalar_value;
-        }
-        *b = b_;
-        return true;
-    }
-    
-    if (a_dim != b_dim) return false;
-    int a_broadcast = -1;
-    for(int i = 0; i < a_dim; i++) {
-        if(a->shape[i] == b->shape[i]) continue;
-        if(a->shape[i] == 1) {
-            if(a_broadcast == 0) return false;
-            a_broadcast = 1;
-        } else if(b->shape[i] == 1) {
-            if(a_broadcast == 1) return false;
-            a_broadcast = 0;
+    Tensor orig_a = *a;
+    Tensor orig_b = *b;
+
+    // 1. Determine the result shape from the two input shapes
+    TensorShape result_shape;
+    int a_ndims = TensorShape_dim(orig_a.shape);
+    int b_ndims = TensorShape_dim(orig_b.shape);
+    int max_ndims = (a_ndims > b_ndims) ? a_ndims : b_ndims;
+
+    if (max_ndims > 4) return false;
+    memset(result_shape, 0, sizeof(TensorShape));
+
+    for (int i = 0; i < max_ndims; i++) {
+        int a_idx = a_ndims - 1 - i;
+        int b_idx = b_ndims - 1 - i;
+        int result_idx = max_ndims - 1 - i;
+        int a_dim = (a_idx >= 0) ? orig_a.shape[a_idx] : 1;
+        int b_dim = (b_idx >= 0) ? orig_b.shape[b_idx] : 1;
+        if (a_dim == b_dim || a_dim == 1 || b_dim == 1) {
+            result_shape[result_idx] = (a_dim > b_dim) ? a_dim : b_dim;
         } else {
             return false;
         }
     }
-    if(a_broadcast != -1) {
-        if(a_broadcast == 0) {
-            Tensor* tmp = a;
-            a = b;
-            b = tmp;
-            a_broadcast = 1;
-        }
-        Tensor a_ = Tensor_new(b->shape, a->node != NULL);
-        for(int i = 0; i < a_.shape[0]; i++) {
-            int i_ = a->shape[0] == 1 ? 0 : i;
-            for(int j = 0; j < a_.shape[1]; j++) {
-                int j_ = a->shape[1] == 1 ? 0 : j;
-                for(int k = 0; k < a_.shape[2]; k++) {
-                    int k_ = a->shape[2] == 1 ? 0 : k;
-                    for(int l = 0; l < a_.shape[3]; l++) {
-                        int l_ = a->shape[3] == 1 ? 0 : l;
-                        // a_[i][j][k][l] = a[i_][j_][k_][l_]
-                        a_.data->flex[i * a_.shape[1] * a_.shape[2] * a_.shape[3] +
-                                      j * a_.shape[2] * a_.shape[3] + k * a_.shape[3] + l] =
-                            a->data->flex[i_ * a->shape[1] * a->shape[2] * a->shape[3] +
-                                          j_ * a->shape[2] * a->shape[3] + k_ * a->shape[3] + l_];
-                    }
-                }
+
+    // 2. Check if tensor 'a' needs to be expanded
+    if (memcmp(orig_a.shape, result_shape, sizeof(TensorShape)) != 0) {
+        Tensor new_a = Tensor_new(result_shape, orig_a.node != NULL);
+        for (int i = 0; i < new_a.data->numel; i++) {
+            int rem = i;
+            int idx[4] = {0};
+            for (int d = max_ndims - 1; d >= 0; d--) {
+                idx[d] = rem % result_shape[d];
+                rem /= result_shape[d];
             }
+
+            int source_idx = 0;
+            int stride = 1;
+            //iterating backwards over the original tensor's dimensions
+            for (int d = a_ndims - 1; d >= 0; d--) {
+                int original_dim_size = orig_a.shape[d];
+                int result_dim_coord = idx[max_ndims - a_ndims + d];
+                //if original dimension was 1, it's broadcast; its index is 0.
+                int dim_idx = (original_dim_size == 1) ? 0 : result_dim_coord;
+                source_idx += dim_idx * stride;
+                stride *= original_dim_size;
+            }
+            new_a.data->flex[i] = orig_a.data->flex[source_idx];
         }
-        *a = a_;
+        *a = new_a;
+    }
+
+    // 3. Check if tensor 'b' needs to be expanded
+    if (memcmp(orig_b.shape, result_shape, sizeof(TensorShape)) != 0) {
+        Tensor new_b = Tensor_new(result_shape, orig_b.node != NULL);
+        for (int i = 0; i < new_b.data->numel; i++) {
+            int rem = i;
+            int idx[4] = {0};
+            for (int d = max_ndims - 1; d >= 0; d--) {
+                idx[d] = rem % result_shape[d];
+                rem /= result_shape[d];
+            }
+
+            int source_idx = 0;
+            int stride = 1;
+            for (int d = b_ndims - 1; d >= 0; d--) {
+                int original_dim_size = orig_b.shape[d];
+                int result_dim_coord = idx[max_ndims - b_ndims + d];
+                int dim_idx = (original_dim_size == 1) ? 0 : result_dim_coord;
+                source_idx += dim_idx * stride;
+                stride *= original_dim_size;
+            }
+            new_b.data->flex[i] = orig_b.data->flex[source_idx];
+        }
+        *b = new_b;
     }
     return true;
 }

@@ -12,8 +12,8 @@ void test_matmul_backward() {
     // Test Case 1: Basic matrix multiplication backward (sum to scalar)
     {
         const char* tc_name = "matmul_basic_sum_backward";
-        TensorShape a_shape = {2, 3, 0, 0};  // 2x3 matrix
-        TensorShape b_shape = {3, 2, 0, 0};  // 3x2 matrix
+        TensorShape a_shape = {2, 3};  // 2x3 matrix
+        TensorShape b_shape = {3, 2};  // 3x2 matrix
         
         // A = [[1, 2, 3], [4, 5, 6]]
         float a_data[] = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f};
@@ -45,7 +45,7 @@ void test_matmul_backward() {
     // Test Case 2: Square matrix multiplication backward (sum to scalar)
     {
         const char* tc_name = "matmul_square_sum_backward";
-        TensorShape shape = {2, 2, 0, 0};  // 2x2 matrices
+        TensorShape shape = {2, 2};  // 2x2 matrices
         
         // A = [[1, 2], [3, 4]]
         float a_data[] = {1.0f, 2.0f, 3.0f, 4.0f};
@@ -76,8 +76,8 @@ void test_matmul_backward() {
     // Test Case 3: Rectangular matrix multiplication backward (sum to scalar)
     {
         const char* tc_name = "matmul_rectangular_sum_backward";
-        TensorShape a_shape = {3, 2, 0, 0};  // 3x2 matrix
-        TensorShape b_shape = {2, 4, 0, 0};  // 2x4 matrix
+        TensorShape a_shape = {3, 2};  // 3x2 matrix
+        TensorShape b_shape = {2, 4};  // 2x4 matrix
         
         // A = [[1, 2], [3, 4], [5, 6]]
         float a_data[] = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f};
@@ -108,9 +108,9 @@ void test_matmul_backward() {
     // Test Case 4: Complex computation graph with matmul
     {
         const char* tc_name = "matmul_complex_graph_backward";
-        TensorShape a_shape = {2, 2, 0, 0};
-        TensorShape b_shape = {2, 2, 0, 0};
-        TensorShape w_shape = {2, 2, 0, 0};
+        TensorShape a_shape = {2, 2};
+        TensorShape b_shape = {2, 2};
+        TensorShape w_shape = {2, 2};
         
         // A = [[1, 2], [3, 4]]
         float a_data[] = {1.0f, 2.0f, 3.0f, 4.0f};

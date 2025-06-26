@@ -12,7 +12,7 @@ void test_mul_backward() {
     // Test Case 1: Scalar backward (1x1 tensors)
     {
         const char* tc_name = "mul_scalar_backward";
-        TensorShape s_shape = {1, 0, 0, 0};
+        TensorShape s_shape = {1};
 
         // Sub-test 1: Basic scalar backward
         {
@@ -61,7 +61,7 @@ void test_mul_backward() {
     // Test Case 2: Vector sum backward (reduces to scalar)
     {
         const char* tc_name = "mul_vector_sum_backward";
-        TensorShape v_shape = {2, 0, 0, 0};
+        TensorShape v_shape = {2};
         float d1[] = {2.0f, 3.0f};
         float d2[] = {4.0f, 5.0f};
         float exp_grad1[] = {4.0f, 5.0f};  // dz/dx = y = [4, 5]
@@ -85,7 +85,7 @@ void test_mul_backward() {
     // Test Case 3: Matrix sum backward (reduces to scalar)
     {
         const char* tc_name = "mul_matrix_sum_backward";
-        TensorShape m_shape = {2, 2, 0, 0};
+        TensorShape m_shape = {2, 2};
         float d1[] = {1.0f, 2.0f, 3.0f, 4.0f};
         float d2[] = {5.0f, 6.0f, 7.0f, 8.0f};
         float exp_grad1[] = {5.0f, 6.0f, 7.0f, 8.0f};  // dz/dx = y
@@ -109,8 +109,8 @@ void test_mul_backward() {
     // Test Case 4: Broadcasting sum backward (vector * scalar, reduces to scalar)
     {
         const char* tc_name = "mul_broadcast_sum_backward";
-        TensorShape vec_shape = {2, 0, 0, 0};
-        TensorShape scalar_shape = {1, 0, 0, 0};
+        TensorShape vec_shape = {2};
+        TensorShape scalar_shape = {1};
         float vec_data[] = {2.0f, 3.0f};
         float scalar_data[] = {4.0f};
         float exp_grad_vec[] = {4.0f, 4.0f};  // dz/dx = scalar broadcasted = [4, 4]
@@ -134,8 +134,8 @@ void test_mul_backward() {
     // Test Case 5: Complex computation graph (chained operations)
     {
         const char* tc_name = "mul_complex_graph_backward";
-        TensorShape v_shape = {2, 0, 0, 0};
-        TensorShape s_shape = {1, 0, 0, 0};
+        TensorShape v_shape = {2};
+        TensorShape s_shape = {1};
         float x_data[] = {1.0f, 2.0f};
         float y_data[] = {3.0f};
         float w_data[] = {2.0f, 3.0f};
