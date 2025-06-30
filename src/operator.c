@@ -404,18 +404,20 @@ Tensor Tensor_pow(Tensor self, Tensor other) {
 }
 
 Tensor Tensor_sub(Tensor self, Tensor other) {
+    Tensor orig_self = self;
+    Tensor orig_other = other;
     if (!cten_elemwise_broadcast(&self, &other)) {
-        cten_assert_shape("Tensor_sub() cannot broadcast", self.shape, other.shape);
+        cten_assert_shape("Tensor_sub() cannot broadcast", orig_self.shape, orig_other.shape);
     }
-    bool requires_grad = !cten_is_eval() && (self.node != NULL || other.node != NULL);
+    bool requires_grad = !cten_is_eval() && (orig_self.node != NULL || orig_other.node != NULL);
     Tensor res = Tensor_new(self.shape, requires_grad);
     for (int i = 0; i < self.data->numel; i++) {
         res.data->flex[i] = self.data->flex[i] - other.data->flex[i];
     }
     if (requires_grad) {
-        res.node->grad_fn = GradFn_sub; // Define GradFn_sub if needed
-        res.node->inputs[0] = self;
-        res.node->inputs[1] = other;
+        res.node->grad_fn = GradFn_sub;
+        res.node->inputs[0] = orig_self;
+        res.node->inputs[1] = orig_other;
         res.node->n_inputs = 2;
         res.node->name = "Sub";
     }
