@@ -453,8 +453,7 @@ static Tensor GradFn_max(Tensor self, int i) {
 
 Tensor Tensor_max(Tensor self) {
     if (self.data->numel == 0){
-        fprintf(stderr, "Error: max() on an empty tensor.\n");
-        abort();
+        cten_assert(false, "Error: max() on an empty tensor.");
     }
     bool requires_grad = !cten_is_eval() && (self.node != NULL);
     Tensor res = Tensor_new((TensorShape){1, 0, 0, 0}, requires_grad);
@@ -508,8 +507,7 @@ static Tensor GradFn_min(Tensor self, int i) {
 
 Tensor Tensor_min(Tensor self) {
     if (self.data->numel == 0){
-        fprintf(stderr, "Error: min() on an empty tensor.\n");
-        abort();
+        cten_assert(false, "Error: min() on an empty tensor.");
     }
     bool requires_grad = !cten_is_eval() && (self.node != NULL);
     Tensor res = Tensor_new((TensorShape){1, 0, 0, 0}, requires_grad);
