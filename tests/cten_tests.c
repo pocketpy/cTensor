@@ -25,6 +25,8 @@ void test_pow_operator();
 void test_reciprocal_operator();
 void test_square_operator();
 void test_div_operator();
+void test_max_operator();
+void test_min_operator();
 
 // Backward tests
 void test_add_backward();
@@ -95,6 +97,12 @@ int main() {
 
     test_div_operator();
     printf("Div operator tests finished.\n");
+
+    test_max_operator();
+    printf("Max operator tests finished.\n");
+
+    test_min_operator();
+    printf("Min operator tests finished.\n");
 
     // Backward tests
     test_add_backward();
