@@ -423,3 +423,113 @@ Tensor Tensor_sub(Tensor self, Tensor other) {
     }
     return res;
 }
+
+static Tensor GradFn_max(Tensor self, int i) {
+    // f(x) = max(x); f'(x) = 1 for elements equal to max, 0 otherwise
+    Tensor input = self.node->inputs[i];
+    Tensor res = Tensor_new(input.shape, false);
+    float max_val = self.data->flex[0];
+    
+    for (int j = 0; j < res.data->numel; j++) {
+        res.data->flex[j] = 0.0f;
+    }
+    
+    int max_count = 0;
+    for (int j = 0; j < input.data->numel; j++) {
+        if (input.data->flex[j] == max_val) {
+            max_count++;
+        }
+    }
+    
+    float grad_value = 1.0f / max_count;
+    for (int j = 0; j < input.data->numel; j++) {
+        if (input.data->flex[j] == max_val) {
+            res.data->flex[j] = grad_value;
+        }
+    }
+    
+    return res;
+}
+
+Tensor Tensor_max(Tensor self) {
+    if (self.data->numel == 0){
+        fprintf(stderr, "Error: max() on an empty tensor.\n");
+        abort();
+    }
+    bool requires_grad = !cten_is_eval() && (self.node != NULL);
+    Tensor res = Tensor_new((TensorShape){1, 0, 0, 0}, requires_grad);
+    
+    // Find maximum value
+    float max_val = self.data->flex[0];
+    for (int i = 1; i < self.data->numel; i++) {
+        if (self.data->flex[i] > max_val) {
+            max_val = self.data->flex[i];
+        }
+    }
+    
+    res.data->flex[0] = max_val;
+    
+    if (requires_grad) {
+        res.node->grad_fn = GradFn_max;
+        res.node->inputs[0] = self;
+        res.node->n_inputs = 1;
+        res.node->name = "Max";
+    }
+    
+    return res;
+}
+
+static Tensor GradFn_min(Tensor self, int i) {
+    // f(x) = min(x); f'(x) = 1 for elements equal to min, 0 otherwise
+    Tensor input = self.node->inputs[i];
+    Tensor res = Tensor_new(input.shape, false);
+    float min_val = self.data->flex[0];
+    
+    for (int j = 0; j < res.data->numel; j++) {
+        res.data->flex[j] = 0.0f;
+    }
+    
+    int min_count = 0;
+    for (int j = 0; j < input.data->numel; j++) {
+        if (input.data->flex[j] == min_val) {
+            min_count++;
+        }
+    }
+    
+    float grad_value = 1.0f / min_count;
+    for (int j = 0; j < input.data->numel; j++) {
+        if (input.data->flex[j] == min_val) {
+            res.data->flex[j] = grad_value;
+        }
+    }
+    
+    return res;
+}
+
+Tensor Tensor_min(Tensor self) {
+    if (self.data->numel == 0){
+        fprintf(stderr, "Error: min() on an empty tensor.\n");
+        abort();
+    }
+    bool requires_grad = !cten_is_eval() && (self.node != NULL);
+    Tensor res = Tensor_new((TensorShape){1, 0, 0, 0}, requires_grad);
+    
+    // Find minimum value
+    float min_val = self.data->flex[0];
+    for (int i = 1; i < self.data->numel; i++) {
+        if (self.data->flex[i] < min_val) {
+            min_val = self.data->flex[i];
+        }
+    }
+    
+    res.data->flex[0] = min_val;
+    
+    if (requires_grad) {
+        res.node->grad_fn = GradFn_min;
+        res.node->inputs[0] = self;
+        res.node->n_inputs = 1;
+        res.node->name = "Min";
+    }
+    
+    return res;
+}
