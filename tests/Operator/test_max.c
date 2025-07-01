@@ -6,8 +6,8 @@
 
 void test_max_operator() {
     const char* op_name = "max";
-    PoolId pool_id = 8;  // Unique pool ID for max operator tests
-
+    PoolId pool_id = 0;
+    
     cten_begin_malloc(pool_id);
 
     // Test Case 1: Max of a scalar tensor

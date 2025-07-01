@@ -6,7 +6,7 @@
 
 void test_min_operator() {
     const char* op_name = "min";
-    PoolId pool_id = 9;  // Unique pool ID for min operator tests
+    PoolId pool_id = 0;
 
     cten_begin_malloc(pool_id);
 
