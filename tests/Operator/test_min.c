@@ -14,8 +14,8 @@ void test_min_operator() {
     {
         const char* tc_name = "min_scalar";
         TensorShape s_shape = {1};
-        float d1[] = {5.0f};
-        float exp_d[] = {5.0f};
+        float d1[] = {2.7885f};
+        float exp_d[] = {2.7885f};
         Tensor t1 = create_test_tensor(s_shape, d1, false);
         Tensor expected_res = create_test_tensor(s_shape, exp_d, false);
         Tensor actual_res = Tensor_min(t1);
@@ -27,8 +27,8 @@ void test_min_operator() {
     {
         const char* tc_name = "min_vector";
         TensorShape v_shape = {5};
-        float d1[] = {8.0f, 3.0f, 7.0f, 5.0f, 9.0f};
-        float exp_d[] = {3.0f}; // Min is 3
+        float d1[] = {-9.4998f, -4.4994f, -5.5358f, 4.7294f, 3.534f};
+        float exp_d[] = {-9.4998f};
         TensorShape exp_shape = {1, 0, 0, 0};
         Tensor t1 = create_test_tensor(v_shape, d1, false);
         Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
@@ -41,8 +41,8 @@ void test_min_operator() {
     {
         const char* tc_name = "min_matrix";
         TensorShape m_shape = {2, 3};
-        float d1[] = {5.0f, 2.0f, 8.0f, 3.0f, 4.0f, 6.0f};
-        float exp_d[] = {2.0f}; // Min is 2
+        float d1[] = {7.8436f, -8.2612f, -1.5616f, -9.4041f, -5.6272f, 0.1071f};
+        float exp_d[] = {-9.4041f}; 
         TensorShape exp_shape = {1, 0, 0, 0};
         Tensor t1 = create_test_tensor(m_shape, d1, false);
         Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
@@ -55,8 +55,8 @@ void test_min_operator() {
     {
         const char* tc_name = "min_vector_negative";
         TensorShape v_shape = {4};
-        float d1[] = {-1.0f, -2.0f, -3.0f, -0.5f};
-        float exp_d[] = {-3.0f}; // Min is -3.0
+        float d1[] = {-9.7373f, -8.0315f, -3.5661f, -4.6051f};
+        float exp_d[] = {-9.7373f};
         TensorShape exp_shape = {1, 0, 0, 0};
         Tensor t1 = create_test_tensor(v_shape, d1, false);
         Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
@@ -69,8 +69,8 @@ void test_min_operator() {
     {
         const char* tc_name = "min_duplicate";
         TensorShape v_shape = {5};
-        float d1[] = {5.0f, 2.0f, 8.0f, 2.0f, 7.0f};
-        float exp_d[] = {2.0f}; // Min is 2, appears twice
+        float d1[] = {1.7853f, -9.87f, -2.7956f, -2.7956f, -9.87f};
+        float exp_d[] = {-9.87f}; 
         TensorShape exp_shape = {1, 0, 0, 0};
         Tensor t1 = create_test_tensor(v_shape, d1, false);
         Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
@@ -83,8 +83,8 @@ void test_min_operator() {
     {
         const char* tc_name = "min_3d_tensor";
         TensorShape t_shape = {2, 2, 2};
-        float d1[] = {10.0f, 20.0f, 5.0f, 12.0f, 15.0f, 16.0f, 7.0f, 18.0f};
-        float exp_d[] = {5.0f}; // Min is 5
+        float d1[] = {-6.8904f, 9.1443f, -3.2681f, -8.1451f, -8.0657f, 6.9499f, 2.0745f, 6.1426f};
+        float exp_d[] = {-8.1451f};
         TensorShape exp_shape = {1, 0, 0, 0};
         Tensor t1 = create_test_tensor(t_shape, d1, false);
         Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
