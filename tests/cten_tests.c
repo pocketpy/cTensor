@@ -35,6 +35,8 @@ void test_matmul_backward();
 void test_sub_backward();
 void test_relu_backward();
 void test_linear_backward();
+void test_min_backward();
+void test_max_backward();
 
 int main() {
     printf("Starting cTensor Test Suite on %s...\n", PLATFORM_NAME);
@@ -122,6 +124,12 @@ int main() {
     
     test_linear_backward();
     printf("Linear backward tests finished.\n");
+
+    test_min_backward();
+    printf("Min backward tests finished.\n");
+
+    test_max_backward();
+    printf("Max backward tests finished.\n");
 
     // other tests
     
