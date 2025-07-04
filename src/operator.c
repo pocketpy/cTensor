@@ -125,7 +125,7 @@ Tensor GradFn_mean(Tensor self, int i) {
             }
             divisor = reduced_dim_size;
         } else {
-            // I dont know why this can happen, but as a fallback
+            // scalar input
             divisor = TensorShape_numel(input_tensor.shape);
         }
     }
