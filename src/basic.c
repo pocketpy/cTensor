@@ -139,17 +139,42 @@ void Tensor_backward(Tensor self, Tensor grad) {
         self.node->grad = Tensor_add(self.node->grad, grad);
     }
 
-    for(int i = 0; i < self.node->n_inputs; i++) {
+    for(int i = 0; i < self.node->n_inputs; i++) {        
         if (self.node->inputs[i].data == NULL) {
             continue;
         }
         
-        Tensor input_tensor = self.node->inputs[i];
+        Tensor input_tensor = self.node->inputs[i];        
         
         // Step 1: Get the local gradient (the partial derivative). --> For z = f(x, y), this would be dz/dx or dz/dy.
         Tensor input_grad = self.node->grad_fn(self, i);
         
-        // Step 2: Apply the chain rule. --> The gradient flowing to the input is upstream_grad * local_grad.
+        // This is the gradient flowing from the output, which we need to propagate backwards.
+        Tensor grad = self.node->grad;
+        int input_ndim = TensorShape_dim(input_tensor.shape);
+        int grad_ndim = TensorShape_dim(grad.shape);
+        
+        if ((strcmp(self.node->name, "Sum") == 0 || strcmp(self.node->name, "Mean") == 0) && input_ndim > grad_ndim) {
+            // Find the dimension that was reduced. We assume the non-reduced dimensions match in size.
+            int unsqueeze_dim = -1;
+            int grad_idx = 0;
+            for (int dim_idx = 0; dim_idx < input_ndim; ++dim_idx) {
+                if (grad_idx >= grad_ndim || input_tensor.shape[dim_idx] != grad.shape[grad_idx]) {
+                    // Yes, this is the dimension that was removed.
+                    unsqueeze_dim = dim_idx;
+                    break;
+                }
+                grad_idx++;
+            }
+
+            if (unsqueeze_dim != -1) {
+                grad = Tensor_unsqueeze(grad, unsqueeze_dim);
+            } else {
+                cten_assert(false, "Could not deduce unsqueeze dimension.");
+            }
+        }
+        
+        // Step 2: Apply the chain rule (upstream_grad * local_grad)
         Tensor combined_grad;
         if(strcmp(self.node->name, "Matmul") == 0) {
             if (i == 0) {
