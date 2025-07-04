@@ -105,11 +105,40 @@ void Tensor_argmax(Tensor self, int* out) {
 }
 
 Tensor GradFn_mean(Tensor self, int i) {
-    // f(x) = mean(x); f'(x) = 1 / x.numel()
-    Tensor res = Tensor_new(self.shape, false);
-    for(int i = 0; i < res.data->numel; i++) {
-        res.data->flex[i] = 1.0f / self.data->numel;
+    Tensor input_tensor = self.node->inputs[i];
+    int divisor;
+    
+    if (TensorShape_numel(self.shape) == 1 && TensorShape_numel(input_tensor.shape) > 1) {
+        divisor = TensorShape_numel(input_tensor.shape);
+    } else {
+        int input_ndim = TensorShape_dim(input_tensor.shape);
+        int output_ndim = TensorShape_dim(self.shape);
+        if (input_ndim > output_ndim) {
+            int out_idx = 0;
+            int reduced_dim_size = 1;
+            for(int d=0; d < input_ndim; ++d) {
+                if(out_idx >= output_ndim || input_tensor.shape[d] != self.shape[out_idx]) {
+                    reduced_dim_size = input_tensor.shape[d];
+                    break;
+                }
+                out_idx++;
+            }
+            divisor = reduced_dim_size;
+        } else {
+            // I dont know why this can happen, but as a fallback
+            divisor = TensorShape_numel(input_tensor.shape);
+        }
     }
+
+    // gradient ==> SAME SHAPE as the ORIGINAL INPUT.
+    Tensor res = Tensor_new(input_tensor.shape, false);
+    
+    // gradient value is 1 divided by the number of elements that were averaged.
+    float grad_val = 1.0f / divisor;
+    
+    for(int j = 0; j < res.data->numel; j++) {
+        res.data->flex[j] = grad_val;
+    }   
     return res;
 }
 
