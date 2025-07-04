@@ -33,6 +33,8 @@ void test_matmul_backward();
 void test_sub_backward();
 void test_relu_backward();
 void test_linear_backward();
+void test_sum_backward();
+void test_mean_backward();
 
 int main() {
     printf("Starting cTensor Test Suite on %s...\n", PLATFORM_NAME);
@@ -115,6 +117,12 @@ int main() {
     test_linear_backward();
     printf("Linear backward tests finished.\n");
 
+    test_sum_backward();
+    printf("Sum backward tests finished.\n");
+        
+    test_mean_backward();
+    printf("Mean backward tests finished.\n");
+    
     // other tests
     
     csv_reporter_close();
