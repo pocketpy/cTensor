@@ -148,7 +148,7 @@ void test_relu_backward() {
     // Test Case 5: Chained operations with ReLU
     {
         const char* tc_name = "Chained_operations_with_relu";
-        // Sub-test 1: Linear -> ReLU -> Sum
+        // Sub-test 1,2,3: Linear -> ReLU -> Sum
         {
             TensorShape input_shape = {2, 3};
             TensorShape weight_shape = {3, 4};
@@ -158,6 +158,17 @@ void test_relu_backward() {
             float weight_data[] = {0.1f, -0.2f, 0.3f, 0.4f, 0.5f, -0.6f, 0.7f, -0.8f, 0.9f, 1.0f, -1.1f, 1.2f};
             float bias_data[] = {0.1f, -0.1f, 0.2f, -0.2f};
             
+            float exp_grad_input[] = {
+                0.3f, -0.9f, 3.1f,
+                0.3f, -0.9f, 3.1f
+            };
+            float exp_grad_weight[] = {
+                5.0f, 5.0f, 0.0f, 5.0f,
+                7.0f, 7.0f, 0.0f, 7.0f,
+                9.0f, 9.0f, 0.0f, 9.0f
+            };
+            float exp_grad_bias[] = {2.0f, 2.0f, 0.0f, 2.0f};
+
             Tensor input = create_test_tensor(input_shape, input_data, true);
             Tensor weight = create_test_tensor(weight_shape, weight_data, true);
             Tensor bias = create_test_tensor(bias_shape, bias_data, true);
@@ -168,32 +179,32 @@ void test_relu_backward() {
             
             Tensor_backward(sum_output, (Tensor){0});
             
-            // We're not checking specific values here, just that the backward pass completes
-            // and the gradients are computed correctly through the chain
-            
-            // Verify that gradients exist for all tensors in the chain
-            if (input.node->grad.data == NULL || weight.node->grad.data == NULL || bias.node->grad.data == NULL) {
-                printf("Error: Gradients not computed for all tensors in the chain\n");
-            }
+            Tensor expected_grad_input = create_test_tensor(input_shape, exp_grad_input, false);
+            Tensor expected_grad_weight = create_test_tensor(weight_shape, exp_grad_weight, false);
+            Tensor expected_grad_bias = create_test_tensor(bias_shape, exp_grad_bias, false);
+
+            compare_tensors(&input.node->grad, &expected_grad_input, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+            compare_tensors(&weight.node->grad, &expected_grad_weight, op_name, tc_name, 2, TEST_FLOAT_TOLERANCE);
+            compare_tensors(&bias.node->grad, &expected_grad_bias, op_name, tc_name, 3, TEST_FLOAT_TOLERANCE);
         }
 
-        // TODO: Mean Backward is in working progress
-        // // Sub-test 2: ReLU -> Mean with mixed values
-        // {
-        //     TensorShape m_shape = {2, 3};
-        //     float data[] = {-1.0f, 0.0f, 1.0f, 2.0f, -3.0f, 4.0f};
-        //     float exp_grad[] = {0.0f, 0.0f, 1.0f/6.0f, 1.0f/6.0f, 0.0f, 1.0f/6.0f};  // 1/6 for positive values, 0 for negative
+        // Sub-test 4: ReLU -> Mean with mixed values
+        {
+            TensorShape m_shape = {2, 3};
+            float data[] = {-1.0f, 0.0f, 1.0f, 2.0f, -3.0f, 4.0f};
+            float exp_grad[] = {0.0f, 0.0f, 1.0f/6.0f, 1.0f/6.0f, 0.0f, 1.0f/6.0f};  // 1/6 for positive values, 0 for negative
             
-        //     Tensor t = create_test_tensor(m_shape, data, true);
-        //     Tensor relu_output = nn_relu(t);
-        //     Tensor mean_output = Tensor_mean(relu_output);
+            Tensor t = create_test_tensor(m_shape, data, true);
+            Tensor relu_output = nn_relu(t);
+            Tensor mean_output = Tensor_mean(relu_output);
+            Tensor l = Tensor_sum(mean_output);
             
-        //     Tensor_backward(mean_output, (Tensor){0});
+            Tensor_backward(l, (Tensor){0});
             
-        //     Tensor expected_grad = create_test_tensor(m_shape, exp_grad, false);
+            Tensor expected_grad = create_test_tensor(m_shape, exp_grad, false);
 
-        //     compare_tensors(&t.node->grad, &expected_grad, op_name, tc_name, 2, TEST_FLOAT_TOLERANCE);
-        // }
+            compare_tensors(&t.node->grad, &expected_grad, op_name, tc_name, 4, TEST_FLOAT_TOLERANCE);
+        }
     }
 
     cten_free(pool_id);

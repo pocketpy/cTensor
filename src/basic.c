@@ -139,12 +139,12 @@ void Tensor_backward(Tensor self, Tensor grad) {
         self.node->grad = Tensor_add(self.node->grad, grad);
     }
 
-    for(int i = 0; i < self.node->n_inputs; i++) {        
+    for(int i = 0; i < self.node->n_inputs; i++) {
         if (self.node->inputs[i].data == NULL) {
             continue;
         }
         
-        Tensor input_tensor = self.node->inputs[i];        
+        Tensor input_tensor = self.node->inputs[i];
         
         // Step 1: Get the local gradient (the partial derivative). --> For z = f(x, y), this would be dz/dx or dz/dy.
         Tensor input_grad = self.node->grad_fn(self, i);
