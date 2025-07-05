@@ -344,3 +344,26 @@ Tensor Tensor_reduce_dim(Tensor self, int dim, const char* operation) {
     
     return res;
 }
+
+Tensor Tensor_unsqueeze(Tensor self, int dim) {
+    int old_ndim = TensorShape_dim(self.shape);
+    cten_assert(dim >= 0 && dim <= old_ndim, "Unsqueeze dim out of bounds");
+
+    TensorShape new_shape = {0};
+    int old_idx = 0;
+    // insert a '1' at the 'dim' position in the new shape.
+    for (int i = 0; i < old_ndim + 1 && i < 4; i++) {
+        if (i == dim) {
+            new_shape[i] = 1;
+        } else {
+            if(old_idx < 4) {
+               new_shape[i] = self.shape[old_idx++];
+            }
+        }
+    }
+
+    Tensor res = self;
+    memcpy(res.shape, new_shape, sizeof(TensorShape));
+    
+    return res;
+}

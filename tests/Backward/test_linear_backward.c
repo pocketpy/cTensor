@@ -163,66 +163,65 @@ void test_linear_backward() {
         }
     }
 
-    // TODO: Tensor_sum and Tensor_mean backward is in working progress
-    // // Test Case 4: Chained operations with linear
-    // {
-    //     const char* tc_name = "Chained_operations_with_linear";
-    //     // Sub-test 1: Linear followed by sum
-    //     {
-    //         TensorShape input_shape = {2, 3};  // batch_size=2, input_features=3
-    //         TensorShape weight_shape = {3, 2};  // input_features=3, output_features=2
-    //         TensorShape bias_shape = {1, 2};    // output_features=2
+    // Test Case 4: Chained operations with linear
+    {
+        const char* tc_name = "Chained_operations_with_linear";
+        // Sub-test 1: Linear followed by sum
+        {
+            TensorShape input_shape = {2, 3};  // batch_size=2, input_features=3
+            TensorShape weight_shape = {3, 2};  // input_features=3, output_features=2
+            TensorShape bias_shape = {1, 2};    // output_features=2
             
-    //         float input_data[] = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f};
-    //         float weight_data[] = {0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f};
-    //         float bias_data[] = {0.1f, 0.2f};
+            float input_data[] = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f};
+            float weight_data[] = {0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f};
+            float bias_data[] = {0.1f, 0.2f};
             
-    //         // Expected gradients
-    //         float exp_grad_bias[] = {1.0f, 1.0f};  // For sum reduction
+            // Expected gradients
+            float exp_grad_bias[] = {2.0f, 2.0f};  // For sum reduction
             
-    //         Tensor input = create_test_tensor(input_shape, input_data, true);
-    //         Tensor weight = create_test_tensor(weight_shape, weight_data, true);
-    //         Tensor bias = create_test_tensor(bias_shape, bias_data, true);
+            Tensor input = create_test_tensor(input_shape, input_data, true);
+            Tensor weight = create_test_tensor(weight_shape, weight_data, true);
+            Tensor bias = create_test_tensor(bias_shape, bias_data, true);
             
-    //         Tensor output = nn_linear(input, weight, bias);
-    //         Tensor sum_output = Tensor_sum(output);
+            Tensor output = nn_linear(input, weight, bias);
+            Tensor sum_output = Tensor_sum(output);
             
-    //         Tensor_backward(sum_output, (Tensor){0});
+            Tensor_backward(sum_output, (Tensor){0});
             
-    //         Tensor expected_grad_bias = create_test_tensor(bias_shape, exp_grad_bias, false);
+            Tensor expected_grad_bias = create_test_tensor(bias_shape, exp_grad_bias, false);
 
-    //         // Focus on bias gradient
-    //         compare_tensors(&bias.node->grad, &expected_grad_bias, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
-    //     }
+            // Focus on bias gradient
+            compare_tensors(&bias.node->grad, &expected_grad_bias, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+        }
 
-    //     // Sub-test 2: Linear followed by mean
-    //     {
-    //         TensorShape input_shape = {2, 3};  // batch_size=2, input_features=3
-    //         TensorShape weight_shape = {3, 2};  // input_features=3, output_features=2
-    //         TensorShape bias_shape = {1, 2};    // output_features=2
+        // Sub-test 2: Linear followed by mean
+        {
+            TensorShape input_shape = {2, 3};  // batch_size=2, input_features=3
+            TensorShape weight_shape = {3, 2};  // input_features=3, output_features=2
+            TensorShape bias_shape = {1, 2};    // output_features=2
             
-    //         float input_data[] = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f};
-    //         float weight_data[] = {0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f};
-    //         float bias_data[] = {0.1f, 0.2f};
+            float input_data[] = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f};
+            float weight_data[] = {0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f};
+            float bias_data[] = {0.1f, 0.2f};
             
-    //         // Expected gradients
-    //         float exp_grad_bias[] = {0.25f, 0.25f};  // For mean reduction (1/4)
+            // Expected gradients
+            float exp_grad_bias[] = {0.5f, 0.5f};  // For mean reduction (1/2)
             
-    //         Tensor input = create_test_tensor(input_shape, input_data, true);
-    //         Tensor weight = create_test_tensor(weight_shape, weight_data, true);
-    //         Tensor bias = create_test_tensor(bias_shape, bias_data, true);
+            Tensor input = create_test_tensor(input_shape, input_data, true);
+            Tensor weight = create_test_tensor(weight_shape, weight_data, true);
+            Tensor bias = create_test_tensor(bias_shape, bias_data, true);
             
-    //         Tensor output = nn_linear(input, weight, bias);
-    //         Tensor mean_output = Tensor_mean(output);
+            Tensor output = nn_linear(input, weight, bias);
+            Tensor mean_output = Tensor_mean(output);
             
-    //         Tensor_backward(mean_output, (Tensor){0});
+            Tensor_backward(mean_output, (Tensor){0});
             
-    //         Tensor expected_grad_bias = create_test_tensor(bias_shape, exp_grad_bias, false);
+            Tensor expected_grad_bias = create_test_tensor(bias_shape, exp_grad_bias, false);
 
-    //         // Focus on bias gradient
-    //         compare_tensors(&bias.node->grad, &expected_grad_bias, op_name, tc_name, 2, TEST_FLOAT_TOLERANCE);
-    //     }
-    // }
+            // Focus on bias gradient
+            compare_tensors(&bias.node->grad, &expected_grad_bias, op_name, tc_name, 2, TEST_FLOAT_TOLERANCE);
+        }
+    }
 
     cten_free(pool_id);
 }

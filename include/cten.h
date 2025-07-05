@@ -135,3 +135,4 @@ bool cten_elemwise_broadcast(Tensor* a, Tensor* b);
 int load_iris_dataset(const float (**X)[4], const int** y);
 Tensor Tensor_reduce_dim(Tensor self, int dim, const char* operation);
 Tensor reduce_gradient_for_broadcasting(Tensor grad, TensorShape original_shape, TensorShape broadcasted_shape);
+Tensor Tensor_unsqueeze(Tensor self, int dim);
