@@ -10,6 +10,8 @@
 #define _CTEN_PICK(_1,_2,NAME,...) NAME
 #define Tensor_mean(...) _CTEN_PICK(__VA_ARGS__, Tensor_mean_dim, Tensor_mean_all)(__VA_ARGS__)
 #define Tensor_sum(...)  _CTEN_PICK(__VA_ARGS__, Tensor_sum_dim,  Tensor_sum_all )(__VA_ARGS__)
+#define Tensor_max(...)  _CTEN_PICK(__VA_ARGS__, Tensor_max_with_indices, Tensor_max_all)(__VA_ARGS__)
+#define Tensor_min(...)  _CTEN_PICK(__VA_ARGS__, Tensor_min_with_indices, Tensor_min_all)(__VA_ARGS__)
 
 typedef int TensorShape[4];
 typedef struct GradNode GradNode;
@@ -81,8 +83,19 @@ Tensor Tensor_mean_dim(Tensor self, int dim);
 Tensor Tensor_sum_all (Tensor self);
 Tensor Tensor_sum_dim (Tensor self, int dim);
 
+Tensor Tensor_max_all(Tensor self);
+Tensor Tensor_min_all(Tensor self);
+Tensor Tensor_max_dim(Tensor self, int dim);
+Tensor Tensor_min_dim(Tensor self, int dim);
+
 Tensor Tensor_max(Tensor self);
 Tensor Tensor_min(Tensor self);
+
+/* Helper functions for Tensor_max and Tensor_min */
+Tensor Tensor_max_all(Tensor self);
+Tensor Tensor_min_all(Tensor self);
+Tensor* Tensor_max_with_indices(Tensor self, int dim);
+Tensor* Tensor_min_with_indices(Tensor self, int dim);
 
 void Tensor_argmax(Tensor self, int* out);
 
