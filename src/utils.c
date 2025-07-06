@@ -16,6 +16,9 @@ bool va_arg_is_present(va_list args) {
 
 Tensor GradFn_mean(Tensor self, int i);
 Tensor GradFn_sum(Tensor self, int i);
+Tensor GradFn_max_all(Tensor self, int i);
+Tensor GradFn_min_all(Tensor self, int i);
+Tensor GradFn_reduce_dim(Tensor self, int i);
 
 Tensor Tensor_mean_all(Tensor self) {
     float total = 0.0f;
@@ -67,6 +70,155 @@ Tensor Tensor_sum_dim(Tensor self, int dim) {
     return res;
 }
 
+Tensor Tensor_max_all(Tensor self) {
+    bool requires_grad = !cten_is_eval() && (self.node != NULL);
+    Tensor res = Tensor_new((TensorShape){1, 0, 0, 0}, requires_grad);
+    
+    if (self.data->numel == 0) cten_assert(false, "max on empty tensor");
+    float max_val = self.data->flex[0];
+    for (int i = 1; i < self.data->numel; i++) {
+        if (self.data->flex[i] > max_val) {
+            max_val = self.data->flex[i];
+        }
+    }
+    res.data->flex[0] = max_val;
+    
+    if (requires_grad) {
+        res.node->grad_fn = GradFn_max_all;
+        res.node->inputs[0] = self;
+        res.node->n_inputs = 1;
+        res.node->name = "MaxAll";
+    }
+    return res;
+}
+
+TensorMaxMinResult Tensor_max_dim(Tensor self, int dim) {
+    int ndim = TensorShape_dim(self.shape);
+    dim = TensorShape_asdim(self.shape, dim);
+
+    TensorShape out_shape = {0};
+    int out_shape_len = 0;
+    for (int i = 0; i < ndim; i++) {
+        if (i != dim) out_shape[out_shape_len++] = self.shape[i];
+    }
+    
+    bool requires_grad = !cten_is_eval() && (self.node != NULL);
+    Tensor values = Tensor_new(out_shape, requires_grad);
+    Tensor indices = Tensor_new(out_shape, false);
+
+    int dim_size = self.shape[dim];
+    for (int i = 0; i < values.data->numel; ++i) {
+        float best_val = -INFINITY;
+        int best_idx = -1;
+
+        for (int j = 0; j < dim_size; ++j) {
+            int in_linear_idx = 0, stride = 1, out_i_rem = i, out_idx_tracker = out_shape_len - 1;
+            for (int k = ndim - 1; k >= 0; --k) {
+                int current_dim_idx;
+                if (k == dim) {
+                    current_dim_idx = j;
+                } else {
+                    int dim_k = out_shape[out_idx_tracker--];
+                    current_dim_idx = out_i_rem % dim_k;
+                    out_i_rem /= dim_k;
+                }
+                in_linear_idx += current_dim_idx * stride;
+                stride *= self.shape[k];
+            }
+            float current_val = self.data->flex[in_linear_idx];
+            if (current_val > best_val) { best_val = current_val; best_idx = j; }
+        }
+        values.data->flex[i] = best_val;
+        indices.data->flex[i] = (float)best_idx;
+    }
+
+    if (requires_grad) {
+        values.node->grad_fn = GradFn_reduce_dim;
+        values.node->inputs[0] = self;
+        values.node->inputs[1] = indices;
+        values.node->n_inputs = 2;
+        values.node->name = "MaxDim";
+    }
+    
+    TensorMaxMinResult result = {values, indices};
+    return result;
+}
+
+Tensor Tensor_min_all(Tensor self) {
+    bool requires_grad = !cten_is_eval() && (self.node != NULL);
+    Tensor res = Tensor_new((TensorShape){1, 0, 0, 0}, requires_grad);
+
+    if (self.data->numel == 0) cten_assert(false, "min on empty tensor");
+    float min_val = self.data->flex[0];
+    for (int i = 1; i < self.data->numel; i++) {
+        if (self.data->flex[i] < min_val) {
+            min_val = self.data->flex[i];
+        }
+    }
+    res.data->flex[0] = min_val;
+
+    if (requires_grad) {
+        res.node->grad_fn = GradFn_min_all;
+        res.node->inputs[0] = self;
+        res.node->n_inputs = 1;
+        res.node->name = "MinAll";
+    }
+    return res;
+}
+
+TensorMaxMinResult Tensor_min_dim(Tensor self, int dim) {
+    int ndim = TensorShape_dim(self.shape);
+    dim = TensorShape_asdim(self.shape, dim);
+
+    TensorShape out_shape = {0};
+    int out_shape_len = 0;
+    for (int i = 0; i < ndim; i++) {
+        if (i != dim) out_shape[out_shape_len++] = self.shape[i];
+    }
+    
+    bool requires_grad = !cten_is_eval() && (self.node != NULL);
+    Tensor values = Tensor_new(out_shape, requires_grad);
+    Tensor indices = Tensor_new(out_shape, false);
+
+    int dim_size = self.shape[dim];
+    for (int i = 0; i < values.data->numel; ++i) {
+        float best_val = INFINITY;
+        int best_idx = -1;
+
+        for (int j = 0; j < dim_size; ++j) {
+            int in_linear_idx = 0, stride = 1, out_i_rem = i, out_idx_tracker = out_shape_len - 1;
+            for (int k = ndim - 1; k >= 0; --k) {
+                int current_dim_idx;
+                if (k == dim) {
+                    current_dim_idx = j;
+                } else {
+                    int dim_k = out_shape[out_idx_tracker--];
+                    current_dim_idx = out_i_rem % dim_k;
+                    out_i_rem /= dim_k;
+                }
+                in_linear_idx += current_dim_idx * stride;
+                stride *= self.shape[k];
+            }
+            float current_val = self.data->flex[in_linear_idx];
+            if (current_val < best_val) { best_val = current_val; best_idx = j; }
+        }
+        values.data->flex[i] = best_val;
+        indices.data->flex[i] = (float)best_idx;
+    }
+    
+    if (requires_grad) {
+        values.node->grad_fn = GradFn_reduce_dim;
+        values.node->inputs[0] = self;
+        values.node->inputs[1] = indices;
+        values.node->n_inputs = 2;
+        values.node->name = "MinDim";
+    }
+    
+    TensorMaxMinResult result = {values, indices};
+    return result;
+}
+
+
 void cten_assert(bool cond, const char* fmt, ...) {
     if(!cond) {
         va_list args;
@@ -90,7 +242,6 @@ void cten_assert_shape(const char* title, TensorShape a, TensorShape b) {
 void cten_assert_dim(const char* title, int a, int b) {
     cten_assert(a == b, "%s: %d != %d", title, a, b);
 }
-
 
 bool cten_elemwise_broadcast(Tensor* a, Tensor* b) {
     Tensor orig_a = *a;
@@ -365,5 +516,75 @@ Tensor Tensor_unsqueeze(Tensor self, int dim) {
     Tensor res = self;
     memcpy(res.shape, new_shape, sizeof(TensorShape));
     
+    return res;
+}
+
+Tensor Tensor_reduce_with_indices(Tensor self, int dim, const char* operation, int* indices_out) {
+    int ndim = TensorShape_dim(self.shape);
+    dim = TensorShape_asdim(self.shape, dim);
+
+    TensorShape out_shape = {0};
+    int out_idx = 0;
+    for (int i = 0; i < ndim; i++) {
+        if (i != dim) {
+            out_shape[out_idx++] = self.shape[i];
+        }
+    }
+
+    Tensor res = Tensor_new(out_shape, self.node != NULL);
+    int dim_size = self.shape[dim];
+    int total_out_elements = res.data->numel;
+
+    for (int i = 0; i < total_out_elements; ++i) {
+        float best_val;
+        int best_idx = -1;
+
+        if (strcmp(operation, "max") == 0) {
+            best_val = -INFINITY;
+        } else { // "min"
+            best_val = INFINITY;
+        }
+
+        // This loop iterates 'dim_size' times for each output element
+        for (int j = 0; j < dim_size; ++j) {
+            // Calculate the linear index in the source tensor
+            int in_linear_idx = 0;
+            int stride = 1;
+            int out_i_rem = i;
+
+            // This logic maps an output index back to an input index
+            for (int k = ndim - 1; k >= 0; --k) {
+                int current_dim_idx;
+                if (k == dim) {
+                    current_dim_idx = j;
+                } else {
+                    int out_shape_k = out_shape[--out_idx];
+                    current_dim_idx = out_i_rem % out_shape_k;
+                    out_i_rem /= out_shape_k;
+                }
+                in_linear_idx += current_dim_idx * stride;
+                stride *= self.shape[k];
+            }
+            // Reset out_idx for next iteration of outer loop
+            out_idx = TensorShape_dim(out_shape);
+
+            float current_val = self.data->flex[in_linear_idx];
+            if (strcmp(operation, "max") == 0) {
+                if (current_val > best_val) {
+                    best_val = current_val;
+                    best_idx = j;
+                }
+            } else { // "min"
+                if (current_val < best_val) {
+                    best_val = current_val;
+                    best_idx = j;
+                }
+            }
+        }
+        res.data->flex[i] = best_val;
+        if (indices_out != NULL) {
+            indices_out[i] = best_idx;
+        }
+    }
     return res;
 }
