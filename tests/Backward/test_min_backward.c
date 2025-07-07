@@ -93,5 +93,64 @@ void test_min_backward() {
         compare_tensors(&y.node->grad, &expected_grad_y_tensor, op_name, tc_name, 2, TEST_FLOAT_TOLERANCE);
     }
 
+    // Test Case 5: Gradient of min over a dimension (dim=1)
+    {
+        const char* tc_name = "min_matrix_dim1_backward";
+        TensorShape m_shape = {2, 3};
+        float data[] = {5.0f, 7.0f, -1.0f, -8.0f, 2.0f, 6.0f};
+        float exp_grad[] = {0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f};
+
+        Tensor t = create_test_tensor(m_shape, data, true);
+        TensorMaxMinResult min_res = Tensor_min(t, 1);
+        Tensor loss = Tensor_sum(min_res.values);
+        
+        Tensor grad_dummy = {0};
+        Tensor_backward(loss, grad_dummy);
+        
+        Tensor expected_grad = create_test_tensor(m_shape, exp_grad, false);
+        compare_tensors(&t.node->grad, &expected_grad, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+    }
+
+    // Test Case 6: Gradient of min over a dimension (dim=0)
+    {
+        const char* tc_name = "min_matrix_dim0_backward";
+        TensorShape m_shape = {3, 2};
+        float data[] = {5.0f, 2.0f, -1.0f, 9.0f, 7.0f, -8.0f};
+        float exp_grad[] = {0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f};
+
+        Tensor t = create_test_tensor(m_shape, data, true);
+        TensorMaxMinResult min_res = Tensor_min(t, 0);
+        Tensor loss = Tensor_sum(min_res.values);
+        
+        Tensor grad_dummy = {0};
+        Tensor_backward(loss, grad_dummy);
+        
+        Tensor expected_grad = create_test_tensor(m_shape, exp_grad, false);
+        compare_tensors(&t.node->grad, &expected_grad, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+    }
+
+    // Test Case 7: Gradient of min over a dimension with duplicate minimums
+    {
+        const char* tc_name = "min_matrix_dim_duplicate_backward";
+        TensorShape m_shape = {2, 4};
+        float data[] = {5.0f, -8.0f, 7.0f, -8.0f, 2.0f, 6.0f, 2.0f, 9.0f};
+
+        // Min along dim=1 will select the first occurrence of the minimum.
+        // For row 0, min is -8.0 at index 1.
+        // For row 1, min is  2.0 at index 0.
+        // The gradient only flows back to these specific indices.
+        float exp_grad[] = {0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f};
+
+        Tensor t = create_test_tensor(m_shape, data, true);
+        TensorMaxMinResult min_res = Tensor_min(t, 1);
+        Tensor loss = Tensor_sum(min_res.values);
+
+        Tensor grad_dummy = {0};
+        Tensor_backward(loss, grad_dummy);
+        
+        Tensor expected_grad = create_test_tensor(m_shape, exp_grad, false);
+        compare_tensors(&t.node->grad, &expected_grad, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+    }
+    
     cten_free(pool_id);
 }
