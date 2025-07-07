@@ -93,5 +93,62 @@ void test_max_operator() {
         compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
 
+    // Test Case 7: Max over a specific dimension of a matrix (dim=0) (here dim=-2 is used to represent dim=0)
+    {
+        const char* tc_name = "max_matrix_dim_0";
+        TensorShape m_shape = {2, 3};
+        float d1[] = {5.0f, 9.0f, 7.0f, 2.0f, 1.0f, 8.0f};
+        float exp_d[] = {5.0f, 9.0f, 8.0f};
+        float exp_idx[] = {0.0f, 0.0f, 1.0f};
+        TensorShape exp_shape = {3};
+
+        Tensor t1 = create_test_tensor(m_shape, d1, false);
+        Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
+        Tensor expected_indices = create_test_tensor(exp_shape, exp_idx, false);
+        
+        TensorMaxMinResult actual = Tensor_max(t1, -2);
+
+        compare_tensors(&actual.values, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+        compare_tensors(&actual.indices, &expected_indices, op_name, tc_name, 2, TEST_FLOAT_TOLERANCE);
+    }
+
+    // Test Case 8: Max over a specific dimension of a matrix (dim=1)
+    {
+        const char* tc_name = "max_matrix_dim_1";
+        TensorShape m_shape = {2, 3};
+        float d1[] = {5.0f, 9.0f, 7.0f, 2.0f, 1.0f, 8.0f};
+        float exp_d[] = {9.0f, 8.0f};
+        float exp_idx[] = {1.0f, 2.0f};
+        TensorShape exp_shape = {2};
+
+        Tensor t1 = create_test_tensor(m_shape, d1, false);
+        Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
+        Tensor expected_indices = create_test_tensor(exp_shape, exp_idx, false);
+        
+        TensorMaxMinResult actual = Tensor_max(t1, 1);
+
+        compare_tensors(&actual.values, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+        compare_tensors(&actual.indices, &expected_indices, op_name, tc_name, 2, TEST_FLOAT_TOLERANCE);
+    }
+
+    // Test Case 9: Max over a dimension with duplicate max values (should return first index)
+    {
+        const char* tc_name = "max_matrix_dim_1_duplicate";
+        TensorShape m_shape = {2, 4};
+        float d1[] = {1.0f, 9.0f, 5.0f, 9.0f, 8.0f, 8.0f, 2.0f, 7.0f};
+        float exp_d[] = {9.0f, 8.0f};
+        float exp_idx[] = {1.0f, 0.0f};
+        TensorShape exp_shape = {2};
+
+        Tensor t1 = create_test_tensor(m_shape, d1, false);
+        Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
+        Tensor expected_indices = create_test_tensor(exp_shape, exp_idx, false);
+        
+        TensorMaxMinResult actual = Tensor_max(t1, -1);
+        
+        compare_tensors(&actual.values, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+        compare_tensors(&actual.indices, &expected_indices, op_name, tc_name, 2, TEST_FLOAT_TOLERANCE);
+    }
+
     cten_free(pool_id);
 }
