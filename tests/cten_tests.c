@@ -25,6 +25,8 @@ void test_pow_operator();
 void test_reciprocal_operator();
 void test_square_operator();
 void test_div_operator();
+void test_max_operator();
+void test_min_operator();
 
 // Backward tests
 void test_add_backward();
@@ -33,6 +35,8 @@ void test_matmul_backward();
 void test_sub_backward();
 void test_relu_backward();
 void test_linear_backward();
+void test_min_backward();
+void test_max_backward();
 void test_sum_backward();
 void test_mean_backward();
 
@@ -98,6 +102,12 @@ int main() {
     test_div_operator();
     printf("Div operator tests finished.\n");
 
+    test_max_operator();
+    printf("Max operator tests finished.\n");
+
+    test_min_operator();
+    printf("Min operator tests finished.\n");
+
     // Backward tests
     test_add_backward();
     printf("Add backward tests finished.\n");
@@ -116,6 +126,12 @@ int main() {
     
     test_linear_backward();
     printf("Linear backward tests finished.\n");
+
+    test_min_backward();
+    printf("Min backward tests finished.\n");
+
+    test_max_backward();
+    printf("Max backward tests finished.\n");
 
     test_sum_backward();
     printf("Sum backward tests finished.\n");

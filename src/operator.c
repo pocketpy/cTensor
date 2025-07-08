@@ -14,6 +14,12 @@
 #ifdef Tensor_sum
 #undef Tensor_sum
 #endif
+#ifdef Tensor_max
+#undef Tensor_max
+#endif
+#ifdef Tensor_min
+#undef Tensor_min
+#endif
 
 static Tensor GradFn_add(Tensor self, int i) {
     // f(x, y) = x + y; f'(x) = 1; f'(y) = 1
@@ -450,5 +456,131 @@ Tensor Tensor_sub(Tensor self, Tensor other) {
         res.node->n_inputs = 2;
         res.node->name = "Sub";
     }
+    return res;
+}
+
+Tensor GradFn_reduce_dim(Tensor self, int i) {
+    Tensor input = self.node->inputs[0];
+    Tensor indices_tensor = self.node->inputs[1];
+    Tensor grad_out = Tensor_zeros(input.shape, false);
+
+    int out_numel = indices_tensor.data->numel;
+    int ndim = TensorShape_dim(input.shape);
+    int reduced_dim = -1;
+
+    for(int d = 0, out_d = 0; d < ndim; d++){
+        if(out_d >= TensorShape_dim(self.shape) || input.shape[d] != self.shape[out_d]){
+            reduced_dim = d;
+            break;
+        }
+        out_d++;
+    }
+    cten_assert(reduced_dim != -1, "Could not determine reduced dimension in gradient calculation");
+    
+    for (int j = 0; j < out_numel; j++) {
+        int index_along_dim = (int)indices_tensor.data->flex[j];
+        
+        int linear_idx = 0, stride = 1, out_j_rem = j, out_shape_idx = TensorShape_dim(self.shape) - 1;
+        for (int k = ndim - 1; k >= 0; --k) {
+            int current_dim_idx;
+            if (k == reduced_dim) {
+                current_dim_idx = index_along_dim;
+            } else {
+                int dim_k = self.shape[out_shape_idx--];
+                current_dim_idx = out_j_rem % dim_k;
+                out_j_rem /= dim_k;
+            }
+            linear_idx += current_dim_idx * stride;
+            stride *= input.shape[k];
+        }
+        grad_out.data->flex[linear_idx] = 1.0f;
+    }
+    return grad_out;
+}
+
+Tensor GradFn_max_all(Tensor self, int i) {
+    Tensor input = self.node->inputs[i];
+    Tensor res = Tensor_zeros(input.shape, false);
+    float max_val = self.data->flex[0];
+    
+    int max_count = 0;
+    for (int j = 0; j < input.data->numel; j++) {
+        if (input.data->flex[j] == max_val) max_count++;
+    }
+    
+    float grad_value = (max_count > 0) ? 1.0f / max_count : 0.0f;
+    for (int j = 0; j < input.data->numel; j++) {
+        if (input.data->flex[j] == max_val) res.data->flex[j] = grad_value;
+    }
+    return res;
+}
+
+Tensor Tensor_max(Tensor self) {
+    if (self.data->numel == 0){
+        cten_assert(false, "Error: max() on an empty tensor.");
+    }
+    bool requires_grad = !cten_is_eval() && (self.node != NULL);
+    Tensor res = Tensor_new((TensorShape){1, 0, 0, 0}, requires_grad);
+    
+    float max_val = self.data->flex[0];
+    for (int i = 1; i < self.data->numel; i++) {
+        if (self.data->flex[i] > max_val) {
+            max_val = self.data->flex[i];
+        }
+    }
+    
+    res.data->flex[0] = max_val;
+    
+    if (requires_grad) {
+        res.node->grad_fn = GradFn_max_all;
+        res.node->inputs[0] = self;
+        res.node->n_inputs = 1;
+        res.node->name = "MaxAll";
+    }
+    
+    return res;
+}
+
+Tensor GradFn_min_all(Tensor self, int i) {
+    Tensor input = self.node->inputs[i];
+    Tensor res = Tensor_zeros(input.shape, false);
+    float min_val = self.data->flex[0];
+    
+    int min_count = 0;
+    for (int j = 0; j < input.data->numel; j++) {
+        if (input.data->flex[j] == min_val) min_count++;
+    }
+    
+    float grad_value = (min_count > 0) ? 1.0f / min_count : 0.0f;
+    for (int j = 0; j < input.data->numel; j++) {
+        if (input.data->flex[j] == min_val) res.data->flex[j] = grad_value;
+    }
+    return res;
+}
+
+Tensor Tensor_min(Tensor self) {
+    if (self.data->numel == 0){
+        cten_assert(false, "Error: min() on an empty tensor.");
+    }
+    bool requires_grad = !cten_is_eval() && (self.node != NULL);
+    Tensor res = Tensor_new((TensorShape){1, 0, 0, 0}, requires_grad);
+    
+    // Find minimum value
+    float min_val = self.data->flex[0];
+    for (int i = 1; i < self.data->numel; i++) {
+        if (self.data->flex[i] < min_val) {
+            min_val = self.data->flex[i];
+        }
+    }
+    
+    res.data->flex[0] = min_val;
+    
+    if (requires_grad) {
+        res.node->grad_fn = GradFn_min_all;
+        res.node->inputs[0] = self;
+        res.node->n_inputs = 1;
+        res.node->name = "MinAll";
+    }
+    
     return res;
 }

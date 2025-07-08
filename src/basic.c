@@ -140,11 +140,10 @@ void Tensor_backward(Tensor self, Tensor grad) {
     }
 
     for(int i = 0; i < self.node->n_inputs; i++) {
-        if (self.node->inputs[i].data == NULL) {
+        Tensor input_tensor = self.node->inputs[i];
+        if (input_tensor.node == NULL) {
             continue;
         }
-        
-        Tensor input_tensor = self.node->inputs[i];
         
         // Step 1: Get the local gradient (the partial derivative). --> For z = f(x, y), this would be dz/dx or dz/dy.
         Tensor input_grad = self.node->grad_fn(self, i);
@@ -154,7 +153,7 @@ void Tensor_backward(Tensor self, Tensor grad) {
         int input_ndim = TensorShape_dim(input_tensor.shape);
         int grad_ndim = TensorShape_dim(grad.shape);
         
-        if ((strcmp(self.node->name, "Sum") == 0 || strcmp(self.node->name, "Mean") == 0) && input_ndim > grad_ndim) {
+        if ((strcmp(self.node->name, "Sum") == 0 || strcmp(self.node->name, "Mean") == 0 || strcmp(self.node->name, "MaxDim") == 0 || strcmp(self.node->name, "MinDim") == 0) && input_ndim > grad_ndim) {
             // Find the dimension that was reduced. We assume the non-reduced dimensions match in size.
             int unsqueeze_dim = -1;
             int grad_idx = 0;
