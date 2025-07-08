@@ -285,41 +285,40 @@ static Tensor GradFn_sub(Tensor self, int i) {
 
 
 static Tensor GradFn_div(Tensor self, int i) {
-    // f(x, y) = x / y; f'(x) = 1/y; f'(y) = -x/y²
-    if (i == 0) {
-        // Gradient w.r.t. x: 1/y
-        Tensor y = self.node->inputs[1];
-        Tensor res = Tensor_new(y.shape, false);
+    Tensor res = Tensor_new(self.shape, false);
+    Tensor x = self.node->inputs[0];
+    Tensor y = self.node->inputs[1];
+
+    if (i == 0) { // Gradient w.r.t. x: 1/y
         for (int j = 0; j < res.data->numel; j++) {
-            res.data->flex[j] = 1.0f / y.data->flex[j];
+            res.data->flex[j] = 1.0f / y.data->flex[j % y.data->numel];
         }
-        return res;
-    } else {
-        // Gradient w.r.t. y: -x/y²
-        Tensor x = self.node->inputs[0];
-        Tensor y = self.node->inputs[1];
-        Tensor res = Tensor_new(y.shape, false);
+    } else { // Gradient w.r.t. y: -x/y²
         for (int j = 0; j < res.data->numel; j++) {
-            float y_val = y.data->flex[j];
-            res.data->flex[j] = -x.data->flex[j] / (y_val * y_val);
+            float x_val = x.data->flex[j % x.data->numel];
+            float y_val = y.data->flex[j % y.data->numel];
+            res.data->flex[j] = -x_val / (y_val * y_val);
         }
-        return res;
     }
+    return res;
 }
 
 Tensor Tensor_div(Tensor self, Tensor other) {
+    Tensor orig_self = self;
+    Tensor orig_other = other;
+
     if (!cten_elemwise_broadcast(&self, &other)) {
-        cten_assert_shape("Tensor_div() cannot broadcast", self.shape, other.shape);
+        cten_assert_shape("Tensor_div() cannot broadcast", orig_self.shape, orig_other.shape);
     }
-    bool requires_grad = !cten_is_eval() && (self.node != NULL || other.node != NULL);
+    bool requires_grad = !cten_is_eval() && (orig_self.node != NULL || orig_other.node != NULL);
     Tensor res = Tensor_new(self.shape, requires_grad);
     for (int i = 0; i < self.data->numel; i++) {
         res.data->flex[i] = self.data->flex[i] / other.data->flex[i];
     }
     if (requires_grad) {
         res.node->grad_fn = GradFn_div;
-        res.node->inputs[0] = self;
-        res.node->inputs[1] = other;
+        res.node->inputs[0] = orig_self;
+        res.node->inputs[1] = orig_other;
         res.node->n_inputs = 2;
         res.node->name = "Div";
     }
@@ -379,29 +378,27 @@ Tensor Tensor_reciprocal(Tensor self) {
 }
 
 static Tensor GradFn_pow(Tensor self, int i) {
-    // f(x, y) = x^y; f'(x) = y*x^(y-1); f'(y) = x^y * ln(x)
+    // f(x, y) = x^y;  ∂f/∂x = y*x^(y-1);  ∂f/∂y = x^y * ln(x)
+    Tensor res = Tensor_new(self.shape, false);
     Tensor x = self.node->inputs[0];
     Tensor y = self.node->inputs[1];
     
     if (i == 0) {
         // Gradient w.r.t. x: y*x^(y-1)
-        Tensor res = Tensor_new(x.shape, false);
         for (int j = 0; j < res.data->numel; j++) {
-            float x_val = x.data->flex[j];
-            float y_val = y.data->flex[j];
+            float x_val = x.data->flex[j % x.data->numel];
+            float y_val = y.data->flex[j % y.data->numel];
             if (x_val == 0.0f && y_val > 1.0f) {
                 res.data->flex[j] = 0.0f;
             } else {
                 res.data->flex[j] = y_val * powf(x_val, y_val - 1.0f);
             }
         }
-        return res;
     } else {
         // Gradient w.r.t. y: x^y * ln(x)
-        Tensor res = Tensor_new(y.shape, false);
         for (int j = 0; j < res.data->numel; j++) {
-            float x_val = x.data->flex[j];
-            float y_val = y.data->flex[j];
+            float x_val = x.data->flex[j % x.data->numel];
+            float self_val = self.data->flex[j];
             if (x_val <= 0.0f) {
                 // Gradient of x^y w.r.t y is undefined or complex for x <= 0.
                 // Returning 0 for simplicity, but this might need specific handling depending on use case.
@@ -412,26 +409,28 @@ static Tensor GradFn_pow(Tensor self, int i) {
                 // A robust solution might involve checking domain or returning NaN.
                 res.data->flex[j] = 0.0f; 
             } else {
-                res.data->flex[j] = powf(x_val, y_val) * logf(x_val);
+                res.data->flex[j] = self_val * logf(x_val);
             }
         }
-        return res;
     }
+    return res;
 }
 
 Tensor Tensor_pow(Tensor self, Tensor other) {
+    Tensor orig_self = self;
+    Tensor orig_other = other;
     if (!cten_elemwise_broadcast(&self, &other)) {
-        cten_assert_shape("Tensor_pow() cannot broadcast", self.shape, other.shape);
+        cten_assert_shape("Tensor_pow() cannot broadcast", orig_self.shape, orig_other.shape);
     }
-    bool requires_grad = !cten_is_eval() && (self.node != NULL || other.node != NULL);
+    bool requires_grad = !cten_is_eval() && (orig_self.node != NULL || orig_other.node != NULL);
     Tensor res = Tensor_new(self.shape, requires_grad);
     for (int i = 0; i < self.data->numel; i++) {
         res.data->flex[i] = powf(self.data->flex[i], other.data->flex[i]);
     }
     if (requires_grad) {
         res.node->grad_fn = GradFn_pow;
-        res.node->inputs[0] = self;
-        res.node->inputs[1] = other;
+        res.node->inputs[0] = orig_self;
+        res.node->inputs[1] = orig_other;
         res.node->n_inputs = 2;
         res.node->name = "Pow";
     }
