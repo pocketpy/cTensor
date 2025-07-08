@@ -39,6 +39,8 @@ void test_min_backward();
 void test_max_backward();
 void test_sum_backward();
 void test_mean_backward();
+void test_div_backward();
+void test_pow_backward();
 
 int main() {
     printf("Starting cTensor Test Suite on %s...\n", PLATFORM_NAME);
@@ -139,6 +141,11 @@ int main() {
     test_mean_backward();
     printf("Mean backward tests finished.\n");
     
+    test_div_backward();
+    printf("Div backward tests finished.\n");
+    
+    test_pow_backward();
+    printf("Pow backward tests finished.\n");
     // other tests
     
     csv_reporter_close();
