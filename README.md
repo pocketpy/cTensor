@@ -18,49 +18,51 @@ This project is under active development. The prototype demonstrates basic tenso
 - **Automatic Differentiation Framework:** Basic gradient computation infrastructure
 - **Dynamic Compute Graph:** Groundwork for efficient computation flow
 - **Basic Tensor Operations:** 
-  - Basic arithmetic: add, subtract, multiply, matrix multiplication
-  - Reduction: sum, mean
-  - Element access and manipulation
-- **Basic Neural Network Components:**
+  - Basic arithmetic: add, subtract, multiply, divide, power
+  - Element-wise operations: square, reciprocal
+  - Matrix multiplication
+  - Tensor transpose
+- **Reduction Operations:**
+  - Sum (all elements or along dimension)
+  - Mean (all elements or along dimension)
+  - Max (all elements or along dimension with indices)
+  - Min (all elements or along dimension with indices)
+  - Argmax function
+- **Neural Network Components:**
   - Linear layer
-  - ReLU activation
-  - Softmax function
+  - Activation functions: ReLU, Sigmoid, Softmax
   - Cross-entropy loss
-  - Basic weight initialization (Glorot)
-- **SGD Optimizer:** Basic stochastic gradient descent framework
+  - Softmax cross-entropy (combined operation)
+  - Glorot weight initialization
+- **SGD Optimizer:** Stochastic gradient descent implementation
 - **Memory Management:** Pool-based memory allocation system
+- **Tensor Utilities:**
+  - Element access and manipulation
+  - Tensor detachment
+  - Tensor unsqueeze operation
+  - Broadcasting support for element-wise operations
+  - Dataset normalization and shuffling utilities
 
 ### Development Roadmap
 
 The following features are planned for implementation:
 
 #### Math Operators
-- **Forward Operators:**
-  - Division (Tensor_div, Tensor_divf)
-  - Power (Tensor_pow, Tensor_powf)
-  - Square (Tensor_square)
-  - Reciprocal (Tensor_reciprocal)
-- **Backward Operators:**
-  - Complete gradient functions for all element-wise operations
-  - Enhanced broadcasting support
+- **Unary Operations:**
+  - Negative (Tensor_neg)
+  - Absolute value (Tensor_abs)
+- **Mathematical Functions:**
+  - Logarithm (nn_log)
+  - Exponential (nn_exp)
+  - Trigonometric functions (nn_sin, nn_cos, nn_tan)
 
-#### Reduction Operations
-- **Forward and Backward:**
-  - Max (Tensor_max)
-  - Min (Tensor_min)
-  - Enhanced broadcasting and dimension-specific reductions
-
-#### Broadcasting System
-- Stride-based access for optimized tensor operations
-- Full-featured broadcasting mechanism for all tensor shapes
-- Optimization for memory efficiency and computational performance
+#### Broadcasting System Enhancements
+- Broadcasting for Matmul
 
 #### Activation Functions
 - ELU (Exponential Linear Unit)
 - SELU (Scaled Exponential Linear Unit)
-- Logarithm (nn_log)
-- Exponential (nn_exp)
-- Trigonometric functions (nn_sin, nn_cos, nn_tan)
+- Additional activation functions
 
 #### Loss Functions
 - Mean Squared Error (MSE)
@@ -78,8 +80,6 @@ The following features are planned for implementation:
 #### Performance Enhancements
 - Profiling and benchmarking infrastructure
 - Loop unrolling and SIMD optimizations where applicable
-- Memory usage optimization
-- Enhanced memory pooling strategies
 
 ## Getting Started
 
@@ -177,29 +177,118 @@ int main() {
 ### Tensor Creation and Management
 
 ```c
+// Basic tensor creation
 Tensor Tensor_new(TensorShape shape, bool requires_grad);
 Tensor Tensor_zeros(TensorShape shape, bool requires_grad);
 Tensor Tensor_ones(TensorShape shape, bool requires_grad);
+
+// Tensor manipulation
+Tensor Tensor_transpose(Tensor self);
+Tensor Tensor_detach(Tensor self);
+Tensor Tensor_unsqueeze(Tensor self, int dim);
+
+// Element access
+float Tensor_get(Tensor self, int i, int j, int k, int l);
+void Tensor_set(Tensor self, int i, int j, int k, int l, float value);
+
+// Backpropagation
+void Tensor_backward(Tensor self, Tensor grad);
 ```
 
 ### Basic Operations
 
 ```c
+// Element-wise operations with tensors
 Tensor Tensor_add(Tensor self, Tensor other);
 Tensor Tensor_sub(Tensor self, Tensor other);
 Tensor Tensor_mul(Tensor self, Tensor other);
 Tensor Tensor_div(Tensor self, Tensor other);
+Tensor Tensor_pow(Tensor self, Tensor other);
+
+// Element-wise operations with scalars
+Tensor Tensor_addf(Tensor self, float other);
+Tensor Tensor_subf(Tensor self, float other);
+Tensor Tensor_mulf(Tensor self, float other);
+Tensor Tensor_divf(Tensor self, float other);
+Tensor Tensor_powf(Tensor self, float other);
+
+// Matrix operations
 Tensor Tensor_matmul(Tensor self, Tensor other);
+
+// Unary operations
+Tensor Tensor_square(Tensor self);
+Tensor Tensor_reciprocal(Tensor self);
+```
+
+### Reduction Operations
+
+```c
+// Reduction operations (with macro dispatch)
+Tensor Tensor_sum(Tensor self);           // Sum all elements
+Tensor Tensor_sum(Tensor self, int dim);  // Sum along dimension
+
+Tensor Tensor_mean(Tensor self);          // Mean of all elements
+Tensor Tensor_mean(Tensor self, int dim); // Mean along dimension
+
+Tensor Tensor_max(Tensor self);           // Max of all elements
+TensorMaxMinResult Tensor_max(Tensor self, int dim); // Max along dimension
+
+Tensor Tensor_min(Tensor self);           // Min of all elements
+TensorMaxMinResult Tensor_min(Tensor self, int dim); // Min along dimension
+
+// Argmax operation
+void Tensor_argmax(Tensor self, int* out);
 ```
 
 ### Neural Network Functions
 
 ```c
+// Neural network layers
 Tensor nn_linear(Tensor input, Tensor weight, Tensor bias);
+
+// Activation functions
 Tensor nn_relu(Tensor input);
 Tensor nn_sigmoid(Tensor input);
+Tensor nn_tanh(Tensor input);
 Tensor nn_softmax(Tensor input);
+
+// Loss functions
 Tensor nn_crossentropy(Tensor y_true, Tensor y_pred);
+Tensor nn_softmax_crossentropy(Tensor y_true, Tensor logits);
+
+// Weight initialization
+Tensor Glorot_init(TensorShape shape, bool requires_grad);
+```
+
+### Optimizer
+
+```c
+// SGD Optimizer
+optim_sgd* optim_sgd_new(int n_params, Tensor* params);
+void optim_sgd_config(optim_sgd* self, float lr, float momentum);
+void optim_sgd_zerograd(optim_sgd* self);
+void optim_sgd_step(optim_sgd* self);
+void optim_sgd_delete(optim_sgd* self);
+```
+
+### Utility Functions
+
+```c
+// TensorShape utilities
+int TensorShape_numel(TensorShape shape);
+int TensorShape_dim(TensorShape shape);
+int TensorShape_asdim(TensorShape shape, int dim);
+int TensorShape_tostring(TensorShape shape, char* buf, int size);
+
+// Dataset utilities
+int load_iris_dataset(const float (**X)[4], const int** y);
+void Tensor_normalize_dataset(const float (*X)[4], float (*X_norm)[4], int n_samples, int n_train_samples, int n_features);
+void Tensor_shuffle_dataset(const float (*X)[4], const int *y, float (*X_shuffled)[4], int *y_shuffled, int n_samples, int n_features);
+
+// Evaluation mode
+void cten_begin_eval();
+bool cten_is_eval();
+void cten_end_eval();
 ```
 
 ## Memory Management
@@ -231,14 +320,11 @@ cTensor/
 
 Contributions to cTensor are welcome! The project needs implementation of various components as outlined in the Development Roadmap section. Key areas for contribution include:
 
-1. **Math Operators:** Implementing missing math operations (div, pow, square, reciprocal) with both forward and backward passes
-2. **Reduction Operations:** Adding max/min reduction operations with proper gradient handling
-3. **Broadcasting System:** Enhancing the tensor broadcasting mechanism for better flexibility and performance
-4. **Activation Functions:** Implementing additional activation functions (ELU, SELU, log, exp, trigonometric functions)
-5. **Loss Functions:** Adding more loss functions (MSE, MAE, Huber) with gradient support
-6. **Advanced Optimizers:** Creating additional optimizers beyond SGD (Adam, RMSProp, AdaGrad)
-7. **Performance Optimization:** Enhancing computational efficiency through benchmarking and optimizations
-8. **Documentation:** Improving examples, tutorials, and API documentation
+1. **Activation Functions:** Implementing additional activation functions (ELU, SELU) with gradient support
+2. **Loss Functions:** Adding more loss functions (MSE, MAE, Huber) with gradient support
+3. **Advanced Optimizers:** Creating additional optimizers beyond SGD (Adam, RMSProp, AdaGrad)
+4. **Performance Optimization:** Enhancing computational efficiency through benchmarking and optimizations
+5. **Documentation:** Improving examples, tutorials, and API documentation
 
 ## License
 
