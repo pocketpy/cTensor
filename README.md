@@ -121,6 +121,8 @@ and run `main.exe` from root directory
 
 cTensor uses a custom test framework. To run the tests:
 
+For a more detailed guide, refer to [Testing Documentation](tests/README.md).
+
 ```bash
 # Build the test executable with CMake
 mkdir -p build && cd build
