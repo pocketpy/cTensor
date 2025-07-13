@@ -37,8 +37,11 @@ int TensorShape_tostring(TensorShape shape, char* buf, int size) {
 
 Tensor Tensor_new(TensorShape shape, bool requires_grad) {
     Tensor self;
-    memcpy(self.shape, shape, sizeof(TensorShape));
-    int numel = TensorShape_numel(shape);
+    memset(self.shape, 0, sizeof(TensorShape));
+    int ndims = TensorShape_dim(shape); 
+    memcpy(self.shape, shape, ndims * sizeof(int));
+
+    int numel = TensorShape_numel(self.shape);
     self.data = _cten_malloc(sizeof(FloatBuffer) + sizeof(float) * numel);
     self.data->numel = numel;
     
@@ -70,6 +73,7 @@ Tensor Tensor_ones(TensorShape shape, bool requires_grad) {
     }
     return self;
 }
+
 Tensor Tensor_transpose(Tensor self) {
     int dim = TensorShape_dim(self.shape);
     if(dim < 2){
@@ -117,13 +121,18 @@ Tensor Tensor_detach(Tensor self) {
 }
 
 void Tensor_backward(Tensor self, Tensor grad) {
-    if(self.node == NULL) return;
+    if(self.node == NULL) {
+        return;
+    }
+    
     if(grad.data == NULL) {
         assert(self.data->numel == 1);
-        grad = Tensor_ones((TensorShape){1}, false);
+        grad = Tensor_ones((TensorShape){1, 0, 0, 0}, false);
     }
     
     assert(grad.node == NULL);
+    
+    // Accumulate gradient
     if(self.node->grad.data == NULL) {
         self.node->grad = grad;
     } else {
@@ -131,21 +140,64 @@ void Tensor_backward(Tensor self, Tensor grad) {
     }
 
     for(int i = 0; i < self.node->n_inputs; i++) {
-        if (self.node->inputs[i].data == NULL) continue;
-        Tensor combined_grad;  
-        Tensor input_grad = self.node->grad_fn(self, i); 
-        if(strcmp(self.node->name, "Matmul") == 0){
-            if (i == 0){
-                combined_grad = Tensor_matmul(grad, input_grad);
+        Tensor input_tensor = self.node->inputs[i];
+        if (input_tensor.node == NULL) {
+            continue;
+        }
+        
+        // Step 1: Get the local gradient (the partial derivative). --> For z = f(x, y), this would be dz/dx or dz/dy.
+        Tensor input_grad = self.node->grad_fn(self, i);
+        
+        // This is the gradient flowing from the output, which we need to propagate backwards.
+        Tensor grad = self.node->grad;
+        int input_ndim = TensorShape_dim(input_tensor.shape);
+        int grad_ndim = TensorShape_dim(grad.shape);
+        
+        if ((strcmp(self.node->name, "Sum") == 0 || strcmp(self.node->name, "Mean") == 0 || strcmp(self.node->name, "MaxDim") == 0 || strcmp(self.node->name, "MinDim") == 0) && input_ndim > grad_ndim) {
+            // Find the dimension that was reduced. We assume the non-reduced dimensions match in size.
+            int unsqueeze_dim = -1;
+            int grad_idx = 0;
+            for (int dim_idx = 0; dim_idx < input_ndim; ++dim_idx) {
+                if (grad_idx >= grad_ndim || input_tensor.shape[dim_idx] != grad.shape[grad_idx]) {
+                    // Yes, this is the dimension that was removed.
+                    unsqueeze_dim = dim_idx;
+                    break;
+                }
+                grad_idx++;
             }
-            else{
-                combined_grad = Tensor_matmul(input_grad, grad);
+
+            if (unsqueeze_dim != -1) {
+                grad = Tensor_unsqueeze(grad, unsqueeze_dim);
+            } else {
+                cten_assert(false, "Could not deduce unsqueeze dimension.");
             }
         }
-        else{
+        
+        // Step 2: Apply the chain rule (upstream_grad * local_grad)
+        Tensor combined_grad;
+        if(strcmp(self.node->name, "Matmul") == 0) {
+            if (i == 0) {
+                combined_grad = Tensor_matmul(grad, input_grad);
+            } else {
+                combined_grad = Tensor_matmul(input_grad, grad);
+            }
+        } else {
             combined_grad = Tensor_mul(grad, input_grad);
-        }       
-        Tensor_backward(self.node->inputs[i], combined_grad);
+        }
+        
+        // Step 3: Handle broadcasting. --> If the original input was broadcasted, the resulting gradient will have the broadcasted shape, it must be reduced back down to the original input's shape.
+        bool needs_reduction = false;
+        for (int dim = 0; dim < 4; dim++) {
+            if (combined_grad.shape[dim] != input_tensor.shape[dim]) {
+                needs_reduction = true;
+                break;
+            }
+        }
+        
+        if (needs_reduction) {
+            combined_grad = reduce_gradient_for_broadcasting(combined_grad, input_tensor.shape, self.shape);
+        }
+        Tensor_backward(input_tensor, combined_grad);
     }
 }
 
