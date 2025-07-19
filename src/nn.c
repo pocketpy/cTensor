@@ -82,6 +82,76 @@ Tensor nn_exp(Tensor self) {
     return res;
 }
 
+static Tensor GradFn_sin(Tensor self, int i) {
+    Tensor input = self.node->inputs[i];
+    Tensor res = Tensor_new(input.shape, false);
+    for(int j = 0; j < input.data->numel; j++) {
+        res.data->flex[j] = cosf(input.data->flex[j]);
+    }
+    return res;
+}
+Tensor nn_sin(Tensor self) {
+    bool requires_grad = !cten_is_eval() && self.node != NULL;
+    Tensor res = Tensor_new(self.shape, requires_grad);
+    for(int i = 0; i < self.data->numel; i++) {
+        res.data->flex[i] = sinf(self.data->flex[i]);
+    }
+    if(requires_grad) {
+        res.node->grad_fn = GradFn_sin;
+        res.node->inputs[0] = self;
+        res.node->n_inputs = 1;
+        res.node->name = "Sin";
+    }
+    return res;
+}
+
+static Tensor GradFn_cos(Tensor self, int i) {
+    Tensor input = self.node->inputs[i];
+    Tensor res = Tensor_new(input.shape, false);
+    for(int j = 0; j < input.data->numel; j++) {
+        res.data->flex[j] = -sinf(input.data->flex[j]);
+    }
+    return res;
+}
+Tensor nn_cos(Tensor self) {
+    bool requires_grad = !cten_is_eval() && self.node != NULL;
+    Tensor res = Tensor_new(self.shape, requires_grad);
+    for(int i = 0; i < self.data->numel; i++) {
+        res.data->flex[i] = cosf(self.data->flex[i]);
+    }
+    if(requires_grad) {
+        res.node->grad_fn = GradFn_cos;
+        res.node->inputs[0] = self;
+        res.node->n_inputs = 1;
+        res.node->name = "Cos";
+    }
+    return res;
+}
+
+static Tensor GradFn_tan(Tensor self, int i) {
+    // d/dx(tan(x)) = 1 + tan^2(x)
+    Tensor res = Tensor_new(self.shape, false);
+    for(int j = 0; j < self.data->numel; j++) {
+        float y = self.data->flex[j];
+        res.data->flex[j] = 1.0f + y*y;
+    }
+    return res;
+}
+Tensor nn_tan(Tensor self) {
+    bool requires_grad = !cten_is_eval() && self.node != NULL;
+    Tensor res = Tensor_new(self.shape, requires_grad);
+    for(int i = 0; i < self.data->numel; i++) {
+        res.data->flex[i] = tanf(self.data->flex[i]);
+    }
+    if(requires_grad) {
+        res.node->grad_fn = GradFn_tan;
+        res.node->inputs[0] = self;
+        res.node->n_inputs = 1;
+        res.node->name = "Tan";
+    }
+    return res;
+}
+
 Tensor Glorot_init(TensorShape shape, bool requires_grad) {
     Tensor res = Tensor_new(shape, requires_grad);
     int fan_in = shape[0];
