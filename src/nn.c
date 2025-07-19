@@ -41,6 +41,29 @@ Tensor nn_relu(Tensor self) {
     return res;
 }
 
+static Tensor GradFn_log(Tensor self, int i) {
+    Tensor input = self.node->inputs[i];
+    Tensor res = Tensor_new(input.shape, false);
+    for(int j = 0; j < input.data->numel; j++) {
+        res.data->flex[j] = 1.0f / input.data->flex[j];
+    }
+    return res;
+}
+Tensor nn_log(Tensor self) {
+    bool requires_grad = !cten_is_eval() && self.node != NULL;
+    Tensor res = Tensor_new(self.shape, requires_grad);
+    for(int i = 0; i < self.data->numel; i++) {
+        res.data->flex[i] = logf(self.data->flex[i]);
+    }
+    if(requires_grad) {
+        res.node->grad_fn = GradFn_log;
+        res.node->inputs[0] = self;
+        res.node->n_inputs = 1;
+        res.node->name = "Log";
+    }
+    return res;
+}
+
 Tensor Glorot_init(TensorShape shape, bool requires_grad) {
     Tensor res = Tensor_new(shape, requires_grad);
     int fan_in = shape[0];
