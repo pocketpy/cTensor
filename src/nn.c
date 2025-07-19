@@ -244,6 +244,45 @@ Tensor nn_elu(Tensor self) {
     return res;
 }
 
+static Tensor GradFn_selu(Tensor self, int i) {
+    Tensor input = self.node->inputs[0];
+    Tensor grad = Tensor_new(input.shape, false);
+    const float alpha = 1.67326324f;
+    const float lambda = 1.05070098f;
+    for(int j = 0; j < input.data->numel; j++) {
+        float x = input.data->flex[j];
+        if (x > 0) {
+            grad.data->flex[j] = lambda;
+        } else {
+            // derivative is lambda * alpha * e^x = y + lambda*alpha
+            grad.data->flex[j] = self.data->flex[j] + lambda * alpha;
+        }
+    }
+    return grad;
+}
+
+Tensor nn_selu(Tensor self) {
+    bool requires_grad = !cten_is_eval() && self.node != NULL;
+    Tensor res = Tensor_new(self.shape, requires_grad);
+    const float alpha = 1.67326324f;
+    const float lambda = 1.05070098f;
+    for(int i = 0; i < self.data->numel; i++) {
+        float x = self.data->flex[i];
+        if (x > 0) {
+            res.data->flex[i] = lambda * x;
+        } else {
+            res.data->flex[i] = lambda * alpha * (expf(x) - 1);
+        }
+    }
+    if(requires_grad) {
+        res.node->grad_fn = GradFn_selu;
+        res.node->inputs[0] = self;
+        res.node->n_inputs = 1;
+        res.node->name = "Selu";
+    }
+    return res;
+}
+
 Tensor Glorot_init(TensorShape shape, bool requires_grad) {
     Tensor res = Tensor_new(shape, requires_grad);
     int fan_in = shape[0];
