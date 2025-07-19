@@ -151,6 +151,29 @@ Tensor nn_tan(Tensor self) {
     }
     return res;
 }
+static Tensor GradFn_sigmoid(Tensor self, int i) {
+    // d/dx sigmoid(x) = sigmoid(x) * (1 - sigmoid(x))
+    Tensor res = Tensor_new(self.shape, false);
+    for(int j = 0; j < self.data->numel; j++) {
+        float y = self.data->flex[j];
+        res.data->flex[j] = y * (1.0f - y);
+    }
+    return res;
+}
+Tensor nn_sigmoid(Tensor self) {
+    bool requires_grad = !cten_is_eval() && self.node != NULL;
+    Tensor res = Tensor_new(self.shape, requires_grad);
+    for(int i = 0; i < self.data->numel; i++) {
+        res.data->flex[i] = 1.0f / (1.0f + expf(-self.data->flex[i]));
+    }
+    if(requires_grad) {
+        res.node->grad_fn = GradFn_sigmoid;
+        res.node->inputs[0] = self;
+        res.node->n_inputs = 1;
+        res.node->name = "Sigmoid";
+    }
+    return res;
+}
 
 Tensor Glorot_init(TensorShape shape, bool requires_grad) {
     Tensor res = Tensor_new(shape, requires_grad);
