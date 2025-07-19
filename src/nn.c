@@ -49,6 +49,7 @@ static Tensor GradFn_log(Tensor self, int i) {
     }
     return res;
 }
+
 Tensor nn_log(Tensor self) {
     bool requires_grad = !cten_is_eval() && self.node != NULL;
     Tensor res = Tensor_new(self.shape, requires_grad);
@@ -67,6 +68,7 @@ Tensor nn_log(Tensor self) {
 static Tensor GradFn_exp(Tensor self, int i) {
     return self;
 }
+
 Tensor nn_exp(Tensor self) {
     bool requires_grad = !cten_is_eval() && self.node != NULL;
     Tensor res = Tensor_new(self.shape, requires_grad);
@@ -90,6 +92,7 @@ static Tensor GradFn_sin(Tensor self, int i) {
     }
     return res;
 }
+
 Tensor nn_sin(Tensor self) {
     bool requires_grad = !cten_is_eval() && self.node != NULL;
     Tensor res = Tensor_new(self.shape, requires_grad);
@@ -113,6 +116,7 @@ static Tensor GradFn_cos(Tensor self, int i) {
     }
     return res;
 }
+
 Tensor nn_cos(Tensor self) {
     bool requires_grad = !cten_is_eval() && self.node != NULL;
     Tensor res = Tensor_new(self.shape, requires_grad);
@@ -137,6 +141,7 @@ static Tensor GradFn_tan(Tensor self, int i) {
     }
     return res;
 }
+
 Tensor nn_tan(Tensor self) {
     bool requires_grad = !cten_is_eval() && self.node != NULL;
     Tensor res = Tensor_new(self.shape, requires_grad);
@@ -151,6 +156,7 @@ Tensor nn_tan(Tensor self) {
     }
     return res;
 }
+
 static Tensor GradFn_sigmoid(Tensor self, int i) {
     // d/dx sigmoid(x) = sigmoid(x) * (1 - sigmoid(x))
     Tensor res = Tensor_new(self.shape, false);
@@ -160,6 +166,7 @@ static Tensor GradFn_sigmoid(Tensor self, int i) {
     }
     return res;
 }
+
 Tensor nn_sigmoid(Tensor self) {
     bool requires_grad = !cten_is_eval() && self.node != NULL;
     Tensor res = Tensor_new(self.shape, requires_grad);
@@ -171,6 +178,31 @@ Tensor nn_sigmoid(Tensor self) {
         res.node->inputs[0] = self;
         res.node->n_inputs = 1;
         res.node->name = "Sigmoid";
+    }
+    return res;
+}
+
+static Tensor GradFn_tanh(Tensor self, int i) {
+    // d/dx tanh(x) = 1 - tanh^2(x)
+    Tensor res = Tensor_new(self.shape, false);
+    for(int j = 0; j < self.data->numel; j++) {
+        float y = self.data->flex[j];
+        res.data->flex[j] = 1.0f - y*y;
+    }
+    return res;
+}
+
+Tensor nn_tanh(Tensor self) {
+    bool requires_grad = !cten_is_eval() && self.node != NULL;
+    Tensor res = Tensor_new(self.shape, requires_grad);
+    for(int i = 0; i < self.data->numel; i++) {
+        res.data->flex[i] = tanhf(self.data->flex[i]);
+    }
+    if(requires_grad) {
+        res.node->grad_fn = GradFn_tanh;
+        res.node->inputs[0] = self;
+        res.node->n_inputs = 1;
+        res.node->name = "Tanh";
     }
     return res;
 }
