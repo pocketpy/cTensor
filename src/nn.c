@@ -207,6 +207,43 @@ Tensor nn_tanh(Tensor self) {
     return res;
 }
 
+static Tensor GradFn_elu(Tensor self, int i) {
+    const float alpha = 1.0f;
+    Tensor input = self.node->inputs[0];
+    Tensor grad = Tensor_new(input.shape, false);
+    for(int j = 0; j < input.data->numel; j++) {
+        float x = input.data->flex[j];
+        if (x > 0) {
+            grad.data->flex[j] = 1.0f;
+        } else {
+            // derivative is alpha * e^x = alpha * (e^x - 1) + alpha = y + alpha
+            grad.data->flex[j] = self.data->flex[j] + alpha;
+        }
+    }
+    return grad;
+}
+
+Tensor nn_elu(Tensor self) {
+    const float alpha = 1.0f;
+    bool requires_grad = !cten_is_eval() && self.node != NULL;
+    Tensor res = Tensor_new(self.shape, requires_grad);
+    for(int i = 0; i < self.data->numel; i++) {
+        float x = self.data->flex[i];
+        if (x > 0) {
+            res.data->flex[i] = x;
+        } else {
+            res.data->flex[i] = alpha * (expf(x) - 1.0f);
+        }
+    }
+    if(requires_grad) {
+        res.node->grad_fn = GradFn_elu;
+        res.node->inputs[0] = self;
+        res.node->n_inputs = 1;
+        res.node->name = "Elu";
+    }
+    return res;
+}
+
 Tensor Glorot_init(TensorShape shape, bool requires_grad) {
     Tensor res = Tensor_new(shape, requires_grad);
     int fan_in = shape[0];
