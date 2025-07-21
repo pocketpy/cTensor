@@ -109,6 +109,8 @@ Tensor nn_linear(Tensor input, Tensor weight, Tensor bias);
 Tensor nn_relu(Tensor input);
 Tensor nn_sigmoid(Tensor input);
 Tensor nn_tanh(Tensor input);
+Tensor nn_elu(Tensor self, float alpha);
+Tensor nn_selu(Tensor self);
 Tensor nn_softmax(Tensor input);
 Tensor Glorot_init(TensorShape shape, bool requires_grad);
 Tensor nn_crossentropy(Tensor y_true, Tensor y_pred);
