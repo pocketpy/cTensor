@@ -8,6 +8,8 @@
 #include <time.h>
 #include <stdio.h>
 
+static float elu_alpha_value = 1.0f;
+
 Tensor nn_linear(Tensor input, Tensor weight, Tensor bias) {
     Tensor tmp = Tensor_matmul(input, weight);
     tmp = Tensor_add(tmp, bias);
@@ -208,7 +210,7 @@ Tensor nn_tanh(Tensor self) {
 }
 
 static Tensor GradFn_elu(Tensor self, int i) {
-    const float alpha = 1.0f;
+    float alpha = elu_alpha_value;
     Tensor input = self.node->inputs[0];
     Tensor grad = Tensor_new(input.shape, false);
     for(int j = 0; j < input.data->numel; j++) {
@@ -223,8 +225,8 @@ static Tensor GradFn_elu(Tensor self, int i) {
     return grad;
 }
 
-Tensor nn_elu(Tensor self) {
-    const float alpha = 1.0f;
+Tensor nn_elu(Tensor self, float alpha) {
+    elu_alpha_value = alpha;
     bool requires_grad = !cten_is_eval() && self.node != NULL;
     Tensor res = Tensor_new(self.shape, requires_grad);
     for(int i = 0; i < self.data->numel; i++) {
