@@ -535,3 +535,47 @@ Tensor nn_mse_loss(Tensor y_true, Tensor y_pred) {
     }
     return res;
 }
+
+static Tensor GradFn_mae_loss(Tensor self, int i) {
+    if (i == 1) { // Gradient w.r.t y_pred
+        Tensor y_true = self.node->inputs[0];
+        Tensor y_pred = self.node->inputs[1];
+        int n = y_pred.data->numel;
+
+        Tensor grad = Tensor_new(y_pred.shape, false);
+        for (int j = 0; j < n; j++) {
+            float error = y_pred.data->flex[j] - y_true.data->flex[j];
+            if (error > 0) {
+                grad.data->flex[j] = 1.0f / n;
+            } else if (error < 0) {
+                grad.data->flex[j] = -1.0f / n;
+            } else {
+                grad.data->flex[j] = 0.0f;
+            }
+        }
+        return grad;
+    }
+    return Tensor_zeros((TensorShape){1}, false);
+}
+
+Tensor nn_mae_loss(Tensor y_true, Tensor y_pred) {
+    bool requires_grad = !cten_is_eval() && y_pred.node != NULL;
+
+    cten_begin_eval();
+    Tensor error = Tensor_sub(y_pred, y_true);
+    Tensor abs_error = Tensor_abs(error);
+    Tensor loss = Tensor_mean(abs_error);
+    cten_end_eval();
+
+    Tensor res = Tensor_new((TensorShape){1}, requires_grad);
+    res.data->flex[0] = loss.data->flex[0];
+
+    if (requires_grad) {
+        res.node->grad_fn = GradFn_mae_loss;
+        res.node->inputs[0] = y_true;
+        res.node->inputs[1] = y_pred;
+        res.node->n_inputs = 2;
+        res.node->name = "MAELoss";
+    }
+    return res;
+}
