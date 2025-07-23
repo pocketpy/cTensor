@@ -583,3 +583,35 @@ Tensor Tensor_min(Tensor self) {
     
     return res;
 }
+
+static Tensor GradFn_abs(Tensor self, int i) {
+    Tensor input = self.node->inputs[i];
+    Tensor res = Tensor_new(input.shape, false);
+    for(int j = 0; j < input.data->numel; j++) {
+        float val = input.data->flex[j];
+        if (val > 0) {
+            res.data->flex[j] = 1.0f;
+        } else if (val < 0) {
+            res.data->flex[j] = -1.0f;
+        } else {
+            res.data->flex[j] = 0.0f;
+        }
+    }
+    return res;
+}
+
+Tensor Tensor_abs(Tensor self) {
+    bool requires_grad = !cten_is_eval() && self.node != NULL;
+    Tensor res = Tensor_new(self.shape, requires_grad);
+    for(int i = 0; i < self.data->numel; i++) {
+        res.data->flex[i] = fabsf(self.data->flex[i]);
+    }
+
+    if(requires_grad) {
+        res.node->grad_fn = GradFn_abs;
+        res.node->inputs[0] = self;
+        res.node->n_inputs = 1;
+        res.node->name = "Abs";
+    }
+    return res;
+}

@@ -16,7 +16,6 @@ Tensor nn_linear(Tensor input, Tensor weight, Tensor bias) {
     return tmp;
 }
 
-/* nn.relu */
 static Tensor GradFn_relu(Tensor self, int i) {
     Tensor input = self.node->inputs[i];
     Tensor res = Tensor_new(input.shape, false);
@@ -365,7 +364,6 @@ Tensor nn_softmax(Tensor self) {
     return res;
 }
 
-/* nn.cross_entropy */
 static Tensor GradFn_crossentropy(Tensor self, int i) {
     if (i == 1) { // Gradient w.r.t. y_pred
         Tensor y_true = self.node->inputs[0];
@@ -498,5 +496,42 @@ Tensor nn_softmax_crossentropy(Tensor y_true, Tensor logits) {
         res.node->name = "SoftmaxCrossEntropy"; 
     }
     
+    return res;
+}
+
+static Tensor GradFn_mse_loss(Tensor self, int i) {
+    if (i == 1) {  // Gradient w.r.t y_pred
+        Tensor y_true = self.node->inputs[0];
+        Tensor y_pred = self.node->inputs[1];
+        int n = y_pred.data->numel;
+
+        Tensor grad = Tensor_new(y_pred.shape, false);
+        for (int j = 0; j < n; j++) {
+            grad.data->flex[j] = 2.0f * (y_pred.data->flex[j] - y_true.data->flex[j]) / n;
+        }
+        return grad;
+    }
+    return Tensor_zeros((TensorShape){1}, false);
+}
+
+Tensor nn_mse_loss(Tensor y_true, Tensor y_pred) {
+    bool requires_grad = !cten_is_eval() && y_pred.node != NULL;
+
+    cten_begin_eval();
+    Tensor error = Tensor_sub(y_pred, y_true);
+    Tensor squared_error = Tensor_square(error);
+    Tensor loss = Tensor_mean(squared_error);
+    cten_end_eval();
+
+    Tensor res = Tensor_new((TensorShape){1}, requires_grad);
+    res.data->flex[0] = loss.data->flex[0];
+
+    if (requires_grad) {
+        res.node->grad_fn = GradFn_mse_loss;
+        res.node->inputs[0] = y_true;
+        res.node->inputs[1] = y_pred;
+        res.node->n_inputs = 2;
+        res.node->name = "MSELoss";
+    }
     return res;
 }
