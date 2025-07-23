@@ -9,6 +9,7 @@
 #include <stdio.h>
 
 static float elu_alpha_value = 1.0f;
+static float huber_delta_value = 1.0f;
 
 Tensor nn_linear(Tensor input, Tensor weight, Tensor bias) {
     Tensor tmp = Tensor_matmul(input, weight);
@@ -576,6 +577,62 @@ Tensor nn_mae_loss(Tensor y_true, Tensor y_pred) {
         res.node->inputs[1] = y_pred;
         res.node->n_inputs = 2;
         res.node->name = "MAELoss";
+    }
+    return res;
+}
+
+static Tensor GradFn_huber_loss(Tensor self, int i) {
+    if (i == 1) { // Gradient w.r.t y_pred
+        Tensor y_true = self.node->inputs[0];
+        Tensor y_pred = self.node->inputs[1];
+        float delta = huber_delta_value;
+        int n = y_pred.data->numel;
+
+        Tensor grad = Tensor_new(y_pred.shape, false);
+        // Gradient of Huber loss is (error / n) for small errors,
+        // and (delta * sign(error) / n) for large errors.
+        for (int j = 0; j < n; j++) {
+            float error = y_pred.data->flex[j] - y_true.data->flex[j];
+            if (fabsf(error) <= delta) {
+                grad.data->flex[j] = error / n;
+            } else {
+                if (error > 0) {
+                    grad.data->flex[j] = delta / n;
+                } else {
+                    grad.data->flex[j] = -delta / n;
+                }
+            }
+        }
+        return grad;
+    }
+    return Tensor_zeros((TensorShape){1}, false);
+}
+
+Tensor nn_huber_loss(Tensor y_true, Tensor y_pred, float delta) {
+    huber_delta_value = delta; // Store delta for the backward pass
+    bool requires_grad = !cten_is_eval() && y_pred.node != NULL;
+
+    int n = y_pred.data->numel;
+    float total_loss = 0.0f;
+    for (int i = 0; i < n; i++) {
+        float error = y_pred.data->flex[i] - y_true.data->flex[i];
+        float abs_error = fabsf(error);
+        if (abs_error <= delta) {
+            total_loss += 0.5f * error * error; // MSE part
+        } else {
+            total_loss += delta * (abs_error - 0.5f * delta); // MAE part
+        }
+    }
+
+    Tensor res = Tensor_new((TensorShape){1}, requires_grad);
+    res.data->flex[0] = total_loss / n; // Mean Huber Loss
+
+    if (requires_grad) {
+        res.node->grad_fn = GradFn_huber_loss;
+        res.node->inputs[0] = y_true;
+        res.node->inputs[1] = y_pred;
+        res.node->n_inputs = 2;
+        res.node->name = "HuberLoss";
     }
     return res;
 }
