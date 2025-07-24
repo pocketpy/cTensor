@@ -115,6 +115,9 @@ Tensor nn_softmax(Tensor input);
 Tensor Glorot_init(TensorShape shape, bool requires_grad);
 Tensor nn_crossentropy(Tensor y_true, Tensor y_pred);
 Tensor nn_softmax_crossentropy(Tensor y_true, Tensor logits);
+Tensor nn_mse_loss(Tensor y_true, Tensor y_pred);
+Tensor nn_mae_loss(Tensor y_true, Tensor y_pred);
+Tensor nn_huber_loss(Tensor y_true, Tensor y_pred, float delta);
 
 /* Memory Management */
 typedef int64_t PoolId;
