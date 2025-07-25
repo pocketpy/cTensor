@@ -175,7 +175,9 @@ void Tensor_backward(Tensor self, Tensor grad) {
         
         // Step 2: Apply the chain rule (upstream_grad * local_grad)
         Tensor combined_grad;
-        if(strcmp(self.node->name, "Matmul") == 0) {
+        if (strcmp(self.node->name, "Softmax") == 0) {
+            combined_grad = input_grad;
+        } else if(strcmp(self.node->name, "Matmul") == 0) {
             if (i == 0) {
                 combined_grad = Tensor_matmul(grad, input_grad);
             } else {

@@ -303,25 +303,24 @@ static Tensor GradFn_softmax(Tensor self, int i) {
     Tensor grad = Tensor_new(input.shape, false);
     
     int dim = TensorShape_dim(self.shape);
-    int batch_size = self.shape[0];
-    int num_classes = self.shape[1];  
-    for(int b = 0; b < batch_size; b++){
-        for(int i = 0; i < num_classes; i++) {
-            for(int j = 0; j < num_classes; j++) {
-                float softmax_i = self.data->flex[b * num_classes + i];
-                float softmax_j = self.data->flex[b * num_classes + j];
-                float value;
-                if(i == j){
-                    value = softmax_i * (1.0f - softmax_i);
-                } 
-                else{
-                    value = -softmax_i * softmax_j;
-                }
-                
-                if(i == j){
-                    grad.data->flex[b * num_classes + i] = value;
-                }
-            }
+    assert(dim > 0);
+    int last_dim_size = self.shape[dim - 1];
+    int outer_size = self.data->numel / last_dim_size;
+
+    float* s_data = self.data->flex; // Softmax output data (s)
+    float* upstream_grad_data = self.node->grad.data->flex; // Upstream grad (dL/ds)
+    float* input_grad_data = grad.data->flex; // Resulting grad (dL/dz)
+    for (int outer = 0; outer < outer_size; outer++) {
+        int offset = outer * last_dim_size;
+        // Step 1. Calculate the dot product for the current slice: sum_k(dL/ds_k * s_k)
+        float dot_product = 0.0f;
+        for (int k = 0; k < last_dim_size; k++) {
+            dot_product += upstream_grad_data[offset + k] * s_data[offset + k];
+        }
+        // Step 2. Calculate the final gradient for each element in the slice
+        for (int j = 0; j < last_dim_size; j++) {
+            int index = offset + j;
+            input_grad_data[index] = s_data[index] * (upstream_grad_data[index] - dot_product);
         }
     }
     return grad;
