@@ -82,7 +82,6 @@ Tensor Tensor_mul(Tensor self, Tensor other) {
     return res;
 }
 
-
 Tensor Tensor_mulf(Tensor self, float other) {
     Tensor tmp = Tensor_new(self.shape, false);
     for(int i = 0; i < tmp.data->numel; i++) {
@@ -282,7 +281,6 @@ static Tensor GradFn_sub(Tensor self, int i) {
     }
     return res;
 }
-
 
 static Tensor GradFn_div(Tensor self, int i) {
     Tensor res = Tensor_new(self.shape, false);
