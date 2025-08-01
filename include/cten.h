@@ -35,6 +35,7 @@ typedef struct GradNode {
     struct Tensor inputs[4];
     int n_inputs;
     const char* name;
+    int params[4];
 } GradNode;
 
 typedef struct {
@@ -111,7 +112,7 @@ Tensor nn_sigmoid(Tensor input);
 Tensor nn_tanh(Tensor input);
 Tensor nn_elu(Tensor self, float alpha);
 Tensor nn_selu(Tensor self);
-Tensor nn_softmax(Tensor input);
+Tensor nn_softmax(Tensor input, int dim);
 Tensor Glorot_init(TensorShape shape, bool requires_grad);
 Tensor nn_crossentropy(Tensor y_true, Tensor y_pred);
 Tensor nn_softmax_crossentropy(Tensor y_true, Tensor logits);
