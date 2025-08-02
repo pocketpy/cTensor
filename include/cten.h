@@ -129,12 +129,30 @@ void cten_free(PoolId id);
 
 /* Optimizer */
 typedef struct optim_sgd optim_sgd;
+typedef struct optim_adagrad optim_adagrad;
+typedef struct optim_rmsprop optim_rmsprop;
+typedef struct optim_adam optim_adam;
 
+//SGD
 optim_sgd* optim_sgd_new(int n_params, Tensor* params);
 void optim_sgd_config(optim_sgd* self, float lr, float momentum);
 void optim_sgd_zerograd(optim_sgd* self);
 void optim_sgd_step(optim_sgd* self);
-void optim_sgd_delete(optim_sgd* self);
+
+//AdaGrad
+optim_adagrad* optim_adagrad_new(int n_params, Tensor* params, float lr, float eps);
+void optim_adagrad_zerograd(optim_adagrad* self);
+void optim_adagrad_step(optim_adagrad* self);
+
+//RMSProp
+optim_rmsprop* optim_rmsprop_new(int n_params, Tensor* params, float lr, float alpha, float eps);
+void optim_rmsprop_zerograd(optim_rmsprop* self);
+void optim_rmsprop_step(optim_rmsprop* self);
+
+//Adam
+optim_adam* optim_adam_new(int n_params, Tensor* params, float lr, float beta1, float beta2, float eps);
+void optim_adam_zerograd(optim_adam* self);
+void optim_adam_step(optim_adam* self);
 
 /* Misc */
 void cten_begin_eval();
