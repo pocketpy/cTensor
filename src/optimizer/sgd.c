@@ -1,6 +1,6 @@
 #include "cten.h"
 #include "cten_internal.h"
-
+#include <math.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,6 +14,11 @@ typedef struct optim_sgd {
 } optim_sgd;
 
 optim_sgd* optim_sgd_new(int n_params, Tensor* params) {
+    cten_assert(n_params >= 0, "n_params cannot be negative, but got %d.", n_params);
+    if (n_params > 0) {
+        cten_assert(params != NULL, "params array cannot be NULL when n_params is greater than 0.");
+    }
+
     optim_sgd* self = _cten_malloc(sizeof(optim_sgd));
     self->n_params = n_params;
     self->params = params;
