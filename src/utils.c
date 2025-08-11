@@ -518,3 +518,102 @@ Tensor Tensor_unsqueeze(Tensor self, int dim) {
     
     return res;
 }
+
+void cten_clip_grad_norm(Tensor* params, int n_params, float max_norm) {
+    if(max_norm <= 0.0f) { return; }
+    if(n_params <= 0 || params == NULL) { return; }
+    float total_norm = 0.0f;
+    for(int i = 0; i < n_params; i++) {
+        Tensor t = params[i];
+        if(t.node == NULL || t.node->grad.data == NULL) { continue; }
+        for(int j = 0; j < t.data->numel; j++) {
+            float g = t.node->grad.data->flex[j];
+            total_norm += g * g;
+        }
+    }
+    total_norm = sqrtf(total_norm);
+    if(total_norm > max_norm) {
+        float scale = max_norm / total_norm;
+        for(int i = 0; i < n_params; i++) {
+            Tensor t = params[i];
+            if(t.node == NULL || t.node->grad.data == NULL) { continue; }
+            for(int j = 0; j < t.data->numel; j++) {
+                t.node->grad.data->flex[j] *= scale;
+            }
+        }
+    }
+}
+
+void cten_clip_grad_value(Tensor* params, int n_params, float max_value) {
+    cten_clip_grad_value_range(params, n_params, -max_value, max_value);
+}
+
+void cten_clip_grad_value_range(Tensor* params, int n_params, float min_value, float max_value) {
+    if(min_value > max_value) {
+        cten_assert(false, "min_value must be less than or equal to max_value");
+    }
+    if(n_params <= 0 || params == NULL) { return; } //safety check
+    int clipped_count = 0;
+    int total_count = 0;
+    for(int i = 0; i < n_params; i++) {
+        Tensor t = params[i];
+        if(t.node == NULL || t.node->grad.data == NULL) { continue; }
+
+        for(int j = 0; j < t.data->numel; j++) {
+            float* grad_ptr = &t.node->grad.data->flex[j];
+            float grad_val = *grad_ptr;
+            total_count++;
+            if(grad_val > max_value) {
+                *grad_ptr = max_value;
+                clipped_count++;
+            } else if(grad_val < min_value) {
+                *grad_ptr = min_value;
+                clipped_count++;
+            }
+        }
+    }
+}
+
+void cten_clip_grad_positive(Tensor* params, int n_params, float max_value) {
+    if(n_params <= 0 || params == NULL) { return; } //safety check
+    int clipped_count = 0;
+    int total_count = 0;
+
+    for(int i = 0; i < n_params; i++) {
+        Tensor t = params[i];
+        if(t.node == NULL || t.node->grad.data == NULL) continue;
+
+        for(int j = 0; j < t.data->numel; j++) {
+            float* grad_ptr = &t.node->grad.data->flex[j];
+            float grad_val = *grad_ptr;
+            total_count++;
+
+            if(grad_val > max_value) {
+                *grad_ptr = max_value;
+                clipped_count++;
+            }
+        }
+    }
+}
+
+void cten_clip_grad_negative(Tensor* params, int n_params, float min_value) {
+    if(n_params <= 0 || params == NULL) { return; } //safety check
+    int clipped_count = 0;
+    int total_count = 0;
+
+    for(int i = 0; i < n_params; i++) {
+        Tensor t = params[i];
+        if(t.node == NULL || t.node->grad.data == NULL) continue;
+
+        for(int j = 0; j < t.data->numel; j++) {
+            float* grad_ptr = &t.node->grad.data->flex[j];
+            float grad_val = *grad_ptr;
+            total_count++;
+
+            if(grad_val < min_value) {
+                *grad_ptr = min_value;
+                clipped_count++;
+            }
+        }
+    }
+}
