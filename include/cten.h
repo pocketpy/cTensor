@@ -154,6 +154,13 @@ optim_adam* optim_adam_new(int n_params, Tensor* params, float lr, float β1, fl
 void optim_adam_zerograd(optim_adam* self);
 void optim_adam_step(optim_adam* self);
 
+/* Gradient Clipping */
+void cten_clip_grad_norm(Tensor* params, int n_params, float max_norm);
+void cten_clip_grad_value(Tensor* params, int n_params, float max_value);
+void cten_clip_grad_value_range(Tensor* params, int n_params, float min_value, float max_value);
+void cten_clip_grad_positive(Tensor* params, int n_params, float max_value);
+void cten_clip_grad_negative(Tensor* params, int n_params, float min_value);
+
 /* Misc */
 void cten_begin_eval();
 bool cten_is_eval();
