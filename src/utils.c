@@ -5,8 +5,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>    
-#include <time.h>    
+#include <math.h>
+#include <time.h>
 #include <limits.h>
 
 bool va_arg_is_present(va_list args) {
@@ -22,8 +22,9 @@ Tensor GradFn_reduce_dim(Tensor self, int i);
 
 Tensor Tensor_mean_all(Tensor self) {
     float total = 0.0f;
-    for(int i = 0; i < self.data->numel; i++) total += self.data->flex[i];
-    Tensor res = Tensor_new((TensorShape){1,0,0,0}, self.node != NULL);
+    for(int i = 0; i < self.data->numel; i++)
+        total += self.data->flex[i];
+    Tensor res = Tensor_new((TensorShape){1, 0, 0, 0}, self.node != NULL);
     res.data->flex[0] = total / self.data->numel;
     if(res.node != NULL) {
         res.node->grad_fn = GradFn_mean;
@@ -47,8 +48,9 @@ Tensor Tensor_mean_dim(Tensor self, int dim) {
 
 Tensor Tensor_sum_all(Tensor self) {
     float total = 0.0f;
-    for(int i = 0; i < self.data->numel; i++) total += self.data->flex[i];
-    Tensor res = Tensor_new((TensorShape){1,0,0,0}, self.node != NULL);
+    for(int i = 0; i < self.data->numel; i++)
+        total += self.data->flex[i];
+    Tensor res = Tensor_new((TensorShape){1, 0, 0, 0}, self.node != NULL);
     res.data->flex[0] = total;
     if(res.node != NULL) {
         res.node->grad_fn = GradFn_sum;
@@ -73,17 +75,15 @@ Tensor Tensor_sum_dim(Tensor self, int dim) {
 Tensor Tensor_max_all(Tensor self) {
     bool requires_grad = !cten_is_eval() && (self.node != NULL);
     Tensor res = Tensor_new((TensorShape){1, 0, 0, 0}, requires_grad);
-    
-    if (self.data->numel == 0) cten_assert(false, "max on empty tensor");
+
+    if(self.data->numel == 0) cten_assert(false, "max on empty tensor");
     float max_val = self.data->flex[0];
-    for (int i = 1; i < self.data->numel; i++) {
-        if (self.data->flex[i] > max_val) {
-            max_val = self.data->flex[i];
-        }
+    for(int i = 1; i < self.data->numel; i++) {
+        if(self.data->flex[i] > max_val) { max_val = self.data->flex[i]; }
     }
     res.data->flex[0] = max_val;
-    
-    if (requires_grad) {
+
+    if(requires_grad) {
         res.node->grad_fn = GradFn_max_all;
         res.node->inputs[0] = self;
         res.node->n_inputs = 1;
@@ -98,24 +98,24 @@ TensorMaxMinResult Tensor_max_dim(Tensor self, int dim) {
 
     TensorShape out_shape = {0};
     int out_shape_len = 0;
-    for (int i = 0; i < ndim; i++) {
-        if (i != dim) out_shape[out_shape_len++] = self.shape[i];
+    for(int i = 0; i < ndim; i++) {
+        if(i != dim) out_shape[out_shape_len++] = self.shape[i];
     }
-    
+
     bool requires_grad = !cten_is_eval() && (self.node != NULL);
     Tensor values = Tensor_new(out_shape, requires_grad);
     Tensor indices = Tensor_new(out_shape, false);
 
     int dim_size = self.shape[dim];
-    for (int i = 0; i < values.data->numel; ++i) {
+    for(int i = 0; i < values.data->numel; ++i) {
         float best_val = -INFINITY;
         int best_idx = -1;
 
-        for (int j = 0; j < dim_size; ++j) {
+        for(int j = 0; j < dim_size; ++j) {
             int in_linear_idx = 0, stride = 1, out_i_rem = i, out_idx_tracker = out_shape_len - 1;
-            for (int k = ndim - 1; k >= 0; --k) {
+            for(int k = ndim - 1; k >= 0; --k) {
                 int current_dim_idx;
-                if (k == dim) {
+                if(k == dim) {
                     current_dim_idx = j;
                 } else {
                     int dim_k = out_shape[out_idx_tracker--];
@@ -126,20 +126,23 @@ TensorMaxMinResult Tensor_max_dim(Tensor self, int dim) {
                 stride *= self.shape[k];
             }
             float current_val = self.data->flex[in_linear_idx];
-            if (current_val > best_val) { best_val = current_val; best_idx = j; }
+            if(current_val > best_val) {
+                best_val = current_val;
+                best_idx = j;
+            }
         }
         values.data->flex[i] = best_val;
         indices.data->flex[i] = (float)best_idx;
     }
 
-    if (requires_grad) {
+    if(requires_grad) {
         values.node->grad_fn = GradFn_reduce_dim;
         values.node->inputs[0] = self;
         values.node->inputs[1] = indices;
         values.node->n_inputs = 2;
         values.node->name = "MaxDim";
     }
-    
+
     TensorMaxMinResult result = {values, indices};
     return result;
 }
@@ -148,16 +151,14 @@ Tensor Tensor_min_all(Tensor self) {
     bool requires_grad = !cten_is_eval() && (self.node != NULL);
     Tensor res = Tensor_new((TensorShape){1, 0, 0, 0}, requires_grad);
 
-    if (self.data->numel == 0) cten_assert(false, "min on empty tensor");
+    if(self.data->numel == 0) cten_assert(false, "min on empty tensor");
     float min_val = self.data->flex[0];
-    for (int i = 1; i < self.data->numel; i++) {
-        if (self.data->flex[i] < min_val) {
-            min_val = self.data->flex[i];
-        }
+    for(int i = 1; i < self.data->numel; i++) {
+        if(self.data->flex[i] < min_val) { min_val = self.data->flex[i]; }
     }
     res.data->flex[0] = min_val;
 
-    if (requires_grad) {
+    if(requires_grad) {
         res.node->grad_fn = GradFn_min_all;
         res.node->inputs[0] = self;
         res.node->n_inputs = 1;
@@ -172,24 +173,24 @@ TensorMaxMinResult Tensor_min_dim(Tensor self, int dim) {
 
     TensorShape out_shape = {0};
     int out_shape_len = 0;
-    for (int i = 0; i < ndim; i++) {
-        if (i != dim) out_shape[out_shape_len++] = self.shape[i];
+    for(int i = 0; i < ndim; i++) {
+        if(i != dim) out_shape[out_shape_len++] = self.shape[i];
     }
-    
+
     bool requires_grad = !cten_is_eval() && (self.node != NULL);
     Tensor values = Tensor_new(out_shape, requires_grad);
     Tensor indices = Tensor_new(out_shape, false);
 
     int dim_size = self.shape[dim];
-    for (int i = 0; i < values.data->numel; ++i) {
+    for(int i = 0; i < values.data->numel; ++i) {
         float best_val = INFINITY;
         int best_idx = -1;
 
-        for (int j = 0; j < dim_size; ++j) {
+        for(int j = 0; j < dim_size; ++j) {
             int in_linear_idx = 0, stride = 1, out_i_rem = i, out_idx_tracker = out_shape_len - 1;
-            for (int k = ndim - 1; k >= 0; --k) {
+            for(int k = ndim - 1; k >= 0; --k) {
                 int current_dim_idx;
-                if (k == dim) {
+                if(k == dim) {
                     current_dim_idx = j;
                 } else {
                     int dim_k = out_shape[out_idx_tracker--];
@@ -200,24 +201,26 @@ TensorMaxMinResult Tensor_min_dim(Tensor self, int dim) {
                 stride *= self.shape[k];
             }
             float current_val = self.data->flex[in_linear_idx];
-            if (current_val < best_val) { best_val = current_val; best_idx = j; }
+            if(current_val < best_val) {
+                best_val = current_val;
+                best_idx = j;
+            }
         }
         values.data->flex[i] = best_val;
         indices.data->flex[i] = (float)best_idx;
     }
-    
-    if (requires_grad) {
+
+    if(requires_grad) {
         values.node->grad_fn = GradFn_reduce_dim;
         values.node->inputs[0] = self;
         values.node->inputs[1] = indices;
         values.node->n_inputs = 2;
         values.node->name = "MinDim";
     }
-    
+
     TensorMaxMinResult result = {values, indices};
     return result;
 }
-
 
 void cten_assert(bool cond, const char* fmt, ...) {
     if(!cond) {
@@ -253,16 +256,16 @@ bool cten_elemwise_broadcast(Tensor* a, Tensor* b) {
     int b_ndims = TensorShape_dim(orig_b.shape);
     int max_ndims = (a_ndims > b_ndims) ? a_ndims : b_ndims;
 
-    if (max_ndims > 4) return false;
+    if(max_ndims > 4) return false;
     memset(result_shape, 0, sizeof(TensorShape));
 
-    for (int i = 0; i < max_ndims; i++) {
+    for(int i = 0; i < max_ndims; i++) {
         int a_idx = a_ndims - 1 - i;
         int b_idx = b_ndims - 1 - i;
         int result_idx = max_ndims - 1 - i;
         int a_dim = (a_idx >= 0) ? orig_a.shape[a_idx] : 1;
         int b_dim = (b_idx >= 0) ? orig_b.shape[b_idx] : 1;
-        if (a_dim == b_dim || a_dim == 1 || b_dim == 1) {
+        if(a_dim == b_dim || a_dim == 1 || b_dim == 1) {
             result_shape[result_idx] = (a_dim > b_dim) ? a_dim : b_dim;
         } else {
             return false;
@@ -270,23 +273,23 @@ bool cten_elemwise_broadcast(Tensor* a, Tensor* b) {
     }
 
     // 2. Check if tensor 'a' needs to be expanded
-    if (memcmp(orig_a.shape, result_shape, sizeof(TensorShape)) != 0) {
+    if(memcmp(orig_a.shape, result_shape, sizeof(TensorShape)) != 0) {
         Tensor new_a = Tensor_new(result_shape, orig_a.node != NULL);
-        for (int i = 0; i < new_a.data->numel; i++) {
+        for(int i = 0; i < new_a.data->numel; i++) {
             int rem = i;
             int idx[4] = {0};
-            for (int d = max_ndims - 1; d >= 0; d--) {
+            for(int d = max_ndims - 1; d >= 0; d--) {
                 idx[d] = rem % result_shape[d];
                 rem /= result_shape[d];
             }
 
             int source_idx = 0;
             int stride = 1;
-            //iterating backwards over the original tensor's dimensions
-            for (int d = a_ndims - 1; d >= 0; d--) {
+            // iterating backwards over the original tensor's dimensions
+            for(int d = a_ndims - 1; d >= 0; d--) {
                 int original_dim_size = orig_a.shape[d];
                 int result_dim_coord = idx[max_ndims - a_ndims + d];
-                //if original dimension was 1, it's broadcast; its index is 0.
+                // if original dimension was 1, it's broadcast; its index is 0.
                 int dim_idx = (original_dim_size == 1) ? 0 : result_dim_coord;
                 source_idx += dim_idx * stride;
                 stride *= original_dim_size;
@@ -297,19 +300,19 @@ bool cten_elemwise_broadcast(Tensor* a, Tensor* b) {
     }
 
     // 3. Check if tensor 'b' needs to be expanded
-    if (memcmp(orig_b.shape, result_shape, sizeof(TensorShape)) != 0) {
+    if(memcmp(orig_b.shape, result_shape, sizeof(TensorShape)) != 0) {
         Tensor new_b = Tensor_new(result_shape, orig_b.node != NULL);
-        for (int i = 0; i < new_b.data->numel; i++) {
+        for(int i = 0; i < new_b.data->numel; i++) {
             int rem = i;
             int idx[4] = {0};
-            for (int d = max_ndims - 1; d >= 0; d--) {
+            for(int d = max_ndims - 1; d >= 0; d--) {
                 idx[d] = rem % result_shape[d];
                 rem /= result_shape[d];
             }
 
             int source_idx = 0;
             int stride = 1;
-            for (int d = b_ndims - 1; d >= 0; d--) {
+            for(int d = b_ndims - 1; d >= 0; d--) {
                 int original_dim_size = orig_b.shape[d];
                 int result_dim_coord = idx[max_ndims - b_ndims + d];
                 int dim_idx = (original_dim_size == 1) ? 0 : result_dim_coord;
@@ -323,176 +326,186 @@ bool cten_elemwise_broadcast(Tensor* a, Tensor* b) {
     return true;
 }
 
-Tensor reduce_gradient_for_broadcasting(Tensor grad, TensorShape original_shape, TensorShape broadcasted_shape) {
+Tensor reduce_gradient_for_broadcasting(Tensor grad,
+                                        TensorShape original_shape,
+                                        TensorShape broadcasted_shape) {
     Tensor result = grad;
-    
-    for (int dim = 3; dim >= 0; dim--) {
+
+    for(int dim = 3; dim >= 0; dim--) {
         int orig_size = original_shape[dim];
         int broad_size = broadcasted_shape[dim];
         int grad_size = result.shape[dim];
-        
+
         // Case 1: dim was broadcasted from size 1 to size N
-        if (orig_size == 1 && broad_size > 1 && grad_size == broad_size) {
-            Tensor summed = Tensor_sum(result, dim);  
-            TensorShape new_shape = {result.shape[0], result.shape[1], result.shape[2], result.shape[3]};
-            new_shape[dim] = 1;  
+        if(orig_size == 1 && broad_size > 1 && grad_size == broad_size) {
+            Tensor summed = Tensor_sum(result, dim);
+            TensorShape new_shape = {result.shape[0],
+                                     result.shape[1],
+                                     result.shape[2],
+                                     result.shape[3]};
+            new_shape[dim] = 1;
             result = Tensor_new(new_shape, false);
-            
-            if (summed.data->numel == 1) {
-                for (int i = 0; i < result.data->numel; i++) {
+
+            if(summed.data->numel == 1) {
+                for(int i = 0; i < result.data->numel; i++) {
                     result.data->flex[i] = summed.data->flex[0];
                 }
             } else {
-                for (int i = 0; i < result.data->numel && i < summed.data->numel; i++) {
+                for(int i = 0; i < result.data->numel && i < summed.data->numel; i++) {
                     result.data->flex[i] = summed.data->flex[i];
                 }
             }
         }
-        // Case 2: dim was added (original was 0, broadcasted > 0) 
-        else if (orig_size == 0 && broad_size > 0 && grad_size == broad_size) {
+        // Case 2: dim was added (original was 0, broadcasted > 0)
+        else if(orig_size == 0 && broad_size > 0 && grad_size == broad_size) {
             Tensor summed = Tensor_sum(result, dim);
-            TensorShape new_shape = {result.shape[0], result.shape[1], result.shape[2], result.shape[3]};
+            TensorShape new_shape = {result.shape[0],
+                                     result.shape[1],
+                                     result.shape[2],
+                                     result.shape[3]};
             new_shape[dim] = 0;
-            for (int d = dim; d < 3; d++) {
-                if (d + 1 < 4) {
-                    new_shape[d] = new_shape[d + 1];
-                }
+            for(int d = dim; d < 3; d++) {
+                if(d + 1 < 4) { new_shape[d] = new_shape[d + 1]; }
             }
-            new_shape[3] = 0; //clearing last dim
+            new_shape[3] = 0;  // clearing last dim
             result = Tensor_new(new_shape, false);
-            for (int i = 0; i < result.data->numel && i < summed.data->numel; i++) {
+            for(int i = 0; i < result.data->numel && i < summed.data->numel; i++) {
                 result.data->flex[i] = summed.data->flex[i];
             }
         }
-        // Case 3: no broadcasting on this dim  
-        else if (orig_size == broad_size && grad_size == broad_size) {
-            //do nothing
-        }
-        else {
-            //have to think about this
+        // Case 3: no broadcasting on this dim
+        else if(orig_size == broad_size && grad_size == broad_size) {
+            // do nothing
+        } else {
+            // have to think about this
             cten_assert(false, "reduce_gradient_for_broadcasting: unexpected broadcasting pattern");
         }
     }
     return result;
 }
 
-void Tensor_normalize_dataset(const float (*X)[4], float (*X_norm)[4], int n_samples, int n_train_samples, int n_features) {
+void Tensor_normalize_dataset(const float (*X)[4],
+                              float (*X_norm)[4],
+                              int n_samples,
+                              int n_train_samples,
+                              int n_features) {
     float mean[4] = {0}, std[4] = {0};
-    
-    for (int i = 0; i < n_train_samples; i++) {
-        for (int j = 0; j < n_features; j++) {
+
+    for(int i = 0; i < n_train_samples; i++) {
+        for(int j = 0; j < n_features; j++) {
             mean[j] += X[i][j];
         }
     }
-    for (int j = 0; j < n_features; j++) {
+    for(int j = 0; j < n_features; j++) {
         mean[j] /= n_train_samples;
     }
-    
-    for (int i = 0; i < n_train_samples; i++) {
-        for (int j = 0; j < n_features; j++) {
+
+    for(int i = 0; i < n_train_samples; i++) {
+        for(int j = 0; j < n_features; j++) {
             std[j] += (X[i][j] - mean[j]) * (X[i][j] - mean[j]);
         }
     }
-    for (int j = 0; j < n_features; j++) {
+    for(int j = 0; j < n_features; j++) {
         std[j] = sqrtf(std[j] / n_train_samples);
         // Avoid division by zero
-        if (std[j] == 0) std[j] = 1.0f;
+        if(std[j] == 0) std[j] = 1.0f;
     }
 
-    for (int i = 0; i < n_samples; i++) {
-        for (int j = 0; j < n_features; j++) {
+    for(int i = 0; i < n_samples; i++) {
+        for(int j = 0; j < n_features; j++) {
             X_norm[i][j] = (X[i][j] - mean[j]) / std[j];
         }
     }
 }
 
-void Tensor_shuffle_dataset(const float (*X)[4], const int *y,float (*X_shuffled)[4], int *y_shuffled, int n_samples, int n_features) {
+void Tensor_shuffle_dataset(const float (*X)[4],
+                            const int* y,
+                            float (*X_shuffled)[4],
+                            int* y_shuffled,
+                            int n_samples,
+                            int n_features) {
     int* indices = malloc(n_samples * sizeof(int));
-    for (int i = 0; i < n_samples; i++) {
+    for(int i = 0; i < n_samples; i++) {
         indices[i] = i;
     }
-    
+
     // Fisher-Yates shuffle
     srand((unsigned)time(NULL));
-    for (int i = n_samples - 1; i > 0; i--) {
+    for(int i = n_samples - 1; i > 0; i--) {
         int j = rand() % (i + 1);
         int tmp = indices[i];
         indices[i] = indices[j];
         indices[j] = tmp;
     }
 
-    for (int i = 0; i < n_samples; i++) {
+    for(int i = 0; i < n_samples; i++) {
         int idx = indices[i];
-        for (int j = 0; j < n_features; j++) {
+        for(int j = 0; j < n_features; j++) {
             X_shuffled[i][j] = X[idx][j];
         }
         y_shuffled[i] = y[idx];
     }
-    
+
     free(indices);
 }
 
 Tensor Tensor_reduce_dim(Tensor self, int dim, const char* operation) {
     int ndim = TensorShape_dim(self.shape);
-    if (dim < 0){
-        if (dim < -ndim) {
+    if(dim < 0) {
+        if(dim < -ndim) {
             printf("dim %d out of range", dim);
             exit(-1);
         }
         dim += ndim;
     }
-    if (dim >= ndim) {
+    if(dim >= ndim) {
         printf("dim %d out of range", dim);
         exit(-1);
     }
-    
+
     TensorShape out_shape = {0, 0, 0, 0};
     int out_idx = 0;
-    for (int i = 0; i < ndim; i++) {
-        if (i != dim) {
-            out_shape[out_idx++] = self.shape[i];
-        }
+    for(int i = 0; i < ndim; i++) {
+        if(i != dim) { out_shape[out_idx++] = self.shape[i]; }
     }
-    
+
     int dim_size = self.shape[dim];
     Tensor res = Tensor_zeros(out_shape, self.node != NULL);
-    
+
     int total_out_elements = res.data->numel;
-    
-    for (int out_i = 0; out_i < total_out_elements; out_i++) {
+
+    for(int out_i = 0; out_i < total_out_elements; out_i++) {
         int out_indices[4] = {0};
         int remaining = out_i;
-        for (int j = out_idx - 1; j >= 0; j--) {
+        for(int j = out_idx - 1; j >= 0; j--) {
             out_indices[j] = remaining % out_shape[j];
             remaining /= out_shape[j];
         }
-        
-        for (int d = 0; d < dim_size; d++) {
+
+        for(int d = 0; d < dim_size; d++) {
             int in_indices[4] = {0};
             int out_pos = 0;
-            for (int j = 0; j < ndim; j++) {
-                if (j == dim) {
+            for(int j = 0; j < ndim; j++) {
+                if(j == dim) {
                     in_indices[j] = d;
                 } else {
                     in_indices[j] = out_indices[out_pos++];
                 }
             }
-            
+
             int in_linear = 0;
             int stride = 1;
-            for (int j = ndim - 1; j >= 0; j--) {
+            for(int j = ndim - 1; j >= 0; j--) {
                 in_linear += in_indices[j] * stride;
                 stride *= self.shape[j];
             }
-            
+
             res.data->flex[out_i] += self.data->flex[in_linear];
         }
-        
-        if (strcmp(operation, "mean") == 0) {
-            res.data->flex[out_i] /= dim_size;
-        }
+
+        if(strcmp(operation, "mean") == 0) { res.data->flex[out_i] /= dim_size; }
     }
-    
+
     return res;
 }
 
@@ -503,19 +516,17 @@ Tensor Tensor_unsqueeze(Tensor self, int dim) {
     TensorShape new_shape = {0};
     int old_idx = 0;
     // insert a '1' at the 'dim' position in the new shape.
-    for (int i = 0; i < old_ndim + 1 && i < 4; i++) {
-        if (i == dim) {
+    for(int i = 0; i < old_ndim + 1 && i < 4; i++) {
+        if(i == dim) {
             new_shape[i] = 1;
         } else {
-            if(old_idx < 4) {
-               new_shape[i] = self.shape[old_idx++];
-            }
+            if(old_idx < 4) { new_shape[i] = self.shape[old_idx++]; }
         }
     }
 
     Tensor res = self;
     memcpy(res.shape, new_shape, sizeof(TensorShape));
-    
+
     return res;
 }
 
@@ -552,7 +563,7 @@ void cten_clip_grad_value_range(Tensor* params, int n_params, float min_value, f
     if(min_value > max_value) {
         cten_assert(false, "min_value must be less than or equal to max_value");
     }
-    if(n_params <= 0 || params == NULL) { return; } //safety check
+    if(n_params <= 0 || params == NULL) { return; }  // safety check
     int clipped_count = 0;
     int total_count = 0;
     for(int i = 0; i < n_params; i++) {
@@ -575,7 +586,7 @@ void cten_clip_grad_value_range(Tensor* params, int n_params, float min_value, f
 }
 
 void cten_clip_grad_positive(Tensor* params, int n_params, float max_value) {
-    if(n_params <= 0 || params == NULL) { return; } //safety check
+    if(n_params <= 0 || params == NULL) { return; }  // safety check
     int clipped_count = 0;
     int total_count = 0;
 
@@ -597,7 +608,7 @@ void cten_clip_grad_positive(Tensor* params, int n_params, float max_value) {
 }
 
 void cten_clip_grad_negative(Tensor* params, int n_params, float min_value) {
-    if(n_params <= 0 || params == NULL) { return; } //safety check
+    if(n_params <= 0 || params == NULL) { return; }  // safety check
     int clipped_count = 0;
     int total_count = 0;
 

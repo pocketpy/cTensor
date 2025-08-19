@@ -60,7 +60,7 @@ void c11_vector__swap(c11_vector* self, c11_vector* other);
 #define c11_vector__erase(T, self, index)                                                          \
     do {                                                                                           \
         T* p = (T*)(self)->data + (index);                                                         \
-        memmove(p, p + 1, ((self)->length - (index)-1) * sizeof(T));                               \
+        memmove(p, p + 1, ((self)->length - (index) - 1) * sizeof(T));                             \
         (self)->length--;                                                                          \
     } while(0)
 
