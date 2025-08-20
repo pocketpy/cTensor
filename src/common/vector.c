@@ -61,7 +61,7 @@ void* c11_vector__submit(c11_vector* self, int* length) {
     return retval;
 }
 
-void c11_vector__swap(c11_vector *self, c11_vector *other){
+void c11_vector__swap(c11_vector* self, c11_vector* other) {
     c11_vector tmp = *self;
     *self = *other;
     *other = tmp;

@@ -7,7 +7,7 @@
 
 void test_abs_operator() {
     const char* op_name = "abs";
-    PoolId pool_id = 0; 
+    PoolId pool_id = 0;
     cten_begin_malloc(pool_id);
 
     // Test Case 1: Basic test with mixed positive, negative and zero values
@@ -16,7 +16,7 @@ void test_abs_operator() {
         TensorShape shape = {6};
         float d1[] = {-2.5f, -1.0f, 0.0f, 1.0f, 2.5f, -3.0f};
         float exp_d[] = {2.5f, 1.0f, 0.0f, 1.0f, 2.5f, 3.0f};
-        
+
         Tensor t1 = create_test_tensor(shape, d1, false);
         Tensor expected_res = create_test_tensor(shape, exp_d, false);
         Tensor actual_res = Tensor_abs(t1);
@@ -58,7 +58,7 @@ void test_abs_operator() {
         TensorShape m_shape = {2, 3};
         float d1[] = {1.0f, -2.0f, 0.0f, -4.0f, 5.0f, -6.0f};
         float exp_d[] = {1.0f, 2.0f, 0.0f, 4.0f, 5.0f, 6.0f};
-        
+
         Tensor t1 = create_test_tensor(m_shape, d1, false);
         Tensor expected_res = create_test_tensor(m_shape, exp_d, false);
         Tensor actual_res = Tensor_abs(t1);
@@ -72,7 +72,7 @@ void test_abs_operator() {
         TensorShape shape = {5};
         float d1[] = {-1e8f, 1e-8f, 0.0f, 1e8f, -1e-8f};
         float exp_d[] = {1e8f, 1e-8f, 0.0f, 1e8f, 1e-8f};
-        
+
         Tensor t1 = create_test_tensor(shape, d1, false);
         Tensor expected_res = create_test_tensor(shape, exp_d, false);
         Tensor actual_res = Tensor_abs(t1);

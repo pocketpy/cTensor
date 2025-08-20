@@ -6,7 +6,7 @@
 
 void test_sub_backward() {
     const char* op_name = "sub_backward";
-    PoolId pool_id = 0; 
+    PoolId pool_id = 0;
     cten_begin_malloc(pool_id);
 
     // Test Case 1: Simple backward (1x1 tensors)
@@ -17,20 +17,30 @@ void test_sub_backward() {
             TensorShape s_shape = {1};
             float d1[] = {5.0f};
             float d2[] = {3.0f};
-            float exp_grad1[] = {1.0f};  // dz/dx = 1
-            float exp_grad2[] = {-1.0f}; // dz/dy = -1
-            
+            float exp_grad1[] = {1.0f};   // dz/dx = 1
+            float exp_grad2[] = {-1.0f};  // dz/dy = -1
+
             Tensor t1 = create_test_tensor(s_shape, d1, true);
             Tensor t2 = create_test_tensor(s_shape, d2, true);
             Tensor z = Tensor_sub(t1, t2);  // z = 2.0
-            
+
             Tensor_backward(z, (Tensor){0});
-            
+
             Tensor expected_grad1 = create_test_tensor(s_shape, exp_grad1, false);
             Tensor expected_grad2 = create_test_tensor(s_shape, exp_grad2, false);
 
-            compare_tensors(&t1.node->grad, &expected_grad1, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
-            compare_tensors(&t2.node->grad, &expected_grad2, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+            compare_tensors(&t1.node->grad,
+                            &expected_grad1,
+                            op_name,
+                            tc_name,
+                            1,
+                            TEST_FLOAT_TOLERANCE);
+            compare_tensors(&t2.node->grad,
+                            &expected_grad2,
+                            op_name,
+                            tc_name,
+                            1,
+                            TEST_FLOAT_TOLERANCE);
         }
 
         // Sub-test 2: Vector sub backward
@@ -40,19 +50,29 @@ void test_sub_backward() {
             float d2[] = {2.0f, 3.0f, 4.0f};
             float exp_grad1[] = {1.0f, 1.0f, 1.0f};
             float exp_grad2[] = {-1.0f, -1.0f, -1.0f};
-            
+
             Tensor t1 = create_test_tensor(v_shape, d1, true);
             Tensor t2 = create_test_tensor(v_shape, d2, true);
             Tensor z = Tensor_sub(t1, t2);
             Tensor l = Tensor_sum(z);
-            
+
             Tensor_backward(l, (Tensor){0});
-            
+
             Tensor expected_grad1 = create_test_tensor(v_shape, exp_grad1, false);
             Tensor expected_grad2 = create_test_tensor(v_shape, exp_grad2, false);
 
-            compare_tensors(&t1.node->grad, &expected_grad1, op_name, tc_name, 2, TEST_FLOAT_TOLERANCE);
-            compare_tensors(&t2.node->grad, &expected_grad2, op_name, tc_name, 2, TEST_FLOAT_TOLERANCE);
+            compare_tensors(&t1.node->grad,
+                            &expected_grad1,
+                            op_name,
+                            tc_name,
+                            2,
+                            TEST_FLOAT_TOLERANCE);
+            compare_tensors(&t2.node->grad,
+                            &expected_grad2,
+                            op_name,
+                            tc_name,
+                            2,
+                            TEST_FLOAT_TOLERANCE);
         }
 
         // Sub-test 3: Matrix sub backward
@@ -62,19 +82,29 @@ void test_sub_backward() {
             float d2[] = {1.0f, 2.0f, 3.0f, 4.0f};
             float exp_grad1[] = {1.0f, 1.0f, 1.0f, 1.0f};
             float exp_grad2[] = {-1.0f, -1.0f, -1.0f, -1.0f};
-            
+
             Tensor t1 = create_test_tensor(m_shape, d1, true);
             Tensor t2 = create_test_tensor(m_shape, d2, true);
             Tensor z = Tensor_sub(t1, t2);
             Tensor l = Tensor_sum(z);
-            
+
             Tensor_backward(l, (Tensor){0});
-            
+
             Tensor expected_grad1 = create_test_tensor(m_shape, exp_grad1, false);
             Tensor expected_grad2 = create_test_tensor(m_shape, exp_grad2, false);
 
-            compare_tensors(&t1.node->grad, &expected_grad1, op_name, tc_name, 3, TEST_FLOAT_TOLERANCE);
-            compare_tensors(&t2.node->grad, &expected_grad2, op_name, tc_name, 3, TEST_FLOAT_TOLERANCE);
+            compare_tensors(&t1.node->grad,
+                            &expected_grad1,
+                            op_name,
+                            tc_name,
+                            3,
+                            TEST_FLOAT_TOLERANCE);
+            compare_tensors(&t2.node->grad,
+                            &expected_grad2,
+                            op_name,
+                            tc_name,
+                            3,
+                            TEST_FLOAT_TOLERANCE);
         }
     }
 
@@ -89,19 +119,29 @@ void test_sub_backward() {
             float scalar_data[] = {3.0f};
             float exp_grad_vec[] = {1.0f, 1.0f};
             float exp_grad_scalar[] = {-2.0f};
-            
+
             Tensor t_vec = create_test_tensor(vec_shape, vec_data, true);
             Tensor t_scalar = create_test_tensor(scalar_shape, scalar_data, true);
             Tensor z = Tensor_sub(t_vec, t_scalar);
             Tensor l = Tensor_sum(z);
-            
+
             Tensor_backward(l, (Tensor){0});
-            
+
             Tensor expected_grad_vec = create_test_tensor(vec_shape, exp_grad_vec, false);
             Tensor expected_grad_scalar = create_test_tensor(scalar_shape, exp_grad_scalar, false);
 
-            compare_tensors(&t_vec.node->grad, &expected_grad_vec, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
-            compare_tensors(&t_scalar.node->grad, &expected_grad_scalar, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+            compare_tensors(&t_vec.node->grad,
+                            &expected_grad_vec,
+                            op_name,
+                            tc_name,
+                            1,
+                            TEST_FLOAT_TOLERANCE);
+            compare_tensors(&t_scalar.node->grad,
+                            &expected_grad_scalar,
+                            op_name,
+                            tc_name,
+                            1,
+                            TEST_FLOAT_TOLERANCE);
         }
 
         // Sub-test 2: Matrix - Row Vector
@@ -123,8 +163,18 @@ void test_sub_backward() {
             Tensor expected_grad_mat = create_test_tensor(mat_shape, exp_grad_mat, false);
             Tensor expected_grad_row = create_test_tensor(row_shape, exp_grad_row, false);
 
-            compare_tensors(&t_mat.node->grad, &expected_grad_mat, op_name, tc_name, 2, TEST_FLOAT_TOLERANCE);
-            compare_tensors(&t_row.node->grad, &expected_grad_row, op_name, tc_name, 2, TEST_FLOAT_TOLERANCE);
+            compare_tensors(&t_mat.node->grad,
+                            &expected_grad_mat,
+                            op_name,
+                            tc_name,
+                            2,
+                            TEST_FLOAT_TOLERANCE);
+            compare_tensors(&t_row.node->grad,
+                            &expected_grad_row,
+                            op_name,
+                            tc_name,
+                            2,
+                            TEST_FLOAT_TOLERANCE);
         }
 
         // Sub-test 3: Matrix - Column Vector
@@ -146,8 +196,18 @@ void test_sub_backward() {
             Tensor expected_grad_mat = create_test_tensor(mat_shape, exp_grad_mat, false);
             Tensor expected_grad_col = create_test_tensor(col_shape, exp_grad_col, false);
 
-            compare_tensors(&t_mat.node->grad, &expected_grad_mat, op_name, tc_name, 3, TEST_FLOAT_TOLERANCE);
-            compare_tensors(&t_col.node->grad, &expected_grad_col, op_name, tc_name, 3, TEST_FLOAT_TOLERANCE);
+            compare_tensors(&t_mat.node->grad,
+                            &expected_grad_mat,
+                            op_name,
+                            tc_name,
+                            3,
+                            TEST_FLOAT_TOLERANCE);
+            compare_tensors(&t_col.node->grad,
+                            &expected_grad_col,
+                            op_name,
+                            tc_name,
+                            3,
+                            TEST_FLOAT_TOLERANCE);
         }
     }
 
@@ -161,19 +221,29 @@ void test_sub_backward() {
             float d2[] = {1.1f, 2.2f, 0.5f, 3.3f};
             float exp_grad1[] = {1.0f, 1.0f, 1.0f, 1.0f};
             float exp_grad2[] = {-1.0f, -1.0f, -1.0f, -1.0f};
-            
+
             Tensor t1 = create_test_tensor(v_shape, d1, true);
             Tensor t2 = create_test_tensor(v_shape, d2, true);
             Tensor z = Tensor_sub(t1, t2);
             Tensor l = Tensor_sum(z);
-            
+
             Tensor_backward(l, (Tensor){0});
-            
+
             Tensor expected_grad1 = create_test_tensor(v_shape, exp_grad1, false);
             Tensor expected_grad2 = create_test_tensor(v_shape, exp_grad2, false);
 
-            compare_tensors(&t1.node->grad, &expected_grad1, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
-            compare_tensors(&t2.node->grad, &expected_grad2, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+            compare_tensors(&t1.node->grad,
+                            &expected_grad1,
+                            op_name,
+                            tc_name,
+                            1,
+                            TEST_FLOAT_TOLERANCE);
+            compare_tensors(&t2.node->grad,
+                            &expected_grad2,
+                            op_name,
+                            tc_name,
+                            1,
+                            TEST_FLOAT_TOLERANCE);
         }
 
         // Sub-test 2: Random 3D tensor subtraction
@@ -194,8 +264,18 @@ void test_sub_backward() {
             Tensor expected_grad1 = create_test_tensor(tensor3d_shape, exp_grad1, false);
             Tensor expected_grad2 = create_test_tensor(tensor3d_shape, exp_grad2, false);
 
-            compare_tensors(&t1.node->grad, &expected_grad1, op_name, tc_name, 2, TEST_FLOAT_TOLERANCE);
-            compare_tensors(&t2.node->grad, &expected_grad2, op_name, tc_name, 2, TEST_FLOAT_TOLERANCE);
+            compare_tensors(&t1.node->grad,
+                            &expected_grad1,
+                            op_name,
+                            tc_name,
+                            2,
+                            TEST_FLOAT_TOLERANCE);
+            compare_tensors(&t2.node->grad,
+                            &expected_grad2,
+                            op_name,
+                            tc_name,
+                            2,
+                            TEST_FLOAT_TOLERANCE);
         }
     }
 
@@ -211,24 +291,39 @@ void test_sub_backward() {
             float exp_grad_a[] = {2.0f, 3.0f};
             float exp_grad_b[] = {-2.0f, -3.0f};
             float exp_grad_c[] = {2.0f, 2.0f};
-            
+
             Tensor a = create_test_tensor(v_shape, a_data, true);
             Tensor b = create_test_tensor(v_shape, b_data, true);
             Tensor c = create_test_tensor(v_shape, c_data, true);
-            
+
             Tensor diff = Tensor_sub(a, b);
             Tensor prod = Tensor_mul(diff, c);
             Tensor l = Tensor_sum(prod);
-            
+
             Tensor_backward(l, (Tensor){0});
-            
+
             Tensor expected_grad_a = create_test_tensor(v_shape, exp_grad_a, false);
             Tensor expected_grad_b = create_test_tensor(v_shape, exp_grad_b, false);
             Tensor expected_grad_c = create_test_tensor(v_shape, exp_grad_c, false);
 
-            compare_tensors(&a.node->grad, &expected_grad_a, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
-            compare_tensors(&b.node->grad, &expected_grad_b, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
-            compare_tensors(&c.node->grad, &expected_grad_c, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+            compare_tensors(&a.node->grad,
+                            &expected_grad_a,
+                            op_name,
+                            tc_name,
+                            1,
+                            TEST_FLOAT_TOLERANCE);
+            compare_tensors(&b.node->grad,
+                            &expected_grad_b,
+                            op_name,
+                            tc_name,
+                            1,
+                            TEST_FLOAT_TOLERANCE);
+            compare_tensors(&c.node->grad,
+                            &expected_grad_c,
+                            op_name,
+                            tc_name,
+                            1,
+                            TEST_FLOAT_TOLERANCE);
         }
     }
 

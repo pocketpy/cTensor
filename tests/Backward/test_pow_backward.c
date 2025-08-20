@@ -7,7 +7,7 @@
 
 void test_pow_backward() {
     const char* op_name = "pow_backward";
-    PoolId pool_id = 0; 
+    PoolId pool_id = 0;
     cten_begin_malloc(pool_id);
 
     // Test Case 1: Simple element-wise vector power
@@ -21,16 +21,16 @@ void test_pow_backward() {
         // loss = sum(z) = 7.4621
         float exp_grad_x[] = {2.568312f, 1.116224f};
         float exp_grad_y[] = {7.218272f, -0.261589f};
-        
+
         Tensor x = create_test_tensor(shape, x_data, true);
         Tensor y = create_test_tensor(shape, y_data, true);
-        
+
         Tensor z = Tensor_pow(x, y);
         Tensor loss = Tensor_sum(z);
-        
+
         Tensor grad_dummy = {0};
         Tensor_backward(loss, grad_dummy);
-        
+
         Tensor expected_grad_x = create_test_tensor(shape, exp_grad_x, false);
         Tensor expected_grad_y = create_test_tensor(shape, exp_grad_y, false);
 
@@ -56,10 +56,10 @@ void test_pow_backward() {
 
         Tensor z = Tensor_pow(x, y);
         Tensor loss = Tensor_sum(z);
-        
+
         Tensor grad_dummy = {0};
         Tensor_backward(loss, grad_dummy);
-        
+
         Tensor expected_grad_x = create_test_tensor(x_shape, exp_grad_x, false);
         Tensor expected_grad_y = create_test_tensor(y_shape, exp_grad_y, false);
 
@@ -85,10 +85,10 @@ void test_pow_backward() {
 
         Tensor z = Tensor_pow(x, y);
         Tensor loss = Tensor_sum(z);
-        
+
         Tensor grad_dummy = {0};
         Tensor_backward(loss, grad_dummy);
-        
+
         Tensor expected_grad_x = create_test_tensor(x_shape, exp_grad_x, false);
         Tensor expected_grad_y = create_test_tensor(y_shape, exp_grad_y, false);
 
@@ -101,7 +101,7 @@ void test_pow_backward() {
         const char* tc_name = "pow_edge_cases_backward";
         TensorShape shape = {2};
         float x_data[] = {0.0f, -2.0f};
-        float y_data[] = {2.0f, 3.0f}; // Exponents are integers
+        float y_data[] = {2.0f, 3.0f};  // Exponents are integers
 
         // z = [0^2, (-2)^3] = [0.0, -8.0]
         // loss = sum(z) = -8.0
@@ -116,13 +116,13 @@ void test_pow_backward() {
 
         Tensor x = create_test_tensor(shape, x_data, true);
         Tensor y = create_test_tensor(shape, y_data, true);
-        
+
         Tensor z = Tensor_pow(x, y);
         Tensor loss = Tensor_sum(z);
-        
+
         Tensor grad_dummy = {0};
         Tensor_backward(loss, grad_dummy);
-        
+
         Tensor expected_grad_x = create_test_tensor(shape, exp_grad_x, false);
         Tensor expected_grad_y = create_test_tensor(shape, exp_grad_y, false);
 
@@ -137,7 +137,7 @@ void test_pow_backward() {
         float a_data[] = {1.4839f};
         float b_data[] = {2.2687f};
         float c_data[] = {0.6194f};
-        
+
         // Let d = a^b. Then z = d * c.
         // Forward: d = 1.4839^2.2687 = 2.4483. z = 2.4483 * 0.6194 = 1.5164
         // Backward pass (upstream grad for d is c=0.6194):
@@ -147,24 +147,39 @@ void test_pow_backward() {
         float exp_grad_b[] = {0.598515f};
         // dz/dc = d = a^b = 2.4483
         float exp_grad_c[] = {2.448306f};
-        
+
         Tensor a = create_test_tensor(shape, a_data, true);
         Tensor b = create_test_tensor(shape, b_data, true);
         Tensor c = create_test_tensor(shape, c_data, true);
-        
+
         Tensor d = Tensor_pow(a, b);
         Tensor z = Tensor_mul(d, c);
-        
+
         Tensor grad_dummy = {0};
         Tensor_backward(z, grad_dummy);
-        
+
         Tensor expected_grad_a_tensor = create_test_tensor(shape, exp_grad_a, false);
         Tensor expected_grad_b_tensor = create_test_tensor(shape, exp_grad_b, false);
         Tensor expected_grad_c_tensor = create_test_tensor(shape, exp_grad_c, false);
 
-        compare_tensors(&a.node->grad, &expected_grad_a_tensor, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
-        compare_tensors(&b.node->grad, &expected_grad_b_tensor, op_name, tc_name, 2, TEST_FLOAT_TOLERANCE);
-        compare_tensors(&c.node->grad, &expected_grad_c_tensor, op_name, tc_name, 3, TEST_FLOAT_TOLERANCE);
+        compare_tensors(&a.node->grad,
+                        &expected_grad_a_tensor,
+                        op_name,
+                        tc_name,
+                        1,
+                        TEST_FLOAT_TOLERANCE);
+        compare_tensors(&b.node->grad,
+                        &expected_grad_b_tensor,
+                        op_name,
+                        tc_name,
+                        2,
+                        TEST_FLOAT_TOLERANCE);
+        compare_tensors(&c.node->grad,
+                        &expected_grad_c_tensor,
+                        op_name,
+                        tc_name,
+                        3,
+                        TEST_FLOAT_TOLERANCE);
     }
 
     cten_free(pool_id);

@@ -6,7 +6,7 @@
 
 void test_abs_backward() {
     const char* op_name = "abs_backward";
-    PoolId pool_id = 0; 
+    PoolId pool_id = 0;
     cten_begin_malloc(pool_id);
 
     // Test Case 1: Simple backward
@@ -17,14 +17,19 @@ void test_abs_backward() {
             TensorShape s_shape = {1};
             float d1[] = {-5.0f};
             float exp_grad[] = {-1.0f};
-            
+
             Tensor t1 = create_test_tensor(s_shape, d1, true);
             Tensor z = Tensor_abs(t1);
-            
+
             Tensor_backward(z, (Tensor){0});
-            
+
             Tensor expected_grad = create_test_tensor(s_shape, exp_grad, false);
-            compare_tensors(&t1.node->grad, &expected_grad, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+            compare_tensors(&t1.node->grad,
+                            &expected_grad,
+                            op_name,
+                            tc_name,
+                            1,
+                            TEST_FLOAT_TOLERANCE);
         }
 
         // Sub-test 2: Vector with mixed values
@@ -32,15 +37,20 @@ void test_abs_backward() {
             TensorShape v_shape = {5};
             float d1[] = {10.0f, -2.0f, 0.0f, 5.5f, -0.1f};
             float exp_grad[] = {1.0f, -1.0f, 0.0f, 1.0f, -1.0f};
-            
+
             Tensor t1 = create_test_tensor(v_shape, d1, true);
             Tensor z = Tensor_abs(t1);
             Tensor l = Tensor_sum(z);
-            
+
             Tensor_backward(l, (Tensor){0});
-            
+
             Tensor expected_grad = create_test_tensor(v_shape, exp_grad, false);
-            compare_tensors(&t1.node->grad, &expected_grad, op_name, tc_name, 2, TEST_FLOAT_TOLERANCE);
+            compare_tensors(&t1.node->grad,
+                            &expected_grad,
+                            op_name,
+                            tc_name,
+                            2,
+                            TEST_FLOAT_TOLERANCE);
         }
 
         // Sub-test 3: Matrix backward
@@ -48,15 +58,20 @@ void test_abs_backward() {
             TensorShape m_shape = {2, 2};
             float d1[] = {1.0f, -2.0f, 0.0f, -4.0f};
             float exp_grad[] = {1.0f, -1.0f, 0.0f, -1.0f};
-            
+
             Tensor t1 = create_test_tensor(m_shape, d1, true);
             Tensor z = Tensor_abs(t1);
             Tensor l = Tensor_sum(z);
-            
+
             Tensor_backward(l, (Tensor){0});
-            
+
             Tensor expected_grad = create_test_tensor(m_shape, exp_grad, false);
-            compare_tensors(&t1.node->grad, &expected_grad, op_name, tc_name, 3, TEST_FLOAT_TOLERANCE);
+            compare_tensors(&t1.node->grad,
+                            &expected_grad,
+                            op_name,
+                            tc_name,
+                            3,
+                            TEST_FLOAT_TOLERANCE);
         }
     }
 
@@ -76,9 +91,8 @@ void test_abs_backward() {
         compare_tensors(&t.node->grad, &expected_grad, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
     }
 
-
     // Test Case 3: Chained and Complex Graphs
-    {   
+    {
         const char* tc_name = "Chained_and_Complex_Graphs_backward";
         // Sub-test 1: z = abs(x) * w
         {
@@ -91,21 +105,31 @@ void test_abs_backward() {
             // dl/dw = (dl/dz) * (dz/dw) = {1, 1} * abs(x) = {2, 3}
             float exp_grad_x[] = {-5.0f, 10.0f};
             float exp_grad_w[] = {2.0f, 3.0f};
-            
+
             Tensor x = create_test_tensor(shape, x_data, true);
             Tensor w = create_test_tensor(shape, w_data, true);
-            
+
             Tensor abs_x = Tensor_abs(x);
             Tensor prod = Tensor_mul(abs_x, w);
             Tensor l = Tensor_sum(prod);
-            
+
             Tensor_backward(l, (Tensor){0});
-            
+
             Tensor expected_grad_x = create_test_tensor(shape, exp_grad_x, false);
             Tensor expected_grad_w = create_test_tensor(shape, exp_grad_w, false);
 
-            compare_tensors(&x.node->grad, &expected_grad_x, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
-            compare_tensors(&w.node->grad, &expected_grad_w, op_name, tc_name, 2, TEST_FLOAT_TOLERANCE);
+            compare_tensors(&x.node->grad,
+                            &expected_grad_x,
+                            op_name,
+                            tc_name,
+                            1,
+                            TEST_FLOAT_TOLERANCE);
+            compare_tensors(&w.node->grad,
+                            &expected_grad_w,
+                            op_name,
+                            tc_name,
+                            2,
+                            TEST_FLOAT_TOLERANCE);
         }
 
         // Sub-test 2: z = abs(x * w)
@@ -120,21 +144,31 @@ void test_abs_backward() {
             // dl/dw = (dl/dz)(dz/dy)(dy/dw) = {1,1} * sign(y) * x = {-1,-1} * {-2,3} = {2, -3}
             float exp_grad_x[] = {-5.0f, 1.0f};
             float exp_grad_w[] = {2.0f, -3.0f};
-            
+
             Tensor x = create_test_tensor(shape, x_data, true);
             Tensor w = create_test_tensor(shape, w_data, true);
-            
+
             Tensor prod = Tensor_mul(x, w);
             Tensor abs_prod = Tensor_abs(prod);
             Tensor l = Tensor_sum(abs_prod);
-            
+
             Tensor_backward(l, (Tensor){0});
-            
+
             Tensor expected_grad_x = create_test_tensor(shape, exp_grad_x, false);
             Tensor expected_grad_w = create_test_tensor(shape, exp_grad_w, false);
 
-            compare_tensors(&x.node->grad, &expected_grad_x, op_name, tc_name, 3, TEST_FLOAT_TOLERANCE);
-            compare_tensors(&w.node->grad, &expected_grad_w, op_name, tc_name, 4, TEST_FLOAT_TOLERANCE);
+            compare_tensors(&x.node->grad,
+                            &expected_grad_x,
+                            op_name,
+                            tc_name,
+                            3,
+                            TEST_FLOAT_TOLERANCE);
+            compare_tensors(&w.node->grad,
+                            &expected_grad_w,
+                            op_name,
+                            tc_name,
+                            4,
+                            TEST_FLOAT_TOLERANCE);
         }
     }
 

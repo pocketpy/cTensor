@@ -38,7 +38,6 @@ Tensor nn_relu(Tensor self) {
         res.node->inputs[0] = self;
         res.node->n_inputs = 1;
         res.node->name = "Relu";
-
     }
     return res;
 }
@@ -67,9 +66,7 @@ Tensor nn_log(Tensor self) {
     return res;
 }
 
-static Tensor GradFn_exp(Tensor self, int i) {
-    return self;
-}
+static Tensor GradFn_exp(Tensor self, int i) { return self; }
 
 Tensor nn_exp(Tensor self) {
     bool requires_grad = !cten_is_eval() && self.node != NULL;
@@ -139,7 +136,7 @@ static Tensor GradFn_tan(Tensor self, int i) {
     Tensor res = Tensor_new(self.shape, false);
     for(int j = 0; j < self.data->numel; j++) {
         float y = self.data->flex[j];
-        res.data->flex[j] = 1.0f + y*y;
+        res.data->flex[j] = 1.0f + y * y;
     }
     return res;
 }
@@ -189,7 +186,7 @@ static Tensor GradFn_tanh(Tensor self, int i) {
     Tensor res = Tensor_new(self.shape, false);
     for(int j = 0; j < self.data->numel; j++) {
         float y = self.data->flex[j];
-        res.data->flex[j] = 1.0f - y*y;
+        res.data->flex[j] = 1.0f - y * y;
     }
     return res;
 }
@@ -215,7 +212,7 @@ static Tensor GradFn_elu(Tensor self, int i) {
     Tensor grad = Tensor_new(input.shape, false);
     for(int j = 0; j < input.data->numel; j++) {
         float x = input.data->flex[j];
-        if (x > 0) {
+        if(x > 0) {
             grad.data->flex[j] = 1.0f;
         } else {
             // derivative is alpha * e^x = alpha * (e^x - 1) + alpha = y + alpha
@@ -231,7 +228,7 @@ Tensor nn_elu(Tensor self, float alpha) {
     Tensor res = Tensor_new(self.shape, requires_grad);
     for(int i = 0; i < self.data->numel; i++) {
         float x = self.data->flex[i];
-        if (x > 0) {
+        if(x > 0) {
             res.data->flex[i] = x;
         } else {
             res.data->flex[i] = alpha * (expf(x) - 1.0f);
@@ -253,7 +250,7 @@ static Tensor GradFn_selu(Tensor self, int i) {
     const float lambda = 1.05070098f;
     for(int j = 0; j < input.data->numel; j++) {
         float x = input.data->flex[j];
-        if (x > 0) {
+        if(x > 0) {
             grad.data->flex[j] = lambda;
         } else {
             // derivative is lambda * alpha * e^x = y + lambda*alpha
@@ -270,7 +267,7 @@ Tensor nn_selu(Tensor self) {
     const float lambda = 1.05070098f;
     for(int i = 0; i < self.data->numel; i++) {
         float x = self.data->flex[i];
-        if (x > 0) {
+        if(x > 0) {
             res.data->flex[i] = lambda * x;
         } else {
             res.data->flex[i] = lambda * alpha * (expf(x) - 1);
@@ -290,9 +287,9 @@ Tensor Glorot_init(TensorShape shape, bool requires_grad) {
     int fan_in = shape[0];
     int fan_out = shape[1];
     float scale = sqrtf(6.0f / (fan_in + fan_out));
-    
+
     for(int i = 0; i < res.data->numel; i++) {
-        float r = (float)rand() / RAND_MAX * 2.0f - 1.0f; 
+        float r = (float)rand() / RAND_MAX * 2.0f - 1.0f;
         res.data->flex[i] = r * scale;
     }
     return res;
@@ -301,10 +298,10 @@ Tensor Glorot_init(TensorShape shape, bool requires_grad) {
 static Tensor GradFn_softmax(Tensor self, int i) {
     Tensor input = self.node->inputs[i];
     Tensor grad = Tensor_new(input.shape, false);
-    
+
     int dim = self.node->params[0];
     int input_ndim = TensorShape_dim(input.shape);
-    
+
     int dim_size = self.shape[dim];
     int outer_size = 1;
     for(int j = 0; j < dim; j++) {
@@ -315,21 +312,22 @@ static Tensor GradFn_softmax(Tensor self, int i) {
         inner_size *= self.shape[j];
     }
 
-    float* s_data = self.data->flex; // Softmax output data (s)
-    float* upstream_grad_data = self.node->grad.data->flex; // Upstream grad (dL/ds)
-    float* input_grad_data = grad.data->flex; // Resulting grad (dL/dz)
-    for (int outer = 0; outer < outer_size; outer++) {
-        for (int inner = 0; inner < inner_size; inner++) {
+    float* s_data = self.data->flex;                         // Softmax output data (s)
+    float* upstream_grad_data = self.node->grad.data->flex;  // Upstream grad (dL/ds)
+    float* input_grad_data = grad.data->flex;                // Resulting grad (dL/dz)
+    for(int outer = 0; outer < outer_size; outer++) {
+        for(int inner = 0; inner < inner_size; inner++) {
             int slice_offset = outer * dim_size * inner_size + inner;
             // Step 1. Calculate the dot product for the current slice: sum_k(dL/ds_k * s_k)
             float dot_product = 0.0f;
-            for (int k = 0; k < dim_size; k++) {
+            for(int k = 0; k < dim_size; k++) {
                 int index = slice_offset + k * inner_size;
                 dot_product += upstream_grad_data[index] * s_data[index];
             }
-            
-            // Step 2. Calculate the final gradient using the formula: dL/dz_j = s_j * (dL/ds_j - dot_product)
-            for (int k = 0; k < dim_size; k++) {
+
+            // Step 2. Calculate the final gradient using the formula: dL/dz_j = s_j * (dL/ds_j -
+            // dot_product)
+            for(int k = 0; k < dim_size; k++) {
                 int index = slice_offset + k * inner_size;
                 input_grad_data[index] = s_data[index] * (upstream_grad_data[index] - dot_product);
             }
@@ -352,7 +350,7 @@ Tensor nn_softmax(Tensor self, int dim) {
     for(int i = dim + 1; i < self_dim; i++) {
         inner_size *= self.shape[i];
     }
-    
+
     for(int outer = 0; outer < outer_size; outer++) {
         for(int inner = 0; inner < inner_size; inner++) {
             int slice_offset = outer * dim_size * inner_size + inner;
@@ -378,27 +376,27 @@ Tensor nn_softmax(Tensor self, int dim) {
     if(requires_grad) {
         res.node->grad_fn = GradFn_softmax;
         res.node->inputs[0] = self;
-        res.node->n_inputs = 1; 
-        res.node->name = "Softmax";     
+        res.node->n_inputs = 1;
+        res.node->name = "Softmax";
         res.node->params[0] = dim;
     }
     return res;
 }
 
 static Tensor GradFn_crossentropy(Tensor self, int i) {
-    if (i == 1) { // Gradient w.r.t. y_pred
+    if(i == 1) {  // Gradient w.r.t. y_pred
         Tensor y_true = self.node->inputs[0];
         Tensor y_pred = self.node->inputs[1];
         int n_samples = y_true.shape[0];
         int n_classes = y_true.shape[1];
-        
+
         Tensor grad = Tensor_new(y_pred.shape, false);
-        
-        for (int i = 0; i < n_samples; i++) {
-            for (int j = 0; j < n_classes; j++) {
+
+        for(int i = 0; i < n_samples; i++) {
+            for(int j = 0; j < n_classes; j++) {
                 float y_true_val = y_true.data->flex[i * n_classes + j];
                 float y_pred_val = y_pred.data->flex[i * n_classes + j];
-                if (y_true_val == 0) {
+                if(y_true_val == 0) {
                     grad.data->flex[i * n_classes + j] = 0;
                 } else {
                     grad.data->flex[i * n_classes + j] = -y_true_val / y_pred_val;
@@ -421,9 +419,12 @@ Tensor nn_crossentropy(Tensor y_true, Tensor y_pred) {
     assert(n_samples == y_pred.shape[0]);
     assert(n_classes == y_pred.shape[1]);
 
-    bool requires_grad = !cten_is_eval() && (y_true.node != NULL || y_pred.node != NULL); //No eval but rather training so requires grad is True
+    bool requires_grad =
+        !cten_is_eval() &&
+        (y_true.node != NULL ||
+         y_pred.node != NULL);  // No eval but rather training so requires grad is True
     Tensor res = Tensor_zeros((TensorShape){1}, requires_grad);
-    
+
     // Calculate cross-entropy loss
     float total_loss = 0.0f;
     for(int i = 0; i < n_samples; i++) {
@@ -431,32 +432,32 @@ Tensor nn_crossentropy(Tensor y_true, Tensor y_pred) {
         for(int j = 0; j < n_classes; j++) {
             float true_val = y_true.data->flex[i * n_classes + j];
             float pred_val = y_pred.data->flex[i * n_classes + j];
-            float epsilon = 1e-8f; // avoid log(0) so we add a small epsilon
-            if (true_val > 0) { // one-hot encoding
+            float epsilon = 1e-8f;  // avoid log(0) so we add a small epsilon
+            if(true_val > 0) {      // one-hot encoding
                 sample_loss -= true_val * logf(pred_val + epsilon);
             }
         }
         total_loss += sample_loss;
     }
-    
+
     res.data->flex[0] = total_loss / n_samples;
-    
+
     if(requires_grad) {
         res.node->grad_fn = GradFn_crossentropy;
         res.node->inputs[0] = y_true;
         res.node->inputs[1] = y_pred;
         res.node->n_inputs = 2;
-        res.node->name = "Cross-entropy";       
+        res.node->name = "Cross-entropy";
     }
 
     return res;
 }
 
 static Tensor GradFn_softmax_crossentropy(Tensor self, int i) {
-    if (i == 1) {
+    if(i == 1) {
         Tensor y_true = self.node->inputs[0];
         Tensor logits = self.node->inputs[1];
-        
+
         Tensor y_pred = Tensor_new(logits.shape, false);
         int self_dim = TensorShape_dim(logits.shape);
         int last_dim_size = logits.shape[self_dim - 1];
@@ -482,18 +483,18 @@ static Tensor GradFn_softmax_crossentropy(Tensor self, int i) {
                 y_pred.data->flex[index] /= sum;
             }
         }
-        
+
         Tensor grad = Tensor_new(y_pred.shape, false);
         int n_samples = y_pred.shape[0];
         int n_classes = y_pred.shape[1];
-        
-        for (int i = 0; i < n_samples; i++) {
-            for (int j = 0; j < n_classes; j++) {
-                grad.data->flex[i * n_classes + j] = 
+
+        for(int i = 0; i < n_samples; i++) {
+            for(int j = 0; j < n_classes; j++) {
+                grad.data->flex[i * n_classes + j] =
                     y_pred.data->flex[i * n_classes + j] - y_true.data->flex[i * n_classes + j];
             }
         }
-        
+
         return grad;
     }
     return Tensor_zeros((TensorShape){1}, false);
@@ -501,7 +502,7 @@ static Tensor GradFn_softmax_crossentropy(Tensor self, int i) {
 
 Tensor nn_softmax_crossentropy(Tensor y_true, Tensor logits) {
     bool requires_grad = !cten_is_eval() && logits.node != NULL;
-    //disable gradient computation
+    // disable gradient computation
     cten_begin_eval();
     int last_dim_logits = TensorShape_dim(logits.shape) - 1;
     Tensor y_pred = nn_softmax(logits, last_dim_logits);
@@ -509,26 +510,26 @@ Tensor nn_softmax_crossentropy(Tensor y_true, Tensor logits) {
     cten_end_eval();
     Tensor res = Tensor_zeros((TensorShape){1}, requires_grad);
     res.data->flex[0] = loss.data->flex[0];
-    
+
     if(requires_grad) {
         res.node->grad_fn = GradFn_softmax_crossentropy;
         res.node->inputs[0] = y_true;
         res.node->inputs[1] = logits;
         res.node->n_inputs = 2;
-        res.node->name = "SoftmaxCrossEntropy"; 
+        res.node->name = "SoftmaxCrossEntropy";
     }
-    
+
     return res;
 }
 
 static Tensor GradFn_mse_loss(Tensor self, int i) {
-    if (i == 1) {  // Gradient w.r.t y_pred
+    if(i == 1) {  // Gradient w.r.t y_pred
         Tensor y_true = self.node->inputs[0];
         Tensor y_pred = self.node->inputs[1];
         int n = y_pred.data->numel;
 
         Tensor grad = Tensor_new(y_pred.shape, false);
-        for (int j = 0; j < n; j++) {
+        for(int j = 0; j < n; j++) {
             grad.data->flex[j] = 2.0f * (y_pred.data->flex[j] - y_true.data->flex[j]) / n;
         }
         return grad;
@@ -548,7 +549,7 @@ Tensor nn_mse_loss(Tensor y_true, Tensor y_pred) {
     Tensor res = Tensor_new((TensorShape){1}, requires_grad);
     res.data->flex[0] = loss.data->flex[0];
 
-    if (requires_grad) {
+    if(requires_grad) {
         res.node->grad_fn = GradFn_mse_loss;
         res.node->inputs[0] = y_true;
         res.node->inputs[1] = y_pred;
@@ -559,17 +560,17 @@ Tensor nn_mse_loss(Tensor y_true, Tensor y_pred) {
 }
 
 static Tensor GradFn_mae_loss(Tensor self, int i) {
-    if (i == 1) { // Gradient w.r.t y_pred
+    if(i == 1) {  // Gradient w.r.t y_pred
         Tensor y_true = self.node->inputs[0];
         Tensor y_pred = self.node->inputs[1];
         int n = y_pred.data->numel;
 
         Tensor grad = Tensor_new(y_pred.shape, false);
-        for (int j = 0; j < n; j++) {
+        for(int j = 0; j < n; j++) {
             float error = y_pred.data->flex[j] - y_true.data->flex[j];
-            if (error > 0) {
+            if(error > 0) {
                 grad.data->flex[j] = 1.0f / n;
-            } else if (error < 0) {
+            } else if(error < 0) {
                 grad.data->flex[j] = -1.0f / n;
             } else {
                 grad.data->flex[j] = 0.0f;
@@ -592,7 +593,7 @@ Tensor nn_mae_loss(Tensor y_true, Tensor y_pred) {
     Tensor res = Tensor_new((TensorShape){1}, requires_grad);
     res.data->flex[0] = loss.data->flex[0];
 
-    if (requires_grad) {
+    if(requires_grad) {
         res.node->grad_fn = GradFn_mae_loss;
         res.node->inputs[0] = y_true;
         res.node->inputs[1] = y_pred;
@@ -603,7 +604,7 @@ Tensor nn_mae_loss(Tensor y_true, Tensor y_pred) {
 }
 
 static Tensor GradFn_huber_loss(Tensor self, int i) {
-    if (i == 1) { // Gradient w.r.t y_pred
+    if(i == 1) {  // Gradient w.r.t y_pred
         Tensor y_true = self.node->inputs[0];
         Tensor y_pred = self.node->inputs[1];
         float delta = huber_delta_value;
@@ -612,12 +613,12 @@ static Tensor GradFn_huber_loss(Tensor self, int i) {
         Tensor grad = Tensor_new(y_pred.shape, false);
         // Gradient of Huber loss is (error / n) for small errors,
         // and (delta * sign(error) / n) for large errors.
-        for (int j = 0; j < n; j++) {
+        for(int j = 0; j < n; j++) {
             float error = y_pred.data->flex[j] - y_true.data->flex[j];
-            if (fabsf(error) <= delta) {
+            if(fabsf(error) <= delta) {
                 grad.data->flex[j] = error / n;
             } else {
-                if (error > 0) {
+                if(error > 0) {
                     grad.data->flex[j] = delta / n;
                 } else {
                     grad.data->flex[j] = -delta / n;
@@ -630,25 +631,25 @@ static Tensor GradFn_huber_loss(Tensor self, int i) {
 }
 
 Tensor nn_huber_loss(Tensor y_true, Tensor y_pred, float delta) {
-    huber_delta_value = delta; // Store delta for the backward pass
+    huber_delta_value = delta;  // Store delta for the backward pass
     bool requires_grad = !cten_is_eval() && y_pred.node != NULL;
 
     int n = y_pred.data->numel;
     float total_loss = 0.0f;
-    for (int i = 0; i < n; i++) {
+    for(int i = 0; i < n; i++) {
         float error = y_pred.data->flex[i] - y_true.data->flex[i];
         float abs_error = fabsf(error);
-        if (abs_error <= delta) {
-            total_loss += 0.5f * error * error; // MSE part
+        if(abs_error <= delta) {
+            total_loss += 0.5f * error * error;  // MSE part
         } else {
-            total_loss += delta * (abs_error - 0.5f * delta); // MAE part
+            total_loss += delta * (abs_error - 0.5f * delta);  // MAE part
         }
     }
 
     Tensor res = Tensor_new((TensorShape){1}, requires_grad);
-    res.data->flex[0] = total_loss / n; // Mean Huber Loss
+    res.data->flex[0] = total_loss / n;  // Mean Huber Loss
 
-    if (requires_grad) {
+    if(requires_grad) {
         res.node->grad_fn = GradFn_huber_loss;
         res.node->inputs[0] = y_true;
         res.node->inputs[1] = y_pred;

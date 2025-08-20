@@ -6,9 +6,9 @@
 #include <stdlib.h>
 
 #if defined(_WIN32) || defined(_WIN64)
-    #define PATH_SEPARATOR_CHAR '\\'
+#define PATH_SEPARATOR_CHAR '\\'
 #else
-    #define PATH_SEPARATOR_CHAR '/'
+#define PATH_SEPARATOR_CHAR '/'
 #endif
 
 #define XSTR(s) STR(s)
@@ -56,20 +56,25 @@ int main() {
     const char* build_dir = XSTR(CTEN_BUILD_DIR_PATH);
     char clean_build_dir[256];
     size_t len = strlen(build_dir);
-    if (len > 1 && build_dir[0] == '"' && build_dir[len-1] == '"') {
+    if(len > 1 && build_dir[0] == '"' && build_dir[len - 1] == '"') {
         strncpy(clean_build_dir, build_dir + 1, len - 2);
         clean_build_dir[len - 2] = '\0';
     } else {
         strcpy(clean_build_dir, build_dir);
     }
-    snprintf(report_path, sizeof(report_path), "%s%ccten_test_report_%s.csv", clean_build_dir, PATH_SEPARATOR_CHAR, PLATFORM_NAME);
+    snprintf(report_path,
+             sizeof(report_path),
+             "%s%ccten_test_report_%s.csv",
+             clean_build_dir,
+             PATH_SEPARATOR_CHAR,
+             PLATFORM_NAME);
 #else
     snprintf(report_path, sizeof(report_path), "cten_test_report_%s.csv", PLATFORM_NAME);
 #endif
 
     printf("Test report will be generated at: %s\n", report_path);
 
-    if (csv_reporter_init(report_path) != 0) {
+    if(csv_reporter_init(report_path) != 0) {
         fprintf(stderr, "Failed to initialize CSV reporter. Aborting tests.\n");
         cten_finalize();
         return 1;
@@ -129,13 +134,13 @@ int main() {
 
     test_matmul_backward();
     printf("Matmul backward tests finished.\n");
-    
+
     test_sub_backward();
     printf("Sub backward tests finished.\n");
-    
+
     test_relu_backward();
     printf("ReLU backward tests finished.\n");
-    
+
     test_linear_backward();
     printf("Linear backward tests finished.\n");
 
@@ -147,27 +152,28 @@ int main() {
 
     test_sum_backward();
     printf("Sum backward tests finished.\n");
-        
+
     test_mean_backward();
     printf("Mean backward tests finished.\n");
-    
+
     test_div_backward();
     printf("Div backward tests finished.\n");
-    
+
     test_pow_backward();
     printf("Pow backward tests finished.\n");
-    
+
     test_abs_backward();
     printf("Abs backward tests finished.\n");
-    
+
     test_softmax_backward();
     printf("Softmax backward tests finished.\n");
-    
+
     // other tests
-    
+
     csv_reporter_close();
     cten_finalize();
 
-    printf("cTensor Test Suite finished. Report generated: cten_test_report_%s.csv\n", PLATFORM_NAME);
+    printf("cTensor Test Suite finished. Report generated: cten_test_report_%s.csv\n",
+           PLATFORM_NAME);
     return 0;
 }

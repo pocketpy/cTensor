@@ -4,13 +4,13 @@
 #define TEST_FLOAT_TOLERANCE 1e-4f
 
 #if defined(_WIN32) || defined(_WIN64)
-    #define PLATFORM_NAME "windows"
+#define PLATFORM_NAME "windows"
 #elif defined(__linux__)
-    #define PLATFORM_NAME "linux"
+#define PLATFORM_NAME "linux"
 #elif defined(__APPLE__) || defined(__MACH__)
-    #define PLATFORM_NAME "macos"
+#define PLATFORM_NAME "macos"
 #else
-    #define PLATFORM_NAME "unknown"
+#define PLATFORM_NAME "unknown"
 #endif
 
 #define CTENSOR_MAX_DIMS 4

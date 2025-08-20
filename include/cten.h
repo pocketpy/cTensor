@@ -8,12 +8,12 @@
 #include <limits.h>
 
 #define _CTEN_PICK_REDUCE(_1, _2, NAME, ...) NAME
-#define Tensor_max(...)  _CTEN_PICK_REDUCE(__VA_ARGS__, Tensor_max_dim,  Tensor_max_all)(__VA_ARGS__)
-#define Tensor_min(...)  _CTEN_PICK_REDUCE(__VA_ARGS__, Tensor_min_dim,  Tensor_min_all)(__VA_ARGS__)
+#define Tensor_max(...) _CTEN_PICK_REDUCE(__VA_ARGS__, Tensor_max_dim, Tensor_max_all)(__VA_ARGS__)
+#define Tensor_min(...) _CTEN_PICK_REDUCE(__VA_ARGS__, Tensor_min_dim, Tensor_min_all)(__VA_ARGS__)
 
-#define _CTEN_PICK(_1,_2,NAME,...) NAME
+#define _CTEN_PICK(_1, _2, NAME, ...) NAME
 #define Tensor_mean(...) _CTEN_PICK(__VA_ARGS__, Tensor_mean_dim, Tensor_mean_all)(__VA_ARGS__)
-#define Tensor_sum(...)  _CTEN_PICK(__VA_ARGS__, Tensor_sum_dim,  Tensor_sum_all )(__VA_ARGS__)
+#define Tensor_sum(...) _CTEN_PICK(__VA_ARGS__, Tensor_sum_dim, Tensor_sum_all)(__VA_ARGS__)
 
 typedef int TensorShape[4];
 typedef struct GradNode GradNode;
@@ -88,8 +88,8 @@ Tensor Tensor_reciprocal(Tensor self);
 /* Helper functions that the macros dispatch to */
 Tensor Tensor_mean_all(Tensor self);
 Tensor Tensor_mean_dim(Tensor self, int dim);
-Tensor Tensor_sum_all (Tensor self);
-Tensor Tensor_sum_dim (Tensor self, int dim);
+Tensor Tensor_sum_all(Tensor self);
+Tensor Tensor_sum_dim(Tensor self, int dim);
 
 Tensor Tensor_max_all(Tensor self);
 TensorMaxMinResult Tensor_max_dim(Tensor self, int dim);
@@ -133,24 +133,32 @@ typedef struct optim_adagrad optim_adagrad;
 typedef struct optim_rmsprop optim_rmsprop;
 typedef struct optim_adam optim_adam;
 
-//SGD
+// SGD
 optim_sgd* optim_sgd_new(int n_params, Tensor* params, float weight_decay);
 void optim_sgd_config(optim_sgd* self, float lr, float momentum);
 void optim_sgd_zerograd(optim_sgd* self);
 void optim_sgd_step(optim_sgd* self);
 
-//AdaGrad
-optim_adagrad* optim_adagrad_new(int n_params, Tensor* params, float lr, float ε,float weight_decay);
+// AdaGrad
+optim_adagrad*
+    optim_adagrad_new(int n_params, Tensor* params, float lr, float ε, float weight_decay);
 void optim_adagrad_zerograd(optim_adagrad* self);
 void optim_adagrad_step(optim_adagrad* self);
 
-//RMSProp
-optim_rmsprop* optim_rmsprop_new(int n_params, Tensor* params, float lr, float β, float ε,float weight_decay);
+// RMSProp
+optim_rmsprop*
+    optim_rmsprop_new(int n_params, Tensor* params, float lr, float β, float ε, float weight_decay);
 void optim_rmsprop_zerograd(optim_rmsprop* self);
 void optim_rmsprop_step(optim_rmsprop* self);
 
-//Adam
-optim_adam* optim_adam_new(int n_params, Tensor* params, float lr, float β1, float β2, float ε,float weight_decay);
+// Adam
+optim_adam* optim_adam_new(int n_params,
+                           Tensor* params,
+                           float lr,
+                           float β1,
+                           float β2,
+                           float ε,
+                           float weight_decay);
 void optim_adam_zerograd(optim_adam* self);
 void optim_adam_step(optim_adam* self);
 
@@ -168,13 +176,25 @@ void cten_end_eval();
 bool va_arg_is_present(va_list args);
 
 /* Utils */
-void Tensor_normalize_dataset(const float (*X)[4], float (*X_norm)[4], int n_samples, int n_train_samples, int n_features);Tensor Tensor_detach(Tensor self);
-void Tensor_shuffle_dataset(const float (*X)[4], const int *y,float (*X_shuffled)[4], int *y_shuffled, int n_samples, int n_features);
+void Tensor_normalize_dataset(const float (*X)[4],
+                              float (*X_norm)[4],
+                              int n_samples,
+                              int n_train_samples,
+                              int n_features);
+Tensor Tensor_detach(Tensor self);
+void Tensor_shuffle_dataset(const float (*X)[4],
+                            const int* y,
+                            float (*X_shuffled)[4],
+                            int* y_shuffled,
+                            int n_samples,
+                            int n_features);
 void cten_assert(bool cond, const char* fmt, ...);
 void cten_assert_shape(const char* title, TensorShape a, TensorShape b);
 void cten_assert_dim(const char* title, int a, int b);
 bool cten_elemwise_broadcast(Tensor* a, Tensor* b);
 int load_iris_dataset(const float (**X)[4], const int** y);
 Tensor Tensor_reduce_dim(Tensor self, int dim, const char* operation);
-Tensor reduce_gradient_for_broadcasting(Tensor grad, TensorShape original_shape, TensorShape broadcasted_shape);
+Tensor reduce_gradient_for_broadcasting(Tensor grad,
+                                        TensorShape original_shape,
+                                        TensorShape broadcasted_shape);
 Tensor Tensor_unsqueeze(Tensor self, int dim);
