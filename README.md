@@ -317,6 +317,9 @@ cTensor/
 │   └── main.c        # Iris dataset example
 └── tests/            # Test suite
 ```
+## API Reference
+
+For a detailed API reference, refer to [API Documentation](API.md).
 
 ## Contributing
 
