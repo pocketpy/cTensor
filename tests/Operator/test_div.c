@@ -65,9 +65,11 @@ void test_div_operator() {
         TensorShape m_shape = {2, 2};
         float d1[] = {1.522753f, 8.795585f, 6.410035f, 7.372653f};
         float d2[] = {0.592630f, 4.864594f, 4.245992f, 1.455526f};
-        float exp_d[] =
-            {2.569482f, 1.808082f, 1.509667f, 5.065284f};  // [1.522753/0.592630, 8.795585/4.864594, 6.410035/4.245992,
-                                                           // 7.372653/1.455526]
+        float exp_d[] = {2.569482f,
+                         1.808082f,
+                         1.509667f,
+                         5.065284f};  // [1.522753/0.592630, 8.795585/4.864594, 6.410035/4.245992,
+                                      // 7.372653/1.455526]
         Tensor t1 = create_test_tensor(m_shape, d1, false);
         Tensor t2 = create_test_tensor(m_shape, d2, false);
         Tensor expected_res = create_test_tensor(m_shape, exp_d, false);
