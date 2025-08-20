@@ -346,7 +346,7 @@ Tensor Tensor_reciprocal(Tensor self);
 
 These operations reduce a tensor to a single value or along a specified dimension. They are exposed via macros for a simpler API.
 
-### Sum
+### `Tensor_sum`
 
 **Usage:**
 
@@ -360,7 +360,7 @@ Tensor sum_dim = Tensor_sum(my_tensor, 1);
 
 #### **Underlying Functions:** `Tensor_sum_all(Tensor self)`, `Tensor_sum_dim(Tensor self, int dim)`
 
-### Mean
+### `Tensor_mean`
 
 **Usage:**
 
@@ -374,7 +374,7 @@ Tensor mean_dim = Tensor_mean(my_tensor, 1);
 
 #### **Underlying Functions:** `Tensor_mean_all(Tensor self)`, `Tensor_mean_dim(Tensor self, int dim)`
 
-### Max
+### `Tensor_max`
 
 **Usage:**
 
@@ -390,7 +390,7 @@ Tensor max_indices = max_res.indices;
 
 #### **Underlying Functions:** `Tensor_max_all(Tensor self)`, `TensorMaxMinResult Tensor_max_dim(Tensor self, int dim)`
 
-### Min
+### `Tensor_min`
 
 **Usage:**
 
@@ -403,8 +403,6 @@ TensorMaxMinResult min_res = Tensor_min(my_tensor, 1);
 ```
 
 #### **Underlying Functions:** `Tensor_min_all(Tensor self)`, `TensorMaxMinResult Tensor_min_dim(Tensor self, int dim)`
-
-### Argmax
 
 ### `Tensor_argmax`
 
