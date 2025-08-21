@@ -77,9 +77,11 @@ void test_pow_operator() {
         TensorShape m_shape = {2, 2};
         float d1[] = {3.394634f, 1.624075f, 1.623978f, 1.232334f};
         float d2[] = {2.665440f, 2.002788f, 2.270181f, 0.551461f};
-        float exp_d[] =
-            {25.989442f, 2.641186f, 3.006458f, 1.122104f};  // [3.394634^2.665440, 1.624075^2.002788,
-                                                            // 1.623978^2.270181, 1.232334^0.551461]
+        float exp_d[] = {25.989442f,
+                         2.641186f,
+                         3.006458f,
+                         1.122104f};  // [3.394634^2.665440, 1.624075^2.002788,
+                                      // 1.623978^2.270181, 1.232334^0.551461]
         Tensor t1 = create_test_tensor(m_shape, d1, false);
         Tensor t2 = create_test_tensor(m_shape, d2, false);
         Tensor expected_res = create_test_tensor(m_shape, exp_d, false);
@@ -108,15 +110,16 @@ void test_pow_operator() {
                       2.000000f,
                       2.000000f,
                       2.000000f};
-        float exp_d[] = {23.810881f,
-                         18.746913f,
-                         3.420119f,
-                         2.983565f,
-                         3.005432f,
-                         4.914951f,
-                         9.603960f,
-                         7.440784f};  // [4.879639^2, 4.329771^2, 1.849356^2, 1.727300^2, 1.733618^2,
-                                      // 2.216969^2, 3.099026^2, 2.727780^2]
+        float exp_d[] = {
+            23.810881f,
+            18.746913f,
+            3.420119f,
+            2.983565f,
+            3.005432f,
+            4.914951f,
+            9.603960f,
+            7.440784f};  // [4.879639^2, 4.329771^2, 1.849356^2, 1.727300^2, 1.733618^2,
+                         // 2.216969^2, 3.099026^2, 2.727780^2]
         Tensor t1 = create_test_tensor(t_shape, d1, false);
         Tensor t2 = create_test_tensor(t_shape, d2, false);
         Tensor expected_res = create_test_tensor(t_shape, exp_d, false);
