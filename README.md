@@ -4,82 +4,57 @@ A lightweight neural network library written in C11 for embedded systems.
 
 ## Overview
 
-cTensor is a compact tensor computation library designed for small client-side devices, such as mobile phones, microcontrollers. The library implements automatic differentiation and dynamic compute graph functionality, allowing for efficient training and deployment of neural networks on resource-constrained devices.
+cTensor is a compact tensor computation library designed for small client-side devices, such as mobile phones and microcontrollers. The library implements automatic differentiation and dynamic compute graph functionality, allowing for efficient training and deployment of neural networks on resource-constrained devices.
 
-## Current Status
-
-This project is under active development. The prototype demonstrates basic tensor operations and neural network functionality using the Iris dataset as an example. Many core mathematical operators and features are still being implemented.
+This library was developed as part of GSoC 2025 and has been successfully validated on ARM Cortex-M3 microcontrollers, achieving 90% classification accuracy on the Iris dataset in a bare-metal environment.
 
 ## Features
 
-### Currently Implemented
-
+### Core Infrastructure
 - **Lightweight C11 Implementation:** Minimal dependencies for wide compatibility
-- **Automatic Differentiation Framework:** Basic gradient computation infrastructure
-- **Dynamic Compute Graph:** Groundwork for efficient computation flow
-- **Basic Tensor Operations:** 
-  - Basic arithmetic: add, subtract, multiply, divide, power
-  - Element-wise operations: square, reciprocal
-  - Matrix multiplication
-  - Tensor transpose
-- **Reduction Operations:**
-  - Sum (all elements or along dimension)
-  - Mean (all elements or along dimension)
-  - Max (all elements or along dimension with indices)
-  - Min (all elements or along dimension with indices)
-  - Argmax function
-- **Neural Network Components:**
-  - Linear layer
-  - Activation functions: ReLU, Sigmoid, Softmax
-  - Cross-entropy loss
-  - Softmax cross-entropy (combined operation)
-  - Glorot weight initialization
-- **SGD Optimizer:** Stochastic gradient descent implementation
-- **Memory Management:** Pool-based memory allocation system
-- **Tensor Utilities:**
-  - Element access and manipulation
-  - Tensor detachment
-  - Tensor unsqueeze operation
-  - Broadcasting support for element-wise operations
-  - Dataset normalization and shuffling utilities
+- **Automatic Differentiation Framework:** Complete gradient computation with backward pass
+- **Dynamic Compute Graph:** Efficient computation flow with gradient tracking
+- **Pool-based Memory Management:** Efficient memory allocation system for embedded devices
 
-### Development Roadmap
+### Tensor Operations
+- **Basic Arithmetic:** add, subtract, multiply, divide, power (both tensor-tensor and tensor-scalar)
+- **Unary Operations:** negation, absolute value, square, reciprocal
+- **Matrix Operations:** matrix multiplication, transpose
+- **Mathematical Functions:** logarithm, exponential, sine, cosine, tangent
+- **Shape Operations:** unsqueeze, detach
+- **Broadcasting:** Element-wise broadcasting for operations on tensors with different shapes
 
-The following features are planned for implementation:
+### Reduction Operations
+- **Sum:** All elements or along specific dimension
+- **Mean:** All elements or along specific dimension
+- **Max/Min:** All elements or along dimension with indices
+- **Argmax:** Find indices of maximum values
 
-#### Math Operators
-- **Unary Operations:**
-  - Negative (Tensor_neg)
-  - Absolute value (Tensor_abs)
-- **Mathematical Functions:**
-  - Logarithm (nn_log)
-  - Exponential (nn_exp)
-  - Trigonometric functions (nn_sin, nn_cos, nn_tan)
+### Neural Network Components
+- **Layers:** Linear (fully connected) layer
+- **Activation Functions:** ReLU, Sigmoid, Tanh, ELU, SELU, Softmax
+- **Loss Functions:** Cross-entropy, Softmax Cross-entropy, MSE, MAE, Huber Loss
+- **Weight Initialization:** Glorot/Xavier initialization
 
-#### Broadcasting System Enhancements
-- Broadcasting for Matmul
+### Optimizers
+- **SGD:** Stochastic Gradient Descent with momentum
+- **Adam:** Adaptive moment estimation
+- **RMSProp:** Root Mean Square Propagation
+- **AdaGrad:** Adaptive Gradient Algorithm
+- **Features:** Weight decay support for all optimizers
 
-#### Activation Functions
-- ELU (Exponential Linear Unit)
-- SELU (Scaled Exponential Linear Unit)
-- Additional activation functions
+### Training Utilities
+- **Gradient Clipping:** By norm, value, range, positive/negative values
+- **Evaluation Mode:** Disable gradient computation for inference
+- **Dataset Utilities:** Normalization, shuffling
 
-#### Loss Functions
-- Mean Squared Error (MSE)
-- Mean Absolute Error (MAE)
-- Huber Loss
-- Enhanced multi-class classification losses
+## Validation
 
-#### Advanced Optimizers
-- Adam optimizer
-- RMSProp optimizer
-- AdaGrad optimizer
-- Weight decay implementation
-- Gradient clipping
-
-#### Performance Enhancements
-- Profiling and benchmarking infrastructure
-- Loop unrolling and SIMD optimizations where applicable
+cTensor has been successfully deployed and tested on:
+- **ARM Cortex-M3 (STM32F103ZE)** using Keil MDK simulation
+- **Task:** Neural network classification on Iris dataset
+- **Result:** 90% accuracy matching desktop performance
+- **Complete validation project:** [cTensor_Cortex_SIM](https://github.com/PrimedErwin/cTensor_Cortex_SIM)
 
 ## Getting Started
 
@@ -121,8 +96,6 @@ and run `main.exe` from root directory
 
 cTensor uses a custom test framework. To run the tests:
 
-For a more detailed guide, refer to [Testing Documentation](tests/README.md).
-
 ```bash
 # Build the test executable with CMake
 mkdir -p build && cd build
@@ -133,9 +106,11 @@ cmake --build .
 ./cten_exe
 ```
 
+For detailed testing information, refer to [Testing Documentation](tests/README.md).
+
 ## Usage Example
 
-The repository includes a simple example in `src2/main.c` that demonstrates how to train a neural network on the Iris dataset:
+Here's a complete example training a neural network on the Iris dataset:
 
 ```c
 #include "cten.h"
@@ -150,10 +125,9 @@ int main() {
     const int* y;
     int num_samples = load_iris_dataset(&X, &y);
     
-    // Create a simple neural network
-    TensorShape input_shape = {1, 4, 0, 0};  // 4 features
-    TensorShape hidden_shape = {4, 10, 0, 0}; // 10 hidden units
-    TensorShape output_shape = {10, 3, 0, 0}; // 3 classes (iris species)
+    // Create network parameters
+    TensorShape hidden_shape = {4, 10, 0, 0}; // 4 inputs -> 10 hidden units
+    TensorShape output_shape = {10, 3, 0, 0}; // 10 hidden -> 3 classes
     
     // Initialize network parameters with Glorot initialization
     Tensor W1 = Glorot_init(hidden_shape, true);
@@ -218,8 +192,23 @@ Tensor Tensor_powf(Tensor self, float other);
 Tensor Tensor_matmul(Tensor self, Tensor other);
 
 // Unary operations
+Tensor Tensor_neg(Tensor self);
+Tensor Tensor_abs(Tensor self);
 Tensor Tensor_square(Tensor self);
 Tensor Tensor_reciprocal(Tensor self);
+```
+
+### Mathematical Functions
+
+```c
+// Logarithmic and exponential
+Tensor nn_log(Tensor self);
+Tensor nn_exp(Tensor self);
+
+// Trigonometric functions
+Tensor nn_sin(Tensor self);
+Tensor nn_cos(Tensor self);
+Tensor nn_tan(Tensor self);
 ```
 
 ### Reduction Operations
@@ -252,25 +241,58 @@ Tensor nn_linear(Tensor input, Tensor weight, Tensor bias);
 Tensor nn_relu(Tensor input);
 Tensor nn_sigmoid(Tensor input);
 Tensor nn_tanh(Tensor input);
-Tensor nn_softmax(Tensor input);
+Tensor nn_elu(Tensor self, float alpha);
+Tensor nn_selu(Tensor self);
+Tensor nn_softmax(Tensor input, int dim);
 
 // Loss functions
 Tensor nn_crossentropy(Tensor y_true, Tensor y_pred);
 Tensor nn_softmax_crossentropy(Tensor y_true, Tensor logits);
+Tensor nn_mse_loss(Tensor y_true, Tensor y_pred);
+Tensor nn_mae_loss(Tensor y_true, Tensor y_pred);
+Tensor nn_huber_loss(Tensor y_true, Tensor y_pred, float delta);
 
 // Weight initialization
 Tensor Glorot_init(TensorShape shape, bool requires_grad);
 ```
 
-### Optimizer
+### Optimizers
 
 ```c
 // SGD Optimizer
-optim_sgd* optim_sgd_new(int n_params, Tensor* params);
+optim_sgd* optim_sgd_new(int n_params, Tensor* params, float weight_decay);
 void optim_sgd_config(optim_sgd* self, float lr, float momentum);
 void optim_sgd_zerograd(optim_sgd* self);
 void optim_sgd_step(optim_sgd* self);
-void optim_sgd_delete(optim_sgd* self);
+
+// Adam Optimizer
+optim_adam* optim_adam_new(int n_params, Tensor* params, float lr, 
+                          float β1, float β2, float ε, float weight_decay);
+void optim_adam_zerograd(optim_adam* self);
+void optim_adam_step(optim_adam* self);
+
+// RMSProp Optimizer
+optim_rmsprop* optim_rmsprop_new(int n_params, Tensor* params, float lr, 
+                                float β, float ε, float weight_decay);
+void optim_rmsprop_zerograd(optim_rmsprop* self);
+void optim_rmsprop_step(optim_rmsprop* self);
+
+// AdaGrad Optimizer
+optim_adagrad* optim_adagrad_new(int n_params, Tensor* params, float lr, 
+                                float ε, float weight_decay);
+void optim_adagrad_zerograd(optim_adagrad* self);
+void optim_adagrad_step(optim_adagrad* self);
+```
+
+### Gradient Clipping
+
+```c
+// Gradient clipping functions
+void cten_clip_grad_norm(Tensor* params, int n_params, float max_norm);
+void cten_clip_grad_value(Tensor* params, int n_params, float max_value);
+void cten_clip_grad_value_range(Tensor* params, int n_params, float min_value, float max_value);
+void cten_clip_grad_positive(Tensor* params, int n_params, float max_value);
+void cten_clip_grad_negative(Tensor* params, int n_params, float min_value);
 ```
 
 ### Utility Functions
@@ -291,6 +313,11 @@ void Tensor_shuffle_dataset(const float (*X)[4], const int *y, float (*X_shuffle
 void cten_begin_eval();
 bool cten_is_eval();
 void cten_end_eval();
+
+// Broadcasting
+bool cten_elemwise_broadcast(Tensor* a, Tensor* b);
+Tensor reduce_gradient_for_broadcasting(Tensor grad, TensorShape original_shape, 
+                                       TensorShape broadcasted_shape);
 ```
 
 ## Memory Management
@@ -298,6 +325,8 @@ void cten_end_eval();
 cTensor uses a pool-based memory management system to efficiently handle tensor allocations:
 
 ```c
+void cten_initilize();
+void cten_finalize();
 void cten_begin_malloc(PoolId id);
 void cten_end_malloc();
 void cten_free(PoolId id);
@@ -308,29 +337,52 @@ void cten_free(PoolId id);
 ```
 cTensor/
 ├── include/          # Header files defining the API
-├── src/              # Core implementation files
-│   ├── basic.c       # Basic tensor operations
-│   ├── nn.c          # Neural network primitives
-│   ├── operator.c    # Mathematical operators
+│   └── cten.h       # Complete API header
+├── src/             # Core implementation files
+│   ├── basic.c      # Basic tensor operations
+│   ├── nn.c         # Neural network primitives
+│   ├── operator.c   # Mathematical operators
+│   ├── context.c    # Memory management
+│   ├── utils.c      # Utility functions
+│   ├── optimizer/   # Optimizer implementations
 │   └── ...
-├── src2/             # Example applications
-│   └── main.c        # Iris dataset example
-└── tests/            # Test suite
+├── src2/            # Example applications
+│   └── main.c       # Iris dataset example
+└── tests/           # Test suite
 ```
-## API Reference
 
-For a detailed API reference, refer to [API Documentation](API.md).
+## Implemented Features Summary
+
+| Category | Components | Status |
+|----------|------------|--------|
+| **Core Structs** | `Tensor`, `GradNode`, `TensorMaxMinResult` | ✅ |
+| **Autograd** | `Tensor_backward`, `requires_grad`, `detach` | ✅ |
+| **Tensor Creation** | `Tensor_new`, `zeros`, `ones`, `Glorot_init` | ✅ |
+| **Binary Operations** | `add`, `sub`, `mul`, `div`, `pow`, `matmul` | ✅ |
+| **Unary Operations** | `neg`, `abs`, `square`, `reciprocal` | ✅ |
+| **Math Functions** | `log`, `exp`, `sin`, `cos`, `tan` | ✅ |
+| **Aggregations** | `sum`, `mean`, `max`, `min` (with indices) | ✅ |
+| **Search/Sort** | `argmax` | ✅ |
+| **Shape Operations** | `transpose`, `unsqueeze` | ✅ |
+| **NN Layers** | `nn_linear` | ✅ |
+| **Activations** | `ReLU`, `Sigmoid`, `Tanh`, `ELU`, `SELU`, `Softmax` | ✅ |
+| **Loss Functions** | `CrossEntropy`, `MSE`, `MAE`, `Huber` | ✅ |
+| **Optimizers** | `SGD`, `Adam`, `RMSProp`, `AdaGrad` | ✅ |
+| **Training Utils** | `Gradient Clipping`, `Evaluation Mode`, `Weight Decay` | ✅ |
 
 ## Contributing
 
-Contributions to cTensor are welcome! The project needs implementation of various components as outlined in the Development Roadmap section. Key areas for contribution include:
+Contributions to cTensor are welcome! Key areas for contribution include:
 
-1. **Activation Functions:** Implementing additional activation functions (ELU, SELU) with gradient support
-2. **Loss Functions:** Adding more loss functions (MSE, MAE, Huber) with gradient support
-3. **Advanced Optimizers:** Creating additional optimizers beyond SGD (Adam, RMSProp, AdaGrad)
-4. **Performance Optimization:** Enhancing computational efficiency through benchmarking and optimizations
-5. **Documentation:** Improving examples, tutorials, and API documentation
+1. **Performance Optimization:** Benchmarking and SIMD implementations
+2. **Advanced Layers:** Convolutional and recurrent neural network layers
+3. **Documentation:** Examples, tutorials, and API documentation improvements
+4. **Testing:** Expanding test coverage and validation on different platforms
+
+## GSoC 2025 Acknowledgments
+
+This project was developed during Google Summer of Code 2025 by [Advait Gaur](https://github.com/Advaitgaur004) under the mentorship of [PrimedErwin](https://github.com/PrimedErwin), [Anurag Bhat](https://github.com/faze-geek), and [blueloveTH](https://github.com/blueloveTH). The project successfully transformed cTensor from a basic prototype into a functional deep learning framework suitable for embedded applications.
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
