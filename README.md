@@ -110,39 +110,101 @@ For detailed testing information, refer to [Testing Documentation](tests/README.
 
 ## Usage Example
 
-Here's a complete example training a neural network on the Iris dataset:
+Here's a complete example of training a neural network to predict sine wave values with noise:
 
 ```c
 #include "cten.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+
+// Define memory pools
+enum MemoryPoolIds {
+    PoolId_Default = 0,
+    PoolId_Model = 1,
+    PoolId_Optimizer = 2,
+};
+
+// Define the model structure
+typedef struct {
+    Tensor w1, b1;
+    Tensor w2, b2;
+    Tensor w3, b3;
+} Model;
+
+// Forward pass for the model
+Tensor Model_forward(Model* model, Tensor x) {
+    x = nn_linear(x, model->w1, model->b1);
+    x = nn_elu(x, 1.0f);
+    x = nn_linear(x, model->w2, model->b2);
+    x = nn_elu(x, 1.0f);
+    x = nn_linear(x, model->w3, model->b3);
+    return x;
+}
 
 int main() {
-    // Initialize cTensor library
     cten_initilize();
-    
-    // Load the Iris dataset
-    const float (*X)[4];
-    const int* y;
-    int num_samples = load_iris_dataset(&X, &y);
-    
-    // Create network parameters
-    TensorShape hidden_shape = {4, 10, 0, 0}; // 4 inputs -> 10 hidden units
-    TensorShape output_shape = {10, 3, 0, 0}; // 10 hidden -> 3 classes
-    
-    // Initialize network parameters with Glorot initialization
-    Tensor W1 = Glorot_init(hidden_shape, true);
-    Tensor b1 = Tensor_zeros((TensorShape){1, 10, 0, 0}, true);
-    Tensor W2 = Glorot_init(output_shape, true);
-    Tensor b2 = Tensor_zeros((TensorShape){1, 3, 0, 0}, true);
-    
-    // Setup optimizer
-    Tensor params[4] = {W1, b1, W2, b2};
-    optim_sgd* optimizer = optim_sgd_new(4, params);
-    optim_sgd_config(optimizer, 0.01f, 0.9f);
-    
+
+    // Generate sine wave data
+    int n_samples = 2048;
+    float* x_data = malloc(n_samples * sizeof(float));
+    float* y_data = malloc(n_samples * sizeof(float));
+    // ... (data generation logic) ...
+
+    // Create model and allocate in its own memory pool
+    Model model;
+    cten_begin_malloc(PoolId_Model);
+    model.w1 = Glorot_init((TensorShape){1, 64}, true);
+    model.b1 = Tensor_zeros((TensorShape){1, 64}, true);
+    model.w2 = Glorot_init((TensorShape){64, 32}, true);
+    model.b2 = Tensor_zeros((TensorShape){1, 32}, true);
+    model.w3 = Glorot_init((TensorShape){32, 1}, true);
+    model.b3 = Tensor_zeros((TensorShape){1, 1}, true);
+    cten_end_malloc();
+
+    // Create optimizer
+    float learning_rate = 0.01f;
+    cten_begin_malloc(PoolId_Optimizer);
+    optim_adam* optimizer = optim_adam_new(6, (Tensor*)&model, learning_rate, 0.9f, 0.999f, 1e-8f, 0.0f);
+    cten_end_malloc();
+
     // Training loop
-    // ...
-    
+    int batch_size = 64;
+    for (int epoch = 0; epoch < 200; epoch++) {
+        // ... (training logic with batching, loss calculation, backpropagation) ...
+        
+        cten_begin_malloc(PoolId_Default); // for temporary tensors in each step
+
+        // ... create input and y_true tensors ...
+
+        optim_adam_zerograd(optimizer);
+        Tensor y_pred = Model_forward(&model, input);
+        
+        // Combined Loss
+        Tensor huber = nn_huber_loss(y_true, y_pred, 1.0f);
+        Tensor mae = nn_mae_loss(y_true, y_pred);
+        Tensor loss = Tensor_add(huber, Tensor_mulf(mae, 0.3f));
+
+        Tensor_backward(loss, Tensor_ones((TensorShape){1}, false));
+        
+        // Gradient Clipping
+        cten_clip_grad_norm((Tensor*)&model, 6, 5.0f);
+
+        optim_adam_step(optimizer);
+        
+        cten_end_malloc();
+        cten_free(PoolId_Default); // free temporary tensors
+    }
+
+    // Evaluate model
+    cten_begin_eval();
+    // ... (evaluation logic) ...
+    cten_end_eval();
+
+    // Free memory pools
+    cten_free(PoolId_Optimizer);
+    cten_free(PoolId_Model); 
+
     cten_finalize();
     return 0;
 }
@@ -347,7 +409,7 @@ cTensor/
 │   ├── optimizer/   # Optimizer implementations
 │   └── ...
 ├── src2/            # Example applications
-│   └── main.c       # Iris dataset example
+│   └── main.c       # Sine regression example
 └── tests/           # Test suite
 ```
 
