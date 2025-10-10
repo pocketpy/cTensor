@@ -7,6 +7,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #ifdef Tensor_mean
 #undef Tensor_mean
@@ -226,14 +227,22 @@ Tensor Tensor_sum(Tensor self, ...) {
 
 static Tensor GradFn_matmul(Tensor self, int i) {
     return Tensor_transpose(Tensor_detach(self.node->inputs[1 - i]));
-    ;
 }
 
 Tensor Tensor_matmul(Tensor self, Tensor other) {
     int self_dim = TensorShape_dim(self.shape);
     int other_dim = TensorShape_dim(other.shape);
+
     assert(self_dim >= 2);
     assert(other_dim >= 2);
+
+    int batch_self = (self_dim >= 3) ? self.shape[0] : 1;
+    int batch_other = (other_dim >= 3) ? other.shape[0] : 1;
+    int batch = (batch_self > batch_other) ? batch_self : batch_other;
+
+    int group_self = (self_dim == 4) ? self.shape[1] : 1;
+    int group_other = (other_dim == 4) ? other.shape[1] : 1;
+    int group = (group_self > group_other) ? group_self : group_other;
 
     int m = self.shape[self_dim - 2];
     int n = self.shape[self_dim - 1];
@@ -241,25 +250,68 @@ Tensor Tensor_matmul(Tensor self, Tensor other) {
 
     assert(n == other.shape[other_dim - 2]);
 
-    TensorShape res_shape;
-    memcpy(res_shape, self.shape, sizeof(TensorShape));
-    res_shape[self_dim - 1] = p;
-    Tensor res = Tensor_new(
-        res_shape,
-        self.node != NULL ||
-            other.node != NULL);  // here weight/bias have .node != NULL, so res have GradNode
+    bool has4D = (self_dim == 4 || other_dim == 4);
 
-    for(int i = 0; i < m; i++) {
-        for(int j = 0; j < p; j++) {
-            float sum = 0;
-            for(int k = 0; k < n; k++) {
-                sum += self.data->flex[i * n + k] * other.data->flex[k * p + j];
-            }
-            res.data->flex[i * p + j] = sum;
+    TensorShape res_shape = {0, 0, 0, 0};
+    if (self_dim <= 2 && other_dim <= 2) {
+        res_shape[0] = m;
+        res_shape[1] = p;
+    } else {
+        res_shape[0] = batch;
+        if (has4D) {
+            res_shape[1] = group;
+            res_shape[2] = m;
+            res_shape[3] = p;
+        } else {
+            res_shape[1] = m;
+            res_shape[2] = p;
+            res_shape[3] = 0;
         }
     }
 
-    if(res.node != NULL) {
+    Tensor res = Tensor_new(res_shape, self.node != NULL || other.node != NULL);
+
+    for (int b = 0; b < batch; b++) {
+        int self_b = (batch_self <= b) ? batch_self - 1 : b;
+        int other_b = (batch_other <= b) ? batch_other - 1 : b;
+
+        for (int g = 0; g < group; g++) {
+            int self_g = (group_self <= g) ? group_self - 1 : g;
+            int other_g = (group_other <= g) ? group_other - 1 : g;
+
+            int offset_self = 0;
+            if (self_dim == 4) {
+                offset_self = self_b * self.shape[1] * m * n + self_g * m * n;
+            } else if (self_dim == 3) {
+                offset_self = self_b * m * n;
+            }
+
+            int offset_other = 0;
+            if (other_dim == 4) {
+                offset_other = other_b * other.shape[1] * n * p + other_g * n * p;
+            } else if (other_dim == 3) {
+                offset_other = other_b * n * p;
+            }
+
+            int offset_res = ((batch > 1) ? b * group + g : g) * m * p;
+
+            float* self_ptr = self.data->flex + offset_self;
+            float* other_ptr = other.data->flex + offset_other;
+            float* res_ptr = res.data->flex + offset_res;
+
+            for (int i = 0; i < m; i++) {
+                for (int j = 0; j < p; j++) {
+                    float sum = 0;
+                    for (int k = 0; k < n; k++) {
+                        sum += self_ptr[i * n + k] * other_ptr[k * p + j];
+                    }
+                    res_ptr[i * p + j] = sum;
+                }
+            }
+        }
+    }
+
+    if (res.node != NULL) {
         res.node->grad_fn = GradFn_matmul;
         res.node->inputs[0] = self;
         res.node->inputs[1] = other;

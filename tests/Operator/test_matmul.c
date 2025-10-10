@@ -259,37 +259,160 @@ void test_matmul_operator() {
         }
     }
 
-    // TODO : Currently MatMul Doesnt support batch matrix multiplication
-    //
-    // // Test Case 8: Batch Matrix Multiplication
-    // {
-    //     const char* tc_name = "matmul_batch_matrices";
+    // Test Case 8: Batch Matrix Multiplication
+    
+    {
+        const char* tc_name = "matmul_batch_matrices";
 
-    //     // Sub-test 1: Batch matrix multiplication (2x3x4 * 2x4x5)
-    //     {
-    //         TensorShape s1_shape = {2, 3, 4};
-    //         float d1[] = {0.9256f, 0.4219f, 0.3916f, 0.6438f, 0.8790f, 0.0543f, 0.0463f, 0.5632f,
-    //         0.7813f, 0.9841f, 0.7979f, 0.8884f, 0.5976f, 0.0739f, 0.8306f, 0.0435f, 0.2653f,
-    //         0.7424f, 0.9176f, 0.6326f, 0.2545f, 0.6777f, 0.9430f, 0.4921f}; TensorShape s2_shape
-    //         = {2, 4, 5}; float d2[] = {0.1146f, 0.8401f, 0.0189f, 0.9417f, 0.9551f, 0.3073f,
-    //         0.5162f, 0.6919f, 0.3872f, 0.9831f, 0.8261f, 0.6104f, 0.1850f, 0.4844f, 0.0732f,
-    //         0.8003f, 0.3244f, 0.6337f, 0.4984f, 0.1917f, 0.5972f, 0.8280f, 0.1163f, 0.1445f,
-    //         0.5281f, 0.3753f, 0.7377f, 0.0097f, 0.0460f, 0.8825f, 0.1283f, 0.3434f, 0.9592f,
-    //         0.2614f, 0.8935f, 0.9233f, 0.1056f, 0.1819f, 0.9243f, 0.1263f}; TensorShape exp_shape
-    //         = {2, 3, 5}; float exp_d[] = {1.0745f, 1.4433f, 0.7899f, 1.5456f, 1.4509f, 0.6064f,
-    //         0.9774f, 0.4197f, 1.1520f, 1.0043f, 1.7620f, 1.9396f, 1.4062f, 1.9461f, 1.9424f,
-    //         0.5314f, 0.8391f, 0.8748f, 0.3471f, 1.1284f, 1.1388f, 1.1492f, 1.0333f,
-    //         0.8970f, 1.6950f, 0.9817f, 1.0865f, 1.0302f, 0.7693f, 1.6373f};
+        // Sub-test 1: Batch matrix multiplication (2x3x4 * 2x4x5) - existing
+        {
+            TensorShape s1_shape = {2, 3, 4};
+            float d1[] = {0.9256f, 0.4219f, 0.3916f, 0.6438f, 0.8790f, 0.0543f, 0.0463f, 0.5632f,
+            0.7813f, 0.9841f, 0.7979f, 0.8884f, 0.5976f, 0.0739f, 0.8306f, 0.0435f, 0.2653f,
+            0.7424f, 0.9176f, 0.6326f, 0.2545f, 0.6777f, 0.9430f, 0.4921f};
 
-    //         Tensor t1 = create_test_tensor(s1_shape, d1, false);
-    //         Tensor t2 = create_test_tensor(s2_shape, d2, false);
-    //         Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
-    //         Tensor actual_res = Tensor_matmul(t1, t2);
+            TensorShape s2_shape= {2, 4, 5};
+            float d2[] = {0.1146f, 0.8401f, 0.0189f, 0.9417f, 0.9551f, 0.3073f,
+            0.5162f, 0.6919f, 0.3872f, 0.9831f, 0.8261f, 0.6104f, 0.1850f, 0.4844f, 0.0732f,
+            0.8003f, 0.3244f, 0.6337f, 0.4984f, 0.1917f, 0.5972f, 0.8280f, 0.1163f, 0.1445f,
+            0.5281f, 0.3753f, 0.7377f, 0.0097f, 0.0460f, 0.8825f, 0.1283f, 0.3434f, 0.9592f,
+            0.2614f, 0.8935f, 0.9233f, 0.1056f, 0.1819f, 0.9243f, 0.1263f};
+            
+            TensorShape exp_shape = {2, 3, 5};
+            float exp_d[] = {1.0745f, 1.4433f, 0.7899f, 1.5456f, 1.4509f, 0.6064f,
+            0.9774f, 0.4197f, 1.1520f, 1.0043f, 1.7620f, 1.9396f, 1.4062f, 1.9461f, 1.9424f,
+            0.5314f, 0.8391f, 0.8748f, 0.3471f, 1.1284f, 1.1388f, 1.1492f, 1.0333f,
+            0.8970f, 1.6950f, 0.9817f, 1.0865f, 1.0302f, 0.7693f, 1.6372f};
 
-    //         compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1,
-    //         TEST_FLOAT_TOLERANCE);
-    //     }
-    // }
+            Tensor t1 = create_test_tensor(s1_shape, d1, false);
+            Tensor t2 = create_test_tensor(s2_shape, d2, false);
+            Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
+            Tensor actual_res = Tensor_matmul(t1, t2);
+
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+        }
+
+        // Sub-test case 2: Batch matrix multiplication using integers only (2x3x4 * 2x4x5)
+        {
+            TensorShape s1_shape = {2, 3, 4};
+            float d1[] = {
+                /* batch0 */ 2.0f, 6.0f, 0.0f, 6.0f,
+                3.0f, 5.0f, 9.0f, 9.0f,
+                9.0f, 2.0f, 1.0f, 7.0f,
+                /* batch1 */ 6.0f, 8.0f, 4.0f, 7.0f,
+                6.0f, 5.0f, 4.0f, 9.0f,
+                5.0f, 7.0f, 3.0f, 8.0f,
+            };
+
+            TensorShape s2_shape = {2, 4, 5};
+            float d2[] = {
+                /* batch0 */ 0.0f, 8.0f, 9.0f, 3.0f, 7.0f,
+                3.0f, 8.0f, 5.0f, 5.0f, 4.0f,
+                3.0f, 0.0f, 8.0f, 4.0f, 0.0f,
+                7.0f, 3.0f, 4.0f, 9.0f, 4.0f,
+                /* batch1 */ 8.0f, 3.0f, 2.0f, 1.0f, 6.0f,
+                7.0f, 5.0f, 0.0f, 9.0f, 3.0f,
+                1.0f, 3.0f, 4.0f, 4.0f, 1.0f,
+                1.0f, 9.0f, 5.0f, 0.0f, 5.0f,
+            };
+
+            TensorShape exp_shape = {2, 3, 5};
+            float exp_d[] = {
+                /* batch0 */ 60.0f, 82.0f, 72.0f, 90.0f, 62.0f,
+                105.0f, 91.0f, 160.0f, 151.0f, 77.0f,
+                58.0f, 109.0f, 127.0f, 104.0f, 99.0f,
+                /* batch1 */ 115.0f, 133.0f, 63.0f, 94.0f, 99.0f,
+                96.0f, 136.0f, 73.0f, 67.0f, 100.0f,
+                100.0f, 131.0f, 62.0f, 80.0f, 94.0f,
+            };
+
+            Tensor t1 = create_test_tensor(s1_shape, d1, false);
+            Tensor t2 = create_test_tensor(s2_shape, d2, false);
+            Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
+            Tensor actual_res = Tensor_matmul(t1, t2);
+
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 2, TEST_FLOAT_TOLERANCE);
+        }
+
+        // Sub-test 3: Batch of identity matrices — result should equal second operand
+        // s1: {3,2,2} (3 identity matrices), s2: {3,2,2}
+        {
+            TensorShape s1_shape = {3, 2, 2};
+            float d1[] = {
+                /* batch0 */ 1.0f, 0.0f, 0.0f, 1.0f,
+                /* batch1 */ 1.0f, 0.0f, 0.0f, 1.0f,
+                /* batch2 */ 1.0f, 0.0f, 0.0f, 1.0f,
+            };
+            TensorShape s2_shape = {3, 2, 2};
+            float d2[] = {
+                /* batch0 */ 1.0f, 2.0f, 3.0f, 4.0f,
+                /* batch1 */ 5.0f, 6.0f, 7.0f, 8.0f,
+                /* batch2 */ 9.0f, 10.0f, 11.0f, 12.0f,
+            };
+            TensorShape exp_shape = {3, 2, 2};
+            float exp_d[] = {
+                1.0f, 2.0f, 3.0f, 4.0f,
+                5.0f, 6.0f, 7.0f, 8.0f,
+                9.0f, 10.0f, 11.0f, 12.0f,
+            };
+
+            Tensor t1 = create_test_tensor(s1_shape, d1, false);
+            Tensor t2 = create_test_tensor(s2_shape, d2, false);
+            Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
+            Tensor actual_res = Tensor_matmul(t1, t2);
+
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 3, TEST_FLOAT_TOLERANCE);
+        }
+
+        // Sub-test 4: Rectangular per-batch multiply (2 batches): {2,1,3} @ {2,3,2} -> {2,1,2}
+        {
+            TensorShape s1_shape = {2, 1, 3};
+            float d1[] = {
+                /* batch0 */ 1.0f, 2.0f, 3.0f,  // row vector
+                /* batch1 */ 4.0f, 5.0f, 6.0f,  // row vector
+            };
+            TensorShape s2_shape = {2, 3, 2};
+            float d2[] = {
+                /* batch0 */ 7.0f, 8.0f, 9.0f, 10.0f, 11.0f, 12.0f,  // 3x2
+                /* batch1 */ 7.0f, 8.0f, 9.0f, 10.0f, 11.0f, 12.0f,  // reuse same matrix for simplicity
+            };
+            TensorShape exp_shape = {2, 1, 2};
+            float exp_d[] = {
+                /* batch0 */ 58.0f, 64.0f,  // [1,2,3] @ [[7,8],[9,10],[11,12]]
+                /* batch1 */ 139.0f, 154.0f, // [4,5,6] @ same
+            };
+
+            Tensor t1 = create_test_tensor(s1_shape, d1, false);
+            Tensor t2 = create_test_tensor(s2_shape, d2, false);
+            Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
+            Tensor actual_res = Tensor_matmul(t1, t2);
+
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 4, TEST_FLOAT_TOLERANCE);
+        }
+
+        // Sub-test 5: Batch of column-result matrices using ones to test reduction (4 batches): {4,2,3}@{4,3,1} -> {4,2,1}
+        {
+            TensorShape s1_shape = {4, 2, 3};
+            // each 2x3 filled with ones
+            float d1[4 * 2 * 3];
+            for(int i = 0; i < 4 * 2 * 3; ++i) d1[i] = 1.0f;
+            TensorShape s2_shape = {4, 3, 1};
+            // each 3x1 filled with ones
+            float d2[4 * 3 * 1];
+            for(int i = 0; i < 4 * 3 * 1; ++i) d2[i] = 1.0f;
+            TensorShape exp_shape = {4, 2, 1};
+            // each 2x1 entry will be sum of 3 ones = 3
+            float exp_d[4 * 2 * 1];
+            for(int i = 0; i < 4 * 2 * 1; ++i) exp_d[i] = 3.0f;
+
+            Tensor t1 = create_test_tensor(s1_shape, d1, false);
+            Tensor t2 = create_test_tensor(s2_shape, d2, false);
+            Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
+            Tensor actual_res = Tensor_matmul(t1, t2);
+
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 5, TEST_FLOAT_TOLERANCE);
+        }
+    }
 
     // Test Case 9: Special Matrix Content
     {
@@ -315,121 +438,277 @@ void test_matmul_operator() {
     // TODO: Problem in Matmul Broadcasting
 
     // // Test Case 10: Broadcasting
-    // {
-    //     const char* tc_name = "matmul_broadcasting";
+    {
+        const char* tc_name = "matmul_broadcasting";
 
-    //     // Sub-test 1: Simple matrix multiplication {4,5} @ {5,3} -> {4,3}
-    //     {
-    //         TensorShape s1_shape = {4, 5};
-    //         float d1[] = {
-    //             0.3745f, 0.9507f, 0.7320f, 0.5987f, 0.1560f,  // Row 0
-    //             0.1560f, 0.0581f, 0.8662f, 0.6011f, 0.7081f,  // Row 1
-    //             0.0206f, 0.9699f, 0.8324f, 0.2123f, 0.1818f,  // Row 2
-    //             0.1834f, 0.3042f, 0.5248f, 0.4319f, 0.2912f,  // Row 3
-    //         };
+        // Sub-test 1: Simple matrix multiplication {4,5} @ {5,3} -> {4,3}
+        {
+            TensorShape s1_shape = {4, 5};
+            float d1[] = {
+                0.3745f, 0.9507f, 0.7320f, 0.5987f, 0.1560f,  // Row 0
+                0.1560f, 0.0581f, 0.8662f, 0.6011f, 0.7081f,  // Row 1
+                0.0206f, 0.9699f, 0.8324f, 0.2123f, 0.1818f,  // Row 2
+                0.1834f, 0.3042f, 0.5248f, 0.4319f, 0.2912f,  // Row 3
+            };
 
-    //         TensorShape s2_shape = {5, 3};
-    //         float d2[] = {
-    //             0.6119f, 0.1395f, 0.2921f,  // Row 0
-    //             0.3664f, 0.4561f, 0.7852f,  // Row 1
-    //             0.1997f, 0.5142f, 0.5924f,  // Row 2
-    //             0.0465f, 0.6075f, 0.1705f,  // Row 3
-    //             0.0651f, 0.9489f, 0.9656f,  // Row 4
-    //         };
+            TensorShape s2_shape = {5, 3};
+            float d2[] = {
+                0.6119f, 0.1395f, 0.2921f,  // Row 0
+                0.3664f, 0.4561f, 0.7852f,  // Row 1
+                0.1997f, 0.5142f, 0.5924f,  // Row 2
+                0.0465f, 0.6075f, 0.1705f,  // Row 3
+                0.0651f, 0.9489f, 0.9656f,  // Row 4
+            };
 
-    //         TensorShape exp_shape = {4, 3};
-    //         float exp_d[] = {
-    //             0.7616f, 1.3740f, 1.5423f,  // Row 0
-    //             0.3637f, 1.5308f, 1.3906f,  // Row 1
-    //             0.5558f, 1.1748f, 1.4725f,  // Row 2
-    //             0.3675f, 0.9730f, 0.9582f,  // Row 3
-    //         };
+            TensorShape exp_shape = {4, 3};
+            float exp_d[] = {
+                0.7617f, 1.3740f, 1.5422f,  // Row 0
+                0.3638f, 1.5307f, 1.3906f,  // Row 1
+                0.5559f, 1.1747f, 1.4724f,  // Row 2
+                0.3675f, 0.9729f, 0.9581f,  // Row 3
+            };
 
-    //         Tensor t1 = create_test_tensor(s1_shape, d1, false);
-    //         Tensor t2 = create_test_tensor(s2_shape, d2, false);
-    //         Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
-    //         Tensor actual_res = Tensor_matmul(t1, t2);
+            Tensor t1 = create_test_tensor(s1_shape, d1, false);
+            Tensor t2 = create_test_tensor(s2_shape, d2, false);
+            Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
+            Tensor actual_res = Tensor_matmul(t1, t2);
 
-    //         compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1,
-    //         TEST_FLOAT_TOLERANCE);
-    //     }
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 1, TEST_FLOAT_TOLERANCE);
+        }
 
-    //     // Sub-test 2: 3D Broadcasting {1,3,2} @ {2,2,4} -> {2,3,4}
-    //     {
-    //         TensorShape s1_shape = {1, 3, 2};
-    //         float d1[] = {
-    //             0.8084f, 0.3046f,  // [0,0,:]
-    //             0.0977f, 0.6842f,  // [0,1,:]
-    //             0.4402f, 0.1220f,  // [0,2,:]
-    //         };
+        // Sub-test 2: 3D Broadcasting {1,3,2} @ {2,2,4} -> {2,3,4}
+        {
+            TensorShape s1_shape = {1, 3, 2};
+            float d1[] = {
+                0.8084f, 0.3046f,
+                0.0977f, 0.6842f,
+                0.4402f, 0.1220f,
+            };
 
-    //         TensorShape s2_shape = {2, 2, 4};
-    //         float d2[] = {
-    //             // Batch 0
-    //             0.4952f, 0.0344f, 0.9093f, 0.2588f,  // [0,0,:]
-    //             0.6625f, 0.3117f, 0.5201f, 0.5467f,  // [0,1,:]
-    //             // Batch 1
-    //             0.1849f, 0.9696f, 0.7751f, 0.9395f,  // [1,0,:]
-    //             0.8948f, 0.5979f, 0.9219f, 0.0885f,  // [1,1,:]
-    //         };
+            TensorShape s2_shape = {2, 2, 4};
+            float d2[] = {
+                0.4952f, 0.0344f, 0.9093f, 0.2588f,
+                0.6625f, 0.3117f, 0.5201f, 0.5467f,
+                
+                0.1849f, 0.9696f, 0.7751f, 0.9395f,
+                0.8948f, 0.5979f, 0.9219f, 0.0885f,
+            };
 
-    //         TensorShape exp_shape = {2, 3, 4};
-    //         float exp_d[] = {
-    //             // Batch 0
-    //             0.6021f, 0.1228f, 0.8935f, 0.3757f,  // [0,0,:]
-    //             0.5017f, 0.2166f, 0.4447f, 0.3994f,  // [0,1,:]
-    //             0.2988f, 0.0532f, 0.4637f, 0.1806f,  // [0,2,:]
-    //             // Batch 1
-    //             0.4220f, 0.9659f, 0.9074f, 0.7864f,  // [1,0,:]
-    //             0.6303f, 0.5038f, 0.7065f, 0.1523f,  // [1,1,:]
-    //             0.1906f, 0.4997f, 0.4537f, 0.4243f,  // [1,2,:]
-    //         };
+            TensorShape exp_shape = {2, 3, 4};
+            float exp_d[] = {
+                0.6021f, 0.1228f, 0.8935f, 0.3757f,
+                0.5017f, 0.2166f, 0.4447f, 0.3994f,
+                0.2988f, 0.0532f, 0.4637f, 0.1806f,
+                
+                0.4220f, 0.9659f, 0.9074f, 0.7864f,
+                0.6303f, 0.5038f, 0.7065f, 0.1523f,
+                0.1906f, 0.4997f, 0.4537f, 0.4243f,
+            };
 
-    //         Tensor t1 = create_test_tensor(s1_shape, d1, false);
-    //         Tensor t2 = create_test_tensor(s2_shape, d2, false);
-    //         Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
-    //         Tensor actual_res = Tensor_matmul(t1, t2);
-    //         compare_tensors(&actual_res, &expected_res, op_name, tc_name, 2,
-    //         TEST_FLOAT_TOLERANCE);
-    //     }
+            Tensor t1 = create_test_tensor(s1_shape, d1, false);
+            Tensor t2 = create_test_tensor(s2_shape, d2, false);
+            Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
+            Tensor actual_res = Tensor_matmul(t1, t2);
+            
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 2, TEST_FLOAT_TOLERANCE);
+        }
 
-    //     // Sub-test 3: 4D Broadcasting {2,1,2,3} @ {1,1,3,2} -> {2,1,2,2}
-    //     {
-    //         TensorShape s1_shape = {2, 1, 2, 3};
-    //         float d1[] = {
-    //             // Batch 0
-    //             0.1960f, 0.0452f, 0.3253f,  // [0,0,0,:]
-    //             0.3887f, 0.2713f, 0.8287f,  // [0,0,1,:]
-    //             // Batch 1
-    //             0.3568f, 0.2809f, 0.5427f,  // [1,0,0,:]
-    //             0.1409f, 0.8022f, 0.0746f,  // [1,0,1,:]
-    //         };
+        // Sub-test 3: 4D Broadcasting {2,1,2,3} @ {1,1,3,2} -> {2,1,2,2}
+        {
+            TensorShape s1_shape = {2, 1, 2, 3};
+            float d1[] = {
+                0.1960f, 0.0452f, 0.3253f,
+                0.3887f, 0.2713f, 0.8287f,
+                
+                0.3568f, 0.2809f, 0.5427f,
+                0.1409f, 0.8022f, 0.0746f,
+            };
 
-    //         TensorShape s2_shape = {1, 1, 3, 2};
-    //         float d2[] = {
-    //             0.9869f, 0.7722f,  // [0,0,0,:]
-    //             0.1987f, 0.0055f,  // [0,0,1,:]
-    //             0.8155f, 0.7069f,  // [0,0,2,:]
-    //         };
+            TensorShape s2_shape = {1, 1, 3, 2};
+            float d2[] = {
+                0.9869f, 0.7722f,
+                0.1987f, 0.0055f,
+                0.8155f, 0.7069f,
+            };
 
-    //         TensorShape exp_shape = {2, 1, 2, 2};
-    //         float exp_d[] = {
-    //             // Batch 0
-    //             0.4677f, 0.3816f,  // [0,0,0,:]
-    //             1.1133f, 0.8875f,  // [0,0,1,:]
-    //             // Batch 1
-    //             0.8504f, 0.6607f,  // [1,0,0,:]
-    //             0.3593f, 0.1660f,  // [1,0,1,:]
-    //         };
+            TensorShape exp_shape = {2, 1, 2, 2};
+            float exp_d[] = {
+                0.4677f, 0.3816f,
+                1.1133f, 0.8875f,
+                
+                0.8505f, 0.6607f,
+                0.3593f, 0.1659f,
+            };
 
-    //         Tensor t1 = create_test_tensor(s1_shape, d1, false);
-    //         Tensor t2 = create_test_tensor(s2_shape, d2, false);
-    //         Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
-    //         Tensor actual_res = Tensor_matmul(t1, t2);
-    //         compare_tensors(&actual_res, &expected_res, op_name, tc_name, 3,
-    //         TEST_FLOAT_TOLERANCE);
-    //     }
-    // }
+            Tensor t1 = create_test_tensor(s1_shape, d1, false);
+            Tensor t2 = create_test_tensor(s2_shape, d2, false);
+            Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
+            Tensor actual_res = Tensor_matmul(t1, t2);
+            
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 3, TEST_FLOAT_TOLERANCE);
+        }
+
+        // Sub-test 4: 3D × 3D Broadcasting {2,1,3} @ {1,3,2} -> {2,1,2}
+        {
+            TensorShape s1_shape = {2, 1, 3};
+            float d1[] = {
+                1.0f, 2.0f, 3.0f,
+
+                4.0f, 5.0f, 6.0f,
+            };
+
+            TensorShape s2_shape = {1, 3, 2};
+            float d2[] = {
+                1.0f, 2.0f,
+                3.0f, 4.0f,
+                5.0f, 6.0f,
+            };
+
+            TensorShape exp_shape = {2, 1, 2};
+            float exp_d[] = {
+                22.0f, 28.0f,
+                
+                49.0f, 64.0f,
+            };
+
+            Tensor t1 = create_test_tensor(s1_shape, d1, false);
+            Tensor t2 = create_test_tensor(s2_shape, d2, false);
+            Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
+            Tensor actual_res = Tensor_matmul(t1, t2);
+
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 4, TEST_FLOAT_TOLERANCE);
+        }
+
+        // Sub-test 5: 3D × 4D Broadcasting {1,2,3} @ {2,1,3,2} -> {2,1,2,2}
+        {
+            TensorShape s1_shape = {1, 2, 3};
+            float d1[] = {
+                1.0f, 2.0f, 3.0f,
+                4.0f, 5.0f, 6.0f,
+            };
+
+            TensorShape s2_shape = {2, 1, 3, 2};
+            float d2[] = {
+                1.0f, 0.0f,
+                0.0f, 1.0f,
+                1.0f, 1.0f,
+                
+                2.0f, 1.0f,
+                1.0f, 2.0f,
+                0.0f, 1.0f,
+            };
+
+            TensorShape exp_shape = {2, 1, 2, 2};
+            float exp_d[] = {
+                4.0f, 5.0f,
+                10.0f, 11.0f,
+                
+                4.0f, 8.0f,
+                13.0f, 20.0f,
+            };
+
+            Tensor t1 = create_test_tensor(s1_shape, d1, false);
+            Tensor t2 = create_test_tensor(s2_shape, d2, false);
+            Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
+            Tensor actual_res = Tensor_matmul(t1, t2);
+
+
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 5, TEST_FLOAT_TOLERANCE);
+        }
+
+        // Sub-test 6: 4D × 4D Broadcasting {1,2,2,3} @ {2,1,3,2} -> {2,2,2,2}
+        {
+            TensorShape s1_shape = {1, 2, 2, 3};
+            float d1[] = {
+                1.0f, 0.0f, 1.0f,
+                0.0f, 1.0f, 1.0f,
+
+                2.0f, 1.0f, 0.0f,
+                1.0f, 2.0f, 1.0f,
+            };
+
+            TensorShape s2_shape = {2, 1, 3, 2};
+            float d2[] = {
+                1.0f, 1.0f,
+                1.0f, 0.0f,
+                0.0f, 1.0f,
+                
+                0.0f, 1.0f,
+                1.0f, 1.0f,
+                1.0f, 0.0f,
+            };
+
+            TensorShape exp_shape = {2, 2, 2, 2};
+            float exp_d[] = {
+                1.0f, 2.0f,
+                1.0f, 1.0f,
+                
+                3.0f, 2.0f,
+                3.0f, 2.0f,
+                
+                1.0f, 1.0f,
+                2.0f, 1.0f,
+                
+                1.0f, 3.0f,
+                3.0f, 3.0f,
+            };
+
+            Tensor t1 = create_test_tensor(s1_shape, d1, false);
+            Tensor t2 = create_test_tensor(s2_shape, d2, false);
+            Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
+            Tensor actual_res = Tensor_matmul(t1, t2);
+
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 6, TEST_FLOAT_TOLERANCE);
+        }
+
+        // Sub-test 7: 4D × 3D Broadcasting {2,2,2,3} @ {1,3,4} -> {2,2,2,4}
+        {
+            TensorShape s1_shape = {2, 2, 2, 3};
+            float d1[] = {
+                1.0f, 0.0f, 0.0f,
+                0.0f, 1.0f, 0.0f,
+                
+                0.0f, 0.0f, 1.0f,
+                1.0f, 1.0f, 1.0f,
+                
+                2.0f, 0.0f, 0.0f,
+                0.0f, 2.0f, 0.0f,
+                
+                0.0f, 0.0f, 2.0f,
+                1.0f, 1.0f, 1.0f,
+            };
+
+            TensorShape s2_shape = {1, 3, 4};
+            float d2[] = {
+                1.0f, 2.0f, 3.0f, 4.0f,
+                5.0f, 6.0f, 7.0f, 8.0f,
+                9.0f, 10.0f, 11.0f, 12.0f,
+            };
+
+            TensorShape exp_shape = {2, 2, 2, 4};
+            float exp_d[] = {
+                1.0f, 2.0f, 3.0f, 4.0f,
+                5.0f, 6.0f, 7.0f, 8.0f,
+                
+                9.0f, 10.0f, 11.0f, 12.0f,
+                15.0f, 18.0f, 21.0f, 24.0f,
+                
+                
+                2.0f, 4.0f, 6.0f, 8.0f,
+                10.0f, 12.0f, 14.0f, 16.0f, 
+                
+                18.0f, 20.0f, 22.0f, 24.0f,
+                15.0f, 18.0f, 21.0f, 24.0f,
+            };
+
+            Tensor t1 = create_test_tensor(s1_shape, d1, false);
+            Tensor t2 = create_test_tensor(s2_shape, d2, false);
+            Tensor expected_res = create_test_tensor(exp_shape, exp_d, false);
+            Tensor actual_res = Tensor_matmul(t1, t2);
+
+            compare_tensors(&actual_res, &expected_res, op_name, tc_name, 7, TEST_FLOAT_TOLERANCE);
+        }
+    }
 
     cten_free(pool_id);
 }
